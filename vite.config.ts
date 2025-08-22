@@ -3,30 +3,26 @@ import react from "@vitejs/plugin-react";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-// --- paths
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = __dirname;
 const CLIENT = path.resolve(ROOT, "client");
 
-// --- tiny debug plugin to print what Vite actually uses
+// debug plugin — prints what Vite is *actually* using
 const printAliases = {
   name: "print-aliases",
   configResolved(cfg: any) {
-    const map = Object.fromEntries(
-      cfg.resolve.alias.map((a: any) => [
-        a.find,
-        typeof a.replacement === "string" ? a.replacement : "(fn)",
-      ])
-    );
-    console.log("🔎 Vite alias map:", map);
+    const pretty = cfg.resolve.alias.map((a: any) => {
+      const find = a.find instanceof RegExp ? a.find.toString() : String(a.find);
+      const repl =
+        typeof a.replacement === "string" ? a.replacement : "(function)";
+      return `${find} → ${repl}`;
+    });
+    console.log("🔎 Vite aliases:\n  " + pretty.join("\n  "));
   },
 };
 
 export default defineConfig({
-  plugins: [
-    printAliases,   // <— keep first
-    react(),
-  ],
+  plugins: [printAliases, react()],
   root: CLIENT,
   publicDir: path.resolve(CLIENT, "public"),
   build: {
@@ -35,9 +31,10 @@ export default defineConfig({
   },
   server: { host: true, port: 5173 },
   resolve: {
-    alias: {
-      "@": path.resolve(CLIENT, "src"),
-      "@shared": path.resolve(ROOT, "shared"),
-    },
+    alias: [
+      // 👇 regex so "@/..." **always** matches
+      { find: /^@\//, replacement: path.resolve(CLIENT, "src/") + "/" },
+      { find: /^@shared\//, replacement: path.resolve(ROOT, "shared/") + "/" },
+    ],
   },
 });

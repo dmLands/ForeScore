@@ -3,16 +3,17 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "scripts": {
-    "dev:api": "tsx watch server/index.ts",
-    "dev:web": "vite",
-    "build:api": "esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/index.js",
-    "build:web": "vite build",
-    "build": "npm run build:api && npm run build:web",
-    "start": "NODE_ENV=production node dist/index.js",
-    "db:push": "drizzle-kit push",
-    "check": "tsc --noEmit"
-  },
+"scripts": {
+  "dev:api": "tsx watch server/index.ts",
+  "dev:web": "vite --config ./vite.config.ts",
+  "dev:web:host": "vite --config ./vite.config.ts --host 0.0.0.0 --port 5173",
+  "build:api": "esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/index.js",
+  "build:web": "vite build --config ./vite.config.ts",
+  "build": "npm run build:api && npm run build:web",
+  "start": "NODE_ENV=production node dist/index.js",
+  "db:push": "drizzle-kit push",
+  "check": "tsc --noEmit"
+},
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",

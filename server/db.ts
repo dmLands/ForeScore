@@ -1,12 +1,10 @@
-// server/db.ts (dual driver: Neon for neon.tech URLs, pg for local Postgres)
-import * as schema from "@shared/schema";
+// server/db.ts — dotenv-free: uses env if present, otherwise local fallback; Neon or local pg
+import * as schema from "../shared/schema";
 
-const url = process.env.DATABASE_URL;
-if (!url) {
-  throw new Error("DATABASE_URL must be set. Did you forget to provision a database?");
-}
+const url =
+  (typeof process !== "undefined" && process.env && process.env.DATABASE_URL) ||
+  "postgres://forescore:forescore@localhost:5432/forescore";
 
-// Use Neon serverless driver for Neon URLs; otherwise use node-postgres
 function isNeon(u: string): boolean {
   return /neon\.tech/i.test(u) || /sslmode=require/i.test(u) || /NEON/i.test(u);
 }
@@ -21,27 +19,15 @@ export const db = await (async () => {
     neonConfig.pipelineConnect = false;
 
     const pool = new Pool({ connectionString: url });
-    // Optional: test connection
-    try {
-      const c = await pool.connect();
-      c.release();
-      console.log("✅ Neon DB connected");
-    } catch (e) {
-      console.warn("⚠️ Neon connect attempt failed (will continue):", e);
-    }
+    try { const c = await pool.connect(); c.release(); console.log("✅ Neon DB connected"); }
+    catch (e) { console.warn("⚠️ Neon connect failed (continuing):", e); }
     return drizzle({ client: pool, schema });
   } else {
     const { Pool } = await import("pg");
     const { drizzle } = await import("drizzle-orm/node-postgres");
     const pool = new Pool({ connectionString: url });
-    // Optional: test connection
-    try {
-      const c = await pool.connect();
-      c.release();
-      console.log("✅ Local Postgres connected");
-    } catch (e) {
-      console.warn("⚠️ Local Postgres connect attempt failed (will continue):", e);
-    }
+    try { const c = await pool.connect(); c.release(); console.log("✅ Local Postgres connected"); }
+    catch (e) { console.warn("⚠️ Local Postgres connect failed (continuing):", e); }
     return drizzle(pool, { schema });
   }
 })();

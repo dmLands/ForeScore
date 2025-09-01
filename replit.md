@@ -1,7 +1,35 @@
-# ForeScoreV5 - Enterprise-Grade Security & Authentication
+# ForeScoreV6.4 - Enterprise-Grade Security & Authentication
 
 ## Overview
-ForeScore V5.20 is a secure, full-stack application designed as a companion for the golf penalty game "Animal." It provides enterprise-grade local authentication, server-side security validation, and enhanced payout visualization. The application supports complete group management, card game mechanics utilizing a Proportional Share Algorithm, isolated 2/9/16 points games per session, and multiple payout calculation views. All game calculations are performed server-side to prevent tampering, ensuring secure user authentication and session management. The project's vision is to offer a robust, reliable, and secure platform for managing golf penalty games, with ambitions to become the leading digital tool in this niche.
+ForeScore V6.4 is a secure, full-stack application designed as a companion for the golf penalty game "Animal." It provides enterprise-grade local authentication, server-side security validation, and enhanced payout visualization. The application supports complete group management, card game mechanics utilizing a Proportional Share Algorithm, isolated 2/9/16 points games per session, and multiple payout calculation views. All game calculations are performed server-side to prevent tampering, ensuring secure user authentication and session management. The project's vision is to offer a robust, reliable, and secure platform for managing golf penalty games, with ambitions to become the leading digital tool in this niche.
+
+## Recent Changes
+### V6.4 (Current) - January 2025
+- **UI/UX Structural Improvements**:
+  - **Games Tab Cleanup**: Removed non-functional "Join Game" button and repositioned "Create Group" button under Recent Groups header for cleaner layout
+  - **Game Selection Interface**: Removed "Active" pills from game selection since games don't have completion status tracking
+  - **Game History Management**: Implemented 5-game display limit for group history instead of broken delete functionality, maintaining clean interface
+  - **Consistent Design Language**: Normalized tutorial styling from colorful theme to consistent gray styling matching overall app design
+  - **Rules Tab Enhancement**: Restructured content with numbered green circle headers for consistent formatting throughout
+
+- **Backend Infrastructure**:
+  - **Database Cleanup System**: Added automated 61-day game cleanup endpoint (`/api/admin/cleanup-old-games`) to manage storage growth while preserving recent game data
+  - **Clean Code Architecture**: Chose maintainable solutions over quick fixes, prioritizing long-term code health and scalability
+  - **Content Hierarchy**: Consistently prioritized 2/9/16 game over card game throughout Rules and tutorial sections
+
+### V6.3 - January 2025
+- **Login Page Cosmetic Updates**:
+  - Changed branding pill from "Golf Game Companion" to "Golf Payout Calculator"
+  - Updated Card Game description: "Don't be an animal! Classic penalty cards game where players collect cards for golf mishaps, and payouts are automatically calculated to fairly reward those who stay out of trouble."
+  - Updated 2/9/16 Game description (revised): "The classic points game where players earn 2, 9, or 16 points (match play, threesomes, or foursomes) points per hole depending on performance. Includes three payout modes (Points or Front-Back-Total [FBT], or both)."
+  - Reordered tiles: 2/9/16 Game moved to top position
+  - Added new "Live Leaderboards" tile with 💰 emoji: "Combine games and instantly calculate payouts with the fewest number of transactions. Money only changes hands once. Real-time leaderboards, and seamless hole-by-hole score tracking."
+  - Final tile order: 2/9/16 Game, Card Game, Live Leaderboards (vertical stack layout)
+- **Key Structural Improvements**:
+  - **Auto-Create 2/9/16 Games**: Modified game creation endpoint to automatically create both Card Game and 2/9/16 points game simultaneously during initial setup, eliminating the manual step
+  - **Navigation Restructure**: Changed default landing page from Card Game to 2/9/16 Game after game creation
+  - **Tab Reordering**: Swapped positions of "Deck" and "2/9/16" tabs, renamed "Deck" to "Cards"
+  - **Final tab order**: Games, 2/9/16, Cards, Payouts, Rules
 
 ## User Preferences
 I want iterative development. Ask before making major changes. Do not make changes to the folder `Z`. Do not make changes to the file `Y`.

@@ -1,7 +1,0 @@
-{
-  "name": "ForeScore Dev (root + apt)",
-  "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
-  "remoteUser": "root",
-  "postCreateCommand": "bash -lc '.devcontainer/setup-apt.sh'",
-  "forwardPorts": [3000, 5173, 5432, 6379]
-}

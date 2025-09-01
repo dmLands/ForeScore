@@ -35,7 +35,7 @@ export default function Landing() {
               You hit the shots, we do the math
             </CardDescription>
             <Badge variant="secondary" className="mx-auto text-sm font-medium">
-              Golf Game Companion
+              Golf Payout Calculator
             </Badge>
           </CardHeader>
           
@@ -60,26 +60,7 @@ export default function Landing() {
             </div>
 
             {/* Game descriptions with graphics */}
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Card Game */}
-              <Card className="border-2 border-gray-200 bg-gradient-to-br from-gray-50 to-gray-50">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center text-white font-bold shadow-md">
-                      🃏
-                    </div>
-                    <CardTitle className="text-lg text-gray-900">Card Game</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <p className="text-sm text-gray-600 leading-relaxed">
-                    Classic Animal penalty cards enhanced by our <strong>Proportional Share Algorithm</strong>. 
-                    Players collect cards for golf mishaps, and payouts are automatically calculated to 
-                    fairly reward those who stay out of trouble.
-                  </p>
-                </CardContent>
-              </Card>
-
+            <div className="space-y-4">
               {/* 2/9/16 Game */}
               <Card className="border-2 border-gray-200 bg-gradient-to-br from-gray-50 to-gray-50">
                 <CardHeader className="pb-3">
@@ -92,9 +73,41 @@ export default function Landing() {
                 </CardHeader>
                 <CardContent className="pt-0">
                   <p className="text-sm text-gray-600 leading-relaxed">
-                    A dynamic points-based format where players earn 2, 9, or 16 points per hole 
-                    depending on performance. Includes <strong>dual payout modes</strong> (Points or FBT), 
-                    real-time leaderboards, and seamless hole-by-hole score tracking.
+                    The classic points game where players earn 2, 9, or 16 points (match play, threesomes, or foursomes) points per hole depending on performance. Includes three payout modes (Points or Front-Back-Total [FBT], or both).
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Card Game */}
+              <Card className="border-2 border-gray-200 bg-gradient-to-br from-gray-50 to-gray-50">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center text-white font-bold shadow-md">
+                      🃏
+                    </div>
+                    <CardTitle className="text-lg text-gray-900">Card Game</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    Don't be an animal! Classic penalty cards game where players collect cards for golf mishaps, and payouts are automatically calculated to fairly reward those who stay out of trouble.
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Live Leaderboards */}
+              <Card className="border-2 border-gray-200 bg-gradient-to-br from-gray-50 to-gray-50">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center text-white font-bold shadow-md">
+                      💰
+                    </div>
+                    <CardTitle className="text-lg text-gray-900">Live Leaderboards</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    Combine games and instantly calculate payouts with the fewest number of transactions. Money only changes hands once. Real-time leaderboards, and seamless hole-by-hole score tracking.
                   </p>
                 </CardContent>
               </Card>

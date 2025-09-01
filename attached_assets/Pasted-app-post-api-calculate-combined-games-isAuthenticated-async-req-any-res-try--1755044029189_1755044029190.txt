@@ -1,0 +1,61 @@
+app.post('/api/calculate-combined-games', isAuthenticated, async (req: any, res) => {
+  try {
+    const { groupId, gameStateId, pointsGameId, selectedGames, pointValue, fbtValue } = req.body;
+    if (!selectedGames || selectedGames.length === 0) {
+      return res.status(400).json({ message: 'No games selected' });
+    }
+
+    const group = await storage.getGroup(groupId);
+    const gameState = gameStateId ? await storage.getGameStateById(gameStateId) : null;
+    const pointsGame = pointsGameId ? await storage.getPointsGameById(pointsGameId) : null;
+    if (!group) return res.status(404).json({ message: 'Group not found' });
+
+    const nets: Record<string, number>[] = [];
+    const activeGames: string[] = [];
+
+    // CARDS
+    if (selectedGames.includes('cards') && gameState?.cardHistory?.length > 0) {
+      const currentAssignments: Record<string, any> = {};
+      for (const a of gameState.cardHistory) currentAssignments[a.cardId] = a;
+      const debts: Record<string, number> = {};
+      for (const p of group.players) debts[p.id] = 0;
+      for (const a of Object.values(currentAssignments)) {
+        if (debts[a.playerId] !== undefined) debts[a.playerId] += a.cardValue || 0;
+      }
+      nets.push(calculateCardsGame(debts));
+      activeGames.push('cards');
+    }
+
+    // POINTS
+    if (selectedGames.includes('points') && pointsGame && parseFloat(pointValue) > 0) {
+      const totals: Record<string, number> = {};
+      for (const p of group.players) totals[p.id] = 0;
+      for (const [, holePoints] of Object.entries(pointsGame.points || {})) {
+        for (const pid of Object.keys(totals)) {
+          totals[pid] += holePoints?.[pid] || 0;
+        }
+      }
+      nets.push(calculatePointsGame(totals, parseFloat(pointValue)));
+      activeGames.push('points');
+    }
+
+    // FBT
+    if (selectedGames.includes('fbt') && pointsGame && parseFloat(fbtValue) > 0) {
+      nets.push(buildFbtNetsFromPointsGame(group.players, pointsGame, parseFloat(fbtValue)));
+      activeGames.push('fbt');
+    }
+
+    // Combine, round once, settle
+    const combinedNet = combineGames(...nets);
+    const transactions = settleWhoOwesWho(combinedNet).map(t => {
+      const fromPlayer = group.players.find(p => p.id === t.from);
+      const toPlayer = group.players.find(p => p.id === t.to);
+      return { ...t, fromName: fromPlayer?.name || 'Unknown', toName: toPlayer?.name || 'Unknown' };
+    });
+
+    res.json({ payouts: combinedNet, transactions, selectedGames: activeGames, success: true });
+  } catch (error) {
+    console.error('Combined games calculation error:', error);
+    res.status(500).json({ message: 'Failed to calculate combined games' });
+  }
+});

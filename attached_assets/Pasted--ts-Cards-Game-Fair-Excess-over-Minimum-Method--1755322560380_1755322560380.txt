@@ -1,0 +1,175 @@
+```ts
+// ==============================
+// Cards Game — Fair "Excess over Minimum" Method
+// ==============================
+// Rule:
+// 1) Find the minimum debt b among players.
+// 2) Each player's excess e_i = max(debt_i - b, 0).
+// 3) Total excess E = sum(e_i). Baseline players (debt == b) split E evenly.
+// 4) Baseline players receive E / (#baseline); non-baseline pay exactly their excess.
+// 5) Round at the end; reconcile 1–2 cents on the last leg if needed.
+
+type MoneyMap = Record<string, number>;
+
+function round2(x: number): number { return Math.round(x * 100) / 100; }
+
+/** Returns net dollars per player: positive = receives, negative = owes */
+export function cardsFairExcess(debts: MoneyMap): MoneyMap {
+  const players = Object.keys(debts);
+  if (players.length === 0) return {};
+
+  const minDebt = Math.min(...players.map(p => debts[p]));
+  const excess: MoneyMap = {};
+  let totalExcess = 0;
+
+  for (const p of players) {
+    const e = Math.max(debts[p] - minDebt, 0);
+    excess[p] = e;
+    totalExcess += e;
+  }
+
+  const baseline = players.filter(p => debts[p] === minDebt);
+  const share = baseline.length > 0 ? totalExcess / baseline.length : 0;
+
+  const net: MoneyMap = {};
+  for (const p of players) {
+    net[p] = round2(debts[p] === minDebt ? share : -excess[p]);
+  }
+
+  // Penny reconciliation: ensure exact zero-sum after rounding
+  const sum = round2(Object.values(net).reduce((s, v) => s + v, 0));
+  if (Math.abs(sum) >= 0.01 && baseline.length > 0) {
+    const last = baseline[baseline.length - 1];
+    net[last] = round2(net[last] - sum); // nudge last baseline recipient by residual cents
+  }
+  return net;
+}
+
+/** Greedy settlement from nets. Returns legs: from -> to : amount */
+export function settleWhoOwesWho(net: MoneyMap): Array<{ from: string; to: string; amount: number }> {
+  const payers = Object.entries(net)
+    .filter(([, v]) => v < 0)
+    .map(([p, v]) => [p, -v] as [string, number])
+    .sort((a, b) => b[1] - a[1]); // largest owes first
+
+  const receivers = Object.entries(net)
+    .filter(([, v]) => v > 0)
+    .map(([p, v]) => [p, v] as [string, number])
+    .sort((a, b) => b[1] - a[1]); // largest needs first
+
+  const legs: Array<{ from: string; to: string; amount: number }> = [];
+  let i = 0, j = 0;
+
+  while (i < payers.length && j < receivers.length) {
+    let [from, owe] = payers[i];
+    let [to, need] = receivers[j];
+    const pay = round2(Math.min(owe, need));
+    legs.push({ from, to, amount: pay });
+    owe = round2(owe - pay);
+    need = round2(need - pay);
+    if (owe <= 0.001) i++; else payers[i] = [from, owe];
+    if (need <= 0.001) j++; else receivers[j] = [to, need];
+  }
+
+  // Reconcile any residual cent on the last leg
+  const totalRecv = round2(Object.values(net).filter(v => v > 0).reduce((s, v) => s + v, 0));
+  const totalPaid = round2(legs.reduce((s, L) => s + L.amount, 0));
+  const diff = round2(totalRecv - totalPaid);
+  if (Math.abs(diff) >= 0.01 && legs.length > 0) {
+    legs[legs.length - 1].amount = round2(legs[legs.length - 1].amount + diff);
+  }
+  return legs;
+}
+
+// ------------------------------
+// Quick examples (uncomment to test):
+// const ex1 = cardsFairExcess({ Cheri: 2, Me: 10, Josh: 2, Pearl: 4 });
+// // -> net: { Cheri:+5, Josh:+5, Pearl:-2, Me:-8 }
+// // legs (one valid): Me->Cheri 5, Me->Josh 3, Pearl->Josh 2
+//
+// const ex2 = cardsFairExcess({ Me: 12, Cheri: 2, Josh: 2, Pearl: 2 });
+// // -> net: { Me:-10, Cheri:+3.33, Josh:+3.33, Pearl:+3.34 } (penny reconciled)
+// ------------------------------
+```
+
+```python
+# ==============================
+# Cards Game — Fair "Excess over Minimum" Method (Python)
+# ==============================
+
+from typing import Dict, List, Tuple
+
+MoneyMap = Dict[str, float]
+
+def round2(x: float) -> float:
+    return round(x + 1e-12, 2)
+
+def cards_fair_excess(debts: MoneyMap) -> MoneyMap:
+    """
+    Returns net dollars per player: positive = receives, negative = owes.
+    Rule:
+      b = min(debt)
+      excess[i] = max(debt[i] - b, 0)
+      E = sum(excess)
+      baseline players (debt == b) each receive E / |baseline|
+      others pay exactly their excess
+    """
+    if not debts:
+        return {}
+
+    min_debt = min(debts.values())
+    excess: MoneyMap = {p: max(d - min_debt, 0.0) for p, d in debts.items()}
+    total_excess = sum(excess.values())
+    baseline = [p for p, d in debts.items() if d == min_debt]
+    share = (total_excess / len(baseline)) if baseline else 0.0
+
+    net: MoneyMap = {}
+    for p, d in debts.items():
+        net[p] = round2(share) if d == min_debt else round2(-excess[p])
+
+    # Penny reconciliation to force exact zero-sum after rounding
+    s = round2(sum(net.values()))
+    if abs(s) >= 0.01 and baseline:
+        last = baseline[-1]
+        net[last] = round2(net[last] - s)
+    return net
+
+def settle_who_owes_who(net: MoneyMap) -> List[Tuple[str, str, float]]:
+    """Greedy settlement legs: (from, to, amount)"""
+    payers = sorted([(p, -v) for p, v in net.items() if v < 0], key=lambda x: -x[1])
+    receivers = sorted([(p,  v) for p, v in net.items() if v > 0], key=lambda x: -x[1])
+
+    legs: List[Tuple[str, str, float]] = []
+    i = j = 0
+    while i < len(payers) and j < len(receivers):
+        payer, owe = payers[i]
+        recv, need = receivers[j]
+        pay = round2(min(owe, need))
+        legs.append((payer, recv, pay))
+        owe = round2(owe - pay)
+        need = round2(need - pay)
+        if owe <= 0.001: i += 1
+        else: payers[i] = (payer, owe)
+        if need <= 0.001: j += 1
+        else: receivers[j] = (recv, need)
+
+    # Reconcile any residual cent on the last leg
+    total_recv = round2(sum(v for v in net.values() if v > 0))
+    total_paid = round2(sum(a for _, _, a in legs))
+    diff = round2(total_recv - total_paid)
+    if abs(diff) >= 0.01 and legs:
+        lp, lr, la = legs[-1]
+        legs[-1] = (lp, lr, round2(la + diff))
+    return legs
+
+# ------------------------------
+# Quick examples:
+# net1 = cards_fair_excess({"Cheri": 2, "Me": 10, "Josh": 2, "Pearl": 4})
+# # -> {'Cheri': 5.0, 'Me': -8.0, 'Josh': 5.0, 'Pearl': -2.0}
+# legs1 = settle_who_owes_who(net1)
+#
+# net2 = cards_fair_excess({"Me": 12, "Cheri": 2, "Josh": 2, "Pearl": 2})
+# # -> {'Me': -10.0, 'Cheri': 3.33, 'Josh': 3.33, 'Pearl': 3.34} (penny reconciled)
+# legs2 = settle_who_owes_who(net2)
+# ------------------------------
+```

@@ -18,10 +18,10 @@ const tutorialSteps: TutorialStep[] = [
     title: "Welcome to ForeScore!",
     content: "ForeScore adds fun competition to your golf rounds with two exciting game options! Play the Card penalty game for laughs when shots go wrong, or try the 2/9/16 points system for stroke-based competition. Both games make every hole more engaging!",
     visual: (
-      <div className="text-center p-6 bg-emerald-50 rounded-lg">
+      <div className="text-center p-6 bg-gray-50 rounded-lg border">
         <div className="text-6xl mb-4">⛳</div>
-        <h3 className="text-xl font-bold text-emerald-700">ForeScore</h3>
-        <p className="text-emerald-600">Two Golf Competition Games</p>
+        <h3 className="text-xl font-bold text-gray-800">ForeScore</h3>
+        <p className="text-gray-600">Two Golf Competition Games</p>
       </div>
     ),
   },
@@ -49,26 +49,51 @@ const tutorialSteps: TutorialStep[] = [
   },
   {
     id: 3,
+    title: "2/9/16 Game with Three Payout Systems",
+    content: "ForeScore includes a stroke-based competition with three payout systems! Toggle between 'Points' (pay based on point differences), 'FBT' (winners for Front 9, Back 9, and Total), or both. All systems run simultaneously so you can choose your preferred payout method!",
+    visual: (
+      <div className="space-y-4">
+        <div className="text-center p-4 bg-gray-50 rounded-lg border">
+          <Hash className="h-8 w-8 text-gray-600 mx-auto mb-2" />
+          <p className="font-medium text-gray-800">2/9/16 Points Game</p>
+          <p className="text-sm text-gray-600">Three payout systems</p>
+        </div>
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          <div className="bg-gray-100 p-2 rounded text-center border">
+            <div className="font-bold text-gray-800">Points</div>
+            <div className="text-gray-600">Point differences</div>
+          </div>
+          <div className="bg-gray-100 p-2 rounded text-center border">
+            <div className="font-bold text-gray-800">FBT</div>
+            <div className="text-gray-600">Front/Back/Total winners</div>
+          </div>
+        </div>
+      </div>
+    ),
+    tip: "Check the Payouts tab to see both payout systems side by side!"
+  },
+  {
+    id: 4,
     title: "Understanding Penalty Cards",
     content: "There are 7 built-in penalty cards, each representing common golf mishaps. You can also create custom cards with your own names, emojis, and values - they'll appear as editable fields in the Card Values section.",
     visual: (
       <div className="grid grid-cols-2 gap-2">
-        <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 justify-center py-2">
+        <Badge className="bg-gray-100 text-gray-800 border-gray-200 justify-center py-2">
           🐪 Camel - $2
         </Badge>
-        <Badge className="bg-blue-100 text-blue-800 border-blue-200 justify-center py-2">
+        <Badge className="bg-gray-100 text-gray-800 border-gray-200 justify-center py-2">
           🐟 Fish - $2
         </Badge>
-        <Badge className="bg-orange-100 text-orange-800 border-orange-200 justify-center py-2">
+        <Badge className="bg-gray-100 text-gray-800 border-gray-200 justify-center py-2">
           🐦 Roadrunner - $2
         </Badge>
-        <Badge className="bg-purple-100 text-purple-800 border-purple-200 justify-center py-2">
+        <Badge className="bg-gray-100 text-gray-800 border-gray-200 justify-center py-2">
           👻 Ghost - $2
         </Badge>
         <Badge className="bg-gray-100 text-gray-800 border-gray-200 justify-center py-2">
           🦨 Skunk - $2
         </Badge>
-        <Badge className="bg-green-100 text-green-800 border-green-200 justify-center py-2">
+        <Badge className="bg-gray-100 text-gray-800 border-gray-200 justify-center py-2">
           🐍 Snake - $2
         </Badge>
       </div>
@@ -76,29 +101,29 @@ const tutorialSteps: TutorialStep[] = [
     tip: "Camel = sand trap, Fish = water, Roadrunner = cart path, Ghost = out of bounds, Skunk = double bogey, Snake = three putt"
   },
   {
-    id: 4,
+    id: 5,
     title: "Playing the Card Game",
-    content: "During your golf round, when someone gets a penalty, go to the Deck tab and assign them the appropriate card. Cards can be reassigned between players throughout the round - strategy is key!",
+    content: "During your golf round, when someone gets a penalty, go to the Cards tab and assign them the appropriate card. Cards can be reassigned between players throughout the round - strategy is key!",
     visual: (
       <div className="space-y-4">
-        <div className="text-center p-4 bg-emerald-50 rounded-lg">
-          <Trophy className="h-8 w-8 text-emerald-600 mx-auto mb-2" />
-          <p className="font-medium text-emerald-700">Select a card type</p>
-          <p className="text-sm text-emerald-600">Choose which penalty occurred</p>
+        <div className="text-center p-4 bg-gray-50 rounded-lg border">
+          <Trophy className="h-8 w-8 text-gray-600 mx-auto mb-2" />
+          <p className="font-medium text-gray-800">Select a card type</p>
+          <p className="text-sm text-gray-600">Choose which penalty occurred</p>
         </div>
-        <div className="text-center p-4 bg-blue-50 rounded-lg">
-          <Users className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-          <p className="font-medium text-blue-700">Assign to player</p>
-          <p className="text-sm text-blue-600">Tap the player who gets the card</p>
+        <div className="text-center p-4 bg-gray-50 rounded-lg border">
+          <Users className="h-8 w-8 text-gray-600 mx-auto mb-2" />
+          <p className="font-medium text-gray-800">Assign to player</p>
+          <p className="text-sm text-gray-600">Tap the player who gets the card</p>
         </div>
       </div>
     ),
     tip: "Cards can be traded between players! Use strategy to minimize your final total."
   },
   {
-    id: 5,
+    id: 6,
     title: "Tracking Scores",
-    content: "The Payouts tab shows each player's card totals and money paid/received. Use 'Who Owes Who' to see direct payments between players, and check Card History to see all card assignments throughout the round.",
+    content: "The Payouts tab shows each player's totals and money paid/received for both games. Use 'Who Owes Who' to see direct payments between players, and check game history to see all assignments throughout the round.",
     visual: (
       <div className="space-y-3">
         <div className="p-3 bg-gray-50 rounded-lg border">
@@ -108,72 +133,32 @@ const tutorialSteps: TutorialStep[] = [
               <span className="font-medium">John</span>
             </div>
             <div className="text-right">
-              <p className="text-lg font-bold text-green-600">$3.00</p>
+              <p className="text-lg font-bold text-gray-800">$3.00</p>
               <p className="text-xs text-gray-600">Receives</p>
             </div>
           </div>
         </div>
-        <div className="p-3 bg-orange-50 rounded-lg border border-orange-200">
+        <div className="p-3 bg-gray-50 rounded-lg border">
           <div className="text-sm">
-            <span className="font-medium text-red-600">Sarah</span>
+            <span className="font-medium text-gray-800">Sarah</span>
             <span className="text-gray-600"> owes </span>
-            <span className="font-medium text-green-600">John</span>
-            <span className="ml-2 font-bold text-black">$3.00</span>
+            <span className="font-medium text-gray-800">John</span>
+            <span className="ml-2 font-bold text-gray-800">$3.00</span>
           </div>
         </div>
       </div>
     ),
-    tip: "Check the Payouts tab to see all money calculations and card assignments!"
-  },
-  {
-    id: 6,
-    title: "Multiplayer Support",
-    content: "Share your game code with other players so they can join from their own devices. Everyone can assign cards and see real-time updates throughout the round.",
-    visual: (
-      <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg border">
-        <div className="text-3xl mb-3">📱➡️📱</div>
-        <div className="bg-white px-4 py-2 rounded-lg border-2 border-dashed border-blue-300 mb-3">
-          <span className="font-mono text-lg font-bold text-blue-600">ABC123</span>
-        </div>
-        <p className="text-sm text-gray-600">Share this code with other players</p>
-      </div>
-    ),
-    tip: "Each game gets its own unique share code for easy joining!"
+    tip: "Check the Payouts tab to see all money calculations for both games!"
   },
   {
     id: 7,
-    title: "2/9/16 Game with Dual Payouts",
-    content: "ForeScore includes a stroke-based competition with two payout systems! Toggle between 'Points' (pay based on point differences) and 'FBT' (winners for Front 9, Back 9, and Total). Both systems run simultaneously so you can choose your preferred payout method!",
-    visual: (
-      <div className="space-y-4">
-        <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
-          <Hash className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-          <p className="font-medium text-blue-700">2/9/16 Points Game</p>
-          <p className="text-sm text-blue-600">Dual payout systems</p>
-        </div>
-        <div className="grid grid-cols-2 gap-2 text-xs">
-          <div className="bg-blue-100 p-2 rounded text-center border border-blue-200">
-            <div className="font-bold text-blue-700">Points</div>
-            <div className="text-blue-600">Point differences</div>
-          </div>
-          <div className="bg-green-100 p-2 rounded text-center border border-green-200">
-            <div className="font-bold text-green-700">FBT</div>
-            <div className="text-green-600">Front/Back/Total winners</div>
-          </div>
-        </div>
-      </div>
-    ),
-    tip: "Check the Payouts tab to see both payout systems side by side!"
-  },
-  {
-    id: 8,
     title: "Ready to Enhance Your Golf Round!",
     content: "You're all set! Create your first group and add excitement to your golf round with ForeScore's two game options. Whether you want penalty-based laughs or stroke competition, these games will make every hole more engaging!",
     visual: (
-      <div className="text-center p-6 bg-gradient-to-br from-emerald-50 to-green-50 rounded-lg">
-        <Trophy className="h-12 w-12 text-emerald-600 mx-auto mb-4" />
-        <h3 className="text-xl font-bold text-emerald-700 mb-2">Enjoy Your Round!</h3>
-        <p className="text-emerald-600">Make every hole more fun</p>
+      <div className="text-center p-6 bg-gray-50 rounded-lg border">
+        <Trophy className="h-12 w-12 text-gray-600 mx-auto mb-4" />
+        <h3 className="text-xl font-bold text-gray-800 mb-2">Enjoy Your Round!</h3>
+        <p className="text-gray-600">Make every hole more fun</p>
         <div className="flex justify-center gap-4 mt-4">
           <div className="text-2xl">🐪</div>
           <div className="text-2xl">🐟</div>

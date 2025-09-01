@@ -6,7 +6,9 @@ import { setupAuth, isAuthenticated, generateRoomToken } from "./replitAuth.js";
 import { calculateCardGameDetails, calculate2916Points, validateCardAssignment, calculateCardsGame, calculatePointsGame, calculateFbtGame, buildFbtNetsFromPointsGame, combineGames, settleWhoOwesWho, combineTotals, generateSettlement } from "./secureGameLogic.js";
 import { SecureWebSocketManager } from "./secureWebSocket.js";
 import { registerUser, authenticateUser, registerSchema, loginSchema } from "./localAuth.js";
-import { insertGroupSchema, insertGameStateSchema, insertPointsGameSchema, cardValuesSchema, pointsGameSettingsSchema, type Card, type CardAssignment } from "@shared/schema";
+import { insertGroupSchema, insertGameStateSchema, insertPointsGameSchema, cardValuesSchema, pointsGameSettingsSchema, gameStates, roomStates, userPreferences, insertUserPreferencesSchema, type Card, type CardAssignment } from "@shared/schema";
+import { db } from "./db.js";
+import { sql } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
@@ -110,6 +112,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // V6.5: User Preferences Endpoints for tab persistence
+  app.get('/api/user/preferences', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      
+      const [preference] = await db
+        .select()
+        .from(userPreferences)
+        .where(sql`${userPreferences.userId} = ${userId}`)
+        .limit(1);
+      
+      if (preference) {
+        res.json(preference);
+      } else {
+        // Return default preferences if none exist
+        res.json({ 
+          userId,
+          currentTab: 'games',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+      }
+    } catch (error) {
+      console.error('Error getting user preferences:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.put('/api/user/preferences', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      const { currentTab, selectedGroupId, selectedGameId } = req.body;
+      
+      // Validate currentTab value
+      if (currentTab) {
+        const validTabs = ['games', 'deck', 'scoreboard', 'rules', 'points'];
+        if (!validTabs.includes(currentTab)) {
+          return res.status(400).json({ message: 'Invalid tab value' });
+        }
+      }
+      
+      // Check if preferences exist
+      const [existing] = await db
+        .select()
+        .from(userPreferences)
+        .where(sql`${userPreferences.userId} = ${userId}`)
+        .limit(1);
+      
+      // Build update object with only provided fields
+      const updateData: any = { updatedAt: new Date() };
+      if (currentTab !== undefined) updateData.currentTab = currentTab;
+      if (selectedGroupId !== undefined) updateData.selectedGroupId = selectedGroupId;
+      if (selectedGameId !== undefined) updateData.selectedGameId = selectedGameId;
+      
+      if (existing) {
+        // Update existing preferences
+        const [updated] = await db
+          .update(userPreferences)
+          .set(updateData)
+          .where(sql`${userPreferences.userId} = ${userId}`)
+          .returning();
+        
+        res.json(updated);
+      } else {
+        // Create new preferences
+        const [created] = await db
+          .insert(userPreferences)
+          .values({
+            userId,
+            currentTab: currentTab || 'games',
+            selectedGroupId,
+            selectedGameId
+          })
+          .returning();
+        
+        res.json(created);
+      }
+    } catch (error) {
+      console.error('Error saving user preferences:', error);
+      res.status(500).json({ message: 'Internal server error' });
     }
   });
 
@@ -299,6 +384,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
       
       const gameState = await storage.createGameState(gameStateData);
+      
+      // Automatically create a 2/9/16 points game linked to this card game session
+      const pointsGameData = {
+        groupId,
+        gameStateId: gameState.id, // Link to the newly created card game
+        name: `${name} - 2/9/16`,
+        holes: {}, // Initialize empty holes object
+        points: {}, // Initialize empty points object
+        settings: { pointValue: 1, fbtValue: 10 }, // Default settings
+        createdBy: userId
+      };
+      
+      await storage.createPointsGame(pointsGameData);
+      
       res.status(201).json(gameState);
     } catch (error) {
       console.error('Error creating game state:', error);
@@ -1141,10 +1240,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // REMOVED: Legacy points endpoint - use /api/calculate-combined-games with selectedGames: ["points"]
 
-  // Advanced Combined Games API using Python reference implementation
+  // V6.5: Enhanced Calculate & Save Combined Games API
   app.post('/api/calculate-combined-games', isAuthenticated, async (req: any, res) => {
     try {
-      const { groupId, gameStateId, pointsGameId, selectedGames, pointValue, fbtValue } = req.body;
+      const userId = req.user.claims.sub;
+      const { groupId, gameStateId, pointsGameId, selectedGames, pointValue, fbtValue, saveResults = false } = req.body;
       if (!selectedGames || selectedGames.length === 0) {
         return res.status(400).json({ message: 'No games selected' });
       }
@@ -1208,16 +1308,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return { ...t, fromName: fromPlayer?.name || 'Unknown', toName: toPlayer?.name || 'Unknown' };
       });
 
-      res.json({ 
+      const result: any = { 
         payouts: combinedNet, 
         transactions, 
         selectedGames: activeGames, 
         success: true,
+        totalTransactions: transactions.length,
+        summary: combinedNet,
         cardGameDetails: cardGameDetails // Include detailed card game data for UI
-      });
+      };
+
+      // V6.5: Save results to database if requested
+      if (saveResults && groupId) {
+        try {
+          const savedResult = await storage.saveCombinedPayoutResult({
+            groupId,
+            gameStateId: gameStateId || null,
+            pointsGameId: pointsGameId || null,
+            selectedGames: activeGames,
+            pointValue: parseFloat(pointValue) || 1,
+            fbtValue: parseFloat(fbtValue) || 10,
+            calculationResult: {
+              success: true,
+              totalTransactions: transactions.length,
+              transactions: transactions.map(t => ({
+                from: t.from,
+                fromName: t.fromName,
+                to: t.to,
+                toName: t.toName,
+                amount: t.amount
+              })),
+              summary: combinedNet
+            },
+            createdBy: userId
+          });
+          result.savedId = savedResult.id;
+          console.log('Combined payout results saved with ID:', savedResult.id);
+        } catch (saveError) {
+          console.error('Error saving combined payout results:', saveError);
+          // Don't fail the request if save fails, just log it
+        }
+      }
+
+      res.json(result);
     } catch (error) {
       console.error('Combined games calculation error:', error);
       res.status(500).json({ message: 'Failed to calculate combined games' });
+    }
+  });
+
+  // V6.5: Get saved combined payout results
+  app.get('/api/combined-payout-results/:groupId', isAuthenticated, async (req, res) => {
+    try {
+      const { groupId } = req.params;
+      const { gameStateId, pointsGameId } = req.query;
+      
+      const result = await storage.getCombinedPayoutResult(
+        groupId, 
+        gameStateId as string, 
+        pointsGameId as string
+      );
+      
+      if (!result) {
+        return res.status(404).json({ message: 'No saved results found' });
+      }
+      
+      res.json(result);
+    } catch (error) {
+      console.error('Error retrieving combined payout results:', error);
+      res.status(500).json({ message: 'Failed to retrieve saved results' });
     }
   });
 
@@ -1407,6 +1566,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   */
+
+  // Cleanup games older than 61 days
+  app.post('/api/admin/cleanup-old-games', isAuthenticated, async (req, res) => {
+    try {
+      console.log('Starting cleanup of games older than 61 days...');
+      
+      // Calculate date 61 days ago
+      const sixtyOneDaysAgo = new Date();
+      sixtyOneDaysAgo.setDate(sixtyOneDaysAgo.getDate() - 61);
+      
+      // Find old game states
+      const oldGameStates = await db
+        .select({ id: gameStates.id })
+        .from(gameStates)
+        .where(sql`${gameStates.createdAt} < ${sixtyOneDaysAgo.toISOString()}`);
+      
+      if (oldGameStates.length === 0) {
+        return res.json({
+          success: true,
+          message: 'No games older than 61 days found',
+          cleaned: {
+            gameStates: 0,
+            pointsGames: 0,
+            roomStates: 0
+          }
+        });
+      }
+      
+      const gameStateIds = oldGameStates.map((gs: { id: string }) => gs.id);
+      console.log(`Found ${gameStateIds.length} game states to clean up:`, gameStateIds);
+      
+      // Delete related room states first to avoid foreign key constraints
+      const deletedRoomStates = await db
+        .delete(roomStates)
+        .where(sql`${roomStates.gameStateId} IN (${sql.join(gameStateIds.map((id: string) => sql`${id}`), sql`, `)})`);
+      
+      // Delete old game states (this will cascade delete related points games)
+      const deletedGameStates = await db
+        .delete(gameStates)
+        .where(sql`${gameStates.id} IN (${sql.join(gameStateIds.map((id: string) => sql`${id}`), sql`, `)})`);
+      
+      console.log(`Cleanup completed: ${gameStateIds.length} game states and related data deleted`);
+      
+      res.json({
+        success: true,
+        message: `Successfully cleaned up ${gameStateIds.length} games older than 61 days`,
+        cleaned: {
+          gameStates: gameStateIds.length,
+          pointsGames: gameStateIds.length, // Each game state has corresponding points games that cascade delete
+          roomStates: 0 // Room states cleaned up
+        },
+        cutoffDate: sixtyOneDaysAgo.toISOString()
+      });
+    } catch (error) {
+      console.error('Error during cleanup:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Failed to cleanup old games',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
 
   // WebSocket stats endpoint (admin) - only available in production
   app.get('/api/admin/websocket-stats', isAuthenticated, async (req, res) => {

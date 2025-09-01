@@ -1,33 +1,47 @@
-// server/db.ts — dotenv-free: uses env if present, otherwise local fallback; Neon or local pg
-import * as schema from "../shared/schema";
+import { Pool, neonConfig } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-serverless';
+import ws from "ws";
+import * as schema from "@shared/schema";
 
-const url =
-  (typeof process !== "undefined" && process.env && process.env.DATABASE_URL) ||
-  "postgres://forescore:forescore@localhost:5432/forescore";
+// Configure neon for WebSocket support
+neonConfig.webSocketConstructor = ws;
+neonConfig.useSecureWebSocket = true;
+neonConfig.pipelineConnect = false;
 
-function isNeon(u: string): boolean {
-  return /neon\.tech/i.test(u) || /sslmode=require/i.test(u) || /NEON/i.test(u);
+if (!process.env.DATABASE_URL) {
+  throw new Error(
+    "DATABASE_URL must be set. Did you forget to provision a database?",
+  );
 }
 
-export const db = await (async () => {
-  if (isNeon(url)) {
-    const { Pool, neonConfig } = await import("@neondatabase/serverless");
-    const { drizzle } = await import("drizzle-orm/neon-serverless");
-    const ws = (await import("ws")).default as any;
-    neonConfig.webSocketConstructor = ws;
-    neonConfig.useSecureWebSocket = true;
-    neonConfig.pipelineConnect = false;
+// Create connection pool with better error handling and retry logic
+export const pool = new Pool({ 
+  connectionString: process.env.DATABASE_URL,
+  max: 3,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
+  maxUses: 100,
+  allowExitOnIdle: false
+});
 
-    const pool = new Pool({ connectionString: url });
-    try { const c = await pool.connect(); c.release(); console.log("✅ Neon DB connected"); }
-    catch (e) { console.warn("⚠️ Neon connect failed (continuing):", e); }
-    return drizzle({ client: pool, schema });
-  } else {
-    const { Pool } = await import("pg");
-    const { drizzle } = await import("drizzle-orm/node-postgres");
-    const pool = new Pool({ connectionString: url });
-    try { const c = await pool.connect(); c.release(); console.log("✅ Local Postgres connected"); }
-    catch (e) { console.warn("⚠️ Local Postgres connect failed (continuing):", e); }
-    return drizzle(pool, { schema });
+// Add error handler for the pool
+pool.on('error', (err) => {
+  console.error('Database pool error:', err);
+  // Don't exit the process, let it retry
+});
+
+export const db = drizzle({ client: pool, schema });
+
+// Test the connection on startup
+async function testConnection() {
+  try {
+    const client = await pool.connect();
+    console.log('Database connection established successfully');
+    client.release();
+  } catch (error) {
+    console.error('Failed to connect to database:', error);
+    // Don't throw, let the app start and retry later
   }
-})();
+}
+
+testConnection();

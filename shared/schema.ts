@@ -27,6 +27,17 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// User Preferences Table - V6.5 Feature for tab persistence AND game context
+export const userPreferences = pgTable("user_preferences", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  currentTab: varchar("current_tab").$type<'games' | 'deck' | 'scoreboard' | 'rules' | 'points'>().default('games'),
+  selectedGroupId: varchar("selected_group_id"), // Persist selected group
+  selectedGameId: varchar("selected_game_id"),   // Persist selected game
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const groups = pgTable("groups", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
@@ -194,4 +205,49 @@ export const insertRoomStateSchema = createInsertSchema(roomStates).omit({
   id: true,
   createdAt: true,
 });
+
+// Combined Payout Results Table - V6.5 Feature
+export const combinedPayoutResults = pgTable("combined_payout_results", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  groupId: varchar("group_id").notNull().references(() => groups.id, { onDelete: "cascade" }),
+  gameStateId: varchar("game_state_id").references(() => gameStates.id, { onDelete: "cascade" }),
+  pointsGameId: varchar("points_game_id").references(() => pointsGames.id, { onDelete: "cascade" }),
+  selectedGames: json("selected_games").$type<string[]>().notNull(), // Array of game types: ["cards", "points", "fbt"]
+  pointValue: json("point_value").$type<number>().notNull().default(1),
+  fbtValue: json("fbt_value").$type<number>().notNull().default(10),
+  calculationResult: jsonb("calculation_result").$type<{
+    success: boolean;
+    totalTransactions: number;
+    transactions: Array<{
+      from: string;
+      fromName: string;
+      to: string;
+      toName: string;
+      amount: number;
+    }>;
+    summary: Record<string, number>;
+  }>().notNull(),
+  createdBy: varchar("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertCombinedPayoutResultSchema = createInsertSchema(combinedPayoutResults).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type CombinedPayoutResult = typeof combinedPayoutResults.$inferSelect;
+export type InsertCombinedPayoutResult = z.infer<typeof insertCombinedPayoutResultSchema>;
+
+// User Preferences Schema
+export const insertUserPreferencesSchema = createInsertSchema(userPreferences).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type UserPreferences = typeof userPreferences.$inferSelect;
+export type InsertUserPreferences = z.infer<typeof insertUserPreferencesSchema>;
 

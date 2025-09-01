@@ -1,6 +1,6 @@
-import { users, groups, gameStates, pointsGames, roomStates, type User, type UpsertUser, type Group, type InsertGroup, type GameState, type InsertGameState, type Player, type Card, type CustomCard, type CardAssignment, type CardValues, type PointsGame, type InsertPointsGame, type RoomState, type InsertRoomState } from "@shared/schema";
+import { users, groups, gameStates, pointsGames, roomStates, combinedPayoutResults, type User, type UpsertUser, type Group, type InsertGroup, type GameState, type InsertGameState, type Player, type Card, type CustomCard, type CardAssignment, type CardValues, type PointsGame, type InsertPointsGame, type RoomState, type InsertRoomState, type CombinedPayoutResult, type InsertCombinedPayoutResult } from "@shared/schema";
 import { db } from "./db";
-import { eq, sql, lt } from "drizzle-orm";
+import { eq, sql, lt, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -41,6 +41,12 @@ export interface IStorage {
   upsertRoomState(roomState: InsertRoomState): Promise<RoomState>;
   deleteRoomState(roomId: string): Promise<boolean>;
   cleanupOldRoomStates(): Promise<void>;
+  
+  // Combined Payout Results (V6.5)
+  getCombinedPayoutResult(groupId: string, gameStateId?: string, pointsGameId?: string): Promise<CombinedPayoutResult | undefined>;
+  saveCombinedPayoutResult(result: InsertCombinedPayoutResult): Promise<CombinedPayoutResult>;
+  updateCombinedPayoutResult(id: string, updates: Partial<InsertCombinedPayoutResult>): Promise<CombinedPayoutResult | undefined>;
+  deleteCombinedPayoutResult(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -337,6 +343,71 @@ export class DatabaseStorage implements IStorage {
     }
   }
   
+  // Combined Payout Results (V6.5)
+  async getCombinedPayoutResult(groupId: string, gameStateId?: string, pointsGameId?: string): Promise<CombinedPayoutResult | undefined> {
+    // Build query conditions dynamically using 'and' helper
+    if (gameStateId && pointsGameId) {
+      const [result] = await db.select().from(combinedPayoutResults)
+        .where(and(
+          eq(combinedPayoutResults.groupId, groupId),
+          eq(combinedPayoutResults.gameStateId, gameStateId),
+          eq(combinedPayoutResults.pointsGameId, pointsGameId)
+        ))
+        .orderBy(sql`${combinedPayoutResults.createdAt} DESC`)
+        .limit(1);
+      return result;
+    } else if (gameStateId) {
+      const [result] = await db.select().from(combinedPayoutResults)
+        .where(and(
+          eq(combinedPayoutResults.groupId, groupId),
+          eq(combinedPayoutResults.gameStateId, gameStateId)
+        ))
+        .orderBy(sql`${combinedPayoutResults.createdAt} DESC`)
+        .limit(1);
+      return result;
+    } else if (pointsGameId) {
+      const [result] = await db.select().from(combinedPayoutResults)
+        .where(and(
+          eq(combinedPayoutResults.groupId, groupId),
+          eq(combinedPayoutResults.pointsGameId, pointsGameId)
+        ))
+        .orderBy(sql`${combinedPayoutResults.createdAt} DESC`)
+        .limit(1);
+      return result;
+    } else {
+      const [result] = await db.select().from(combinedPayoutResults)
+        .where(eq(combinedPayoutResults.groupId, groupId))
+        .orderBy(sql`${combinedPayoutResults.createdAt} DESC`)
+        .limit(1);
+      return result;
+    }
+  }
+
+  async saveCombinedPayoutResult(resultData: InsertCombinedPayoutResult): Promise<CombinedPayoutResult> {
+    const [result] = await db
+      .insert(combinedPayoutResults)
+      .values([resultData])
+      .returning();
+    return result;
+  }
+
+  async updateCombinedPayoutResult(id: string, updates: Partial<InsertCombinedPayoutResult>): Promise<CombinedPayoutResult | undefined> {
+    const [result] = await db
+      .update(combinedPayoutResults)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(combinedPayoutResults.id, id))
+      .returning();
+    return result;
+  }
+
+  async deleteCombinedPayoutResult(id: string): Promise<boolean> {
+    try {
+      await db.delete(combinedPayoutResults).where(eq(combinedPayoutResults.id, id));
+      return true;
+    } catch {
+      return false;
+    }
+  }
 
 }
 

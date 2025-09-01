@@ -1,0 +1,114 @@
+// ---------- Types ----------
+type MoneyMap = Record<string, number>;      // { playerIdOrName: netDollars }
+type PointsMap = Record<string, number>;     // { playerIdOrName: points }
+
+// ---------- A) Cards Game (Proportional Share) ----------
+export function cardsGame(debts: MoneyMap): MoneyMap {
+  const players = Object.keys(debts);
+  const totalPot = players.reduce((s, p) => s + debts[p], 0);
+  const maxDebt = Math.max(...players.map(p => debts[p]));
+  const advantages = Object.fromEntries(players.map(p => [p, maxDebt - debts[p]]));
+  const totalAdv = players.reduce((s, p) => s + advantages[p], 0);
+
+  const result: MoneyMap = {};
+  for (const p of players) {
+    const share = totalAdv > 0 ? (advantages[p] / totalAdv) * totalPot : 0;
+    result[p] = round2(share - debts[p]); // worst debtor's advantage=0 ⇒ share=0
+  }
+  return result;
+}
+
+// ---------- B) Points Game (Pairwise Difference; $/point) ----------
+export function pointsGame(points: PointsMap, valuePerPoint = 1): MoneyMap {
+  const players = Object.keys(points);
+  const net: MoneyMap = Object.fromEntries(players.map(p => [p, 0]));
+
+  for (let i = 0; i < players.length; i++) {
+    for (let j = i + 1; j < players.length; j++) {
+      const a = players[i], b = players[j];
+      const diff = points[a] - points[b];
+      if (diff > 0) { net[a] += diff * valuePerPoint; net[b] -= diff * valuePerPoint; }
+      else if (diff < 0) { net[b] += -diff * valuePerPoint; net[a] -= -diff * valuePerPoint; }
+    }
+  }
+  for (const p of players) net[p] = round2(net[p]);
+  return net;
+}
+
+// ---------- C) Points Game (FBT: Front / Back / Total; fixed pot/segment) ----------
+export function fbtGame(front: PointsMap, back: PointsMap, total: PointsMap, potValue = 10): MoneyMap {
+  const allPlayers = new Set<string>([...Object.keys(front), ...Object.keys(back), ...Object.keys(total)]);
+  const net: MoneyMap = {};
+  for (const p of allPlayers) net[p] = 0;
+
+  for (const segment of [front, back, total]) {
+    const segPlayers = Object.keys(segment);
+    if (segPlayers.length === 0) continue;
+    const maxScore = Math.max(...segPlayers.map(p => segment[p]));
+    const winners = segPlayers.filter(p => segment[p] === maxScore);
+    const losers = segPlayers.filter(p => !winners.includes(p));
+    if (winners.length === segPlayers.length) continue; // all tied
+
+    const winShare = potValue / winners.length;
+    const loseShare = potValue / losers.length;
+    for (const w of winners) net[w] += winShare;
+    for (const l of losers) net[l] -= loseShare;
+  }
+  for (const p of allPlayers) net[p] = round2(net[p]);
+  return net;
+}
+
+// ---------- Combine nets by KEY (never by index) ----------
+export function combineNets(...nets: MoneyMap[]): MoneyMap {
+  const combined: MoneyMap = {};
+  for (const net of nets) {
+    for (const [p, v] of Object.entries(net)) {
+      combined[p] = round2((combined[p] ?? 0) + v);
+    }
+  }
+  // Validate zero-sum within a cent
+  const sum = round2(Object.values(combined).reduce((s, x) => s + x, 0));
+  if (Math.abs(sum) >= 0.02) {
+    throw new Error(`Combined nets not zero-sum (got ${sum}). Upstream bug.`);
+  }
+  return combined;
+}
+
+// ---------- Who-owes-who from the combined nets ----------
+export function settleWhoOwesWho(net: MoneyMap): Array<{ from: string; to: string; amount: number }> {
+  const payers = Object.entries(net)
+    .filter(([, amt]) => amt < 0)
+    .map(([p, amt]) => [p, -amt] as [string, number])
+    .sort((a, b) => b[1] - a[1]); // largest owes first
+
+  const receivers = Object.entries(net)
+    .filter(([, amt]) => amt > 0)
+    .map(([p, amt]) => [p, amt] as [string, number])
+    .sort((a, b) => b[1] - a[1]); // largest needs first
+
+  const legs: Array<{ from: string; to: string; amount: number }> = [];
+  let i = 0, j = 0;
+
+  while (i < payers.length && j < receivers.length) {
+    let [from, owe] = payers[i];
+    let [to, need] = receivers[j];
+    const pay = round2(Math.min(owe, need));
+    legs.push({ from, to, amount: pay });
+    owe = round2(owe - pay);
+    need = round2(need - pay);
+    if (owe <= 0.001) i++; else payers[i] = [from, owe];
+    if (need <= 0.001) j++; else receivers[j] = [to, need];
+  }
+
+  // Penny reconciliation: ensure paid = total positive
+  const totalRecv = round2(Object.values(net).filter(x => x > 0).reduce((s, x) => s + x, 0));
+  const totalPaid = round2(legs.reduce((s, leg) => s + leg.amount, 0));
+  const diff = round2(totalRecv - totalPaid);
+  if (Math.abs(diff) >= 0.01 && legs.length > 0) {
+    legs[legs.length - 1].amount = round2(legs[legs.length - 1].amount + diff);
+  }
+  return legs;
+}
+
+// ---------- Helper ----------
+function round2(x: number): number { return Math.round(x * 100) / 100; }

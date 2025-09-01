@@ -1,0 +1,495 @@
+// ============================================================================
+// FILE: server/secureGameLogic.ts
+// Canonical, single-source math (NO duplicate implementations anywhere else).
+// Rounds ONLY once in combineGames(); settlement has penny reconciliation.
+// ============================================================================
+
+import { CardAssignment, Player } from "@shared/schema";
+
+export interface ProportionalShareResult {
+  totalPot: number;
+  maxDebt: number;
+  payouts: Array<{
+    playerId: string;
+    playerName: string;
+    debt: number;
+    advantage: number;
+    share: number;
+    netPayout: number;
+  }>;
+}
+
+/** Core proportional-share math on a debt map (NO rounding). */
+function proportionalShareFromDebts(
+  debts: Record<string, number>
+): Record<string, number> {
+  const ids = Object.keys(debts);
+  if (ids.length === 0) return {};
+
+  const totalPot = Object.values(debts).reduce((s, d) => s + d, 0);
+  const maxDebt = Math.max(...Object.values(debts));
+
+  const advantages: Record<string, number> = {};
+  for (const id of ids) advantages[id] = maxDebt - (debts[id] ?? 0);
+
+  const totalAdv = Object.values(advantages).reduce((s, a) => s + a, 0);
+
+  const nets: Record<string, number> = {};
+  for (const id of ids) {
+    const share = totalAdv > 0 ? (advantages[id] / totalAdv) * totalPot : 0;
+    nets[id] = share - (debts[id] ?? 0); // RAW
+  }
+  return nets;
+}
+
+/** Cards game — RAW nets. */
+export function calculateCardsGame(
+  cardsDebt: Record<string, number>
+): Record<string, number> {
+  return proportionalShareFromDebts(cardsDebt);
+}
+
+/** Cards details for UI (delegates to same math). */
+export function calculateProportionalShare(
+  cardHistory: CardAssignment[],
+  players: Player[]
+): ProportionalShareResult {
+  const latest: Record<string, CardAssignment> = {};
+  for (const a of cardHistory) latest[a.cardId] = a;
+
+  const debts: Record<string, number> = {};
+  for (const p of players) debts[p.id] = 0;
+  for (const a of Object.values(latest)) {
+    if (debts[a.playerId] !== undefined) debts[a.playerId] += a.cardValue || 0;
+  }
+
+  const netsRaw = proportionalShareFromDebts(debts);
+  const totalPot = Object.values(debts).reduce((s, d) => s + d, 0);
+  const maxDebt = Math.max(...Object.values(debts));
+  const totalAdv = Object.values(debts).map(d => maxDebt - d).reduce((s,a)=>s+a,0);
+
+  const payouts = players.map(p => {
+    const debt = debts[p.id] ?? 0;
+    const advantage = maxDebt - debt;
+    const share = totalAdv > 0 ? (advantage / totalAdv) * totalPot : 0;
+    const netPayout = netsRaw[p.id] ?? 0;
+    return { playerId: p.id, playerName: p.name, debt, advantage, share, netPayout };
+  });
+
+  return { totalPot, maxDebt, payouts };
+}
+
+/** Points — RAW nets (pairwise). */
+export function calculatePointsGame(
+  pointsScores: Record<string, number>,
+  valuePerPoint: number = 1
+): Record<string, number> {
+  const players = Object.keys(pointsScores);
+  const net: Record<string, number> = {};
+  players.forEach(p => net[p] = 0);
+
+  for (let i=0;i<players.length;i++) {
+    for (let j=i+1;j<players.length;j++) {
+      const p1 = players[i], p2 = players[j];
+      const diff = (pointsScores[p1] ?? 0) - (pointsScores[p2] ?? 0);
+      if (diff > 0) { net[p1] += diff * valuePerPoint; net[p2] -= diff * valuePerPoint; }
+      else if (diff < 0) { net[p2] += -diff * valuePerPoint; net[p1] -= -diff * valuePerPoint; }
+    }
+  }
+  return net; // RAW
+}
+
+/** FBT — RAW nets (front/back/total are fixed-pot mini-games). */
+export function calculateFbtGame(
+  frontPoints: Record<string, number>,
+  backPoints: Record<string, number>,
+  totalPoints: Record<string, number>,
+  potValue: number = 10
+): Record<string, number> {
+  const net: Record<string, number> = {};
+  const players = Object.keys(frontPoints);
+  players.forEach(p => net[p] = 0);
+
+  const segments = [frontPoints, backPoints, totalPoints];
+  for (const seg of segments) {
+    const vals = Object.values(seg);
+    if (!vals.length) continue;
+    const maxScore = Math.max(...vals);
+    const winners = Object.entries(seg).filter(([,s]) => s === maxScore).map(([pid]) => pid);
+    const losers = players.filter(p => !winners.includes(p));
+    if (winners.length === players.length) continue; // all tied
+
+    const winShare = potValue / winners.length;
+    const loseShare = potValue / losers.length;
+    winners.forEach(w => net[w] += winShare);
+    losers.forEach(l => net[l] -= loseShare);
+  }
+  return net; // RAW
+}
+
+/** Build FBT nets from pointsGame.points (NOT strokes/holes). */
+export function buildFbtNetsFromPointsGame(
+  groupPlayers: Player[],
+  pointsGame: { points?: Record<number, Record<string, number>> },
+  potValue: number
+): Record<string, number> {
+  const front: Record<string, number> = {};
+  const back: Record<string, number> = {};
+  const total: Record<string, number> = {};
+  groupPlayers.forEach(p => { front[p.id]=0; back[p.id]=0; total[p.id]=0; });
+
+  Object.entries(pointsGame.points || {}).forEach(([holeStr, hp]) => {
+    const hole = parseInt(holeStr,10);
+    for (const pid of Object.keys(total)) {
+      const pts = hp?.[pid] || 0;
+      if (hole <= 9) front[pid] += pts; else back[pid] += pts;
+      total[pid] += pts;
+    }
+  });
+
+  return calculateFbtGame(front, back, total, potValue); // RAW
+}
+
+/** Combine (round ONCE to cents). */
+export function combineGames(...nets: Record<string, number>[]): Record<string, number> {
+  if (!nets.length) return {};
+  const players = Array.from(new Set(nets.flatMap(m => Object.keys(m))));
+  const out: Record<string, number> = {};
+  for (const pid of players) {
+    const total = nets.reduce((s,m)=>s+(m[pid] ?? 0), 0);
+    out[pid] = Math.round(total * 100) / 100;
+  }
+  return out;
+}
+
+/** Settlement w/ penny reconciliation. */
+export function settleWhoOwesWho(
+  net: Record<string, number>
+): Array<{ from: string; to: string; amount: number }> {
+  const payers = Object.entries(net)
+    .filter(([,amt]) => amt < 0)
+    .map(([player,amt]) => ({ player, amount: Math.round(-amt*100)/100 }))
+    .sort((a,b)=>b.amount-a.amount);
+  const receivers = Object.entries(net)
+    .filter(([,amt]) => amt > 0)
+    .map(([player,amt]) => ({ player, amount: Math.round(amt*100)/100 }))
+    .sort((a,b)=>b.amount-a.amount);
+
+  const tx: Array<{from:string;to:string;amount:number}> = [];
+  let i=0,j=0;
+  while (i<payers.length && j<receivers.length) {
+    const p = payers[i], r = receivers[j];
+    const pay = Math.min(p.amount, r.amount);
+    if (pay >= 0.01) tx.push({ from: p.player, to: r.player, amount: Math.round(pay*100)/100 });
+    p.amount = Math.round((p.amount - pay)*100)/100;
+    r.amount = Math.round((r.amount - pay)*100)/100;
+    if (p.amount < 0.01) i++;
+    if (r.amount < 0.01) j++;
+  }
+
+  // Reconcile any drift (±1–2 cents)
+  const targetPos = Object.values(net).filter(v=>v>0).reduce((s,v)=>s+Math.round(v*100)/100,0);
+  const txTotal = Math.round(tx.reduce((s,t)=>s+t.amount,0)*100)/100;
+  let drift = Math.round((targetPos - txTotal)*100);
+  if (drift !== 0 && tx.length) {
+    tx[tx.length-1].amount = Math.round((tx[tx.length-1].amount + drift/100)*100)/100;
+  }
+  return tx;
+}
+
+
+// ============================================================================
+// FILE: server/auth/isAuthenticated.ts
+// A tiny, explicit auth guard that works with either local-auth or Replit auth.
+// Uses req.user created by your existing login flows.
+// ============================================================================
+
+import type { Request, Response, NextFunction } from "express";
+
+export function isAuthenticated(req: Request, res: Response, next: NextFunction) {
+  const user: any = (req as any).user;
+  if (!user?.claims?.sub) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  next();
+}
+
+/** Extract current user id (safe helper). */
+export function getUserId(req: Request): string {
+  const user: any = (req as any).user;
+  return user?.claims?.sub as string;
+}
+
+
+// ============================================================================
+// FILE: server/storage.ts
+// Access layer with **membership enforcement**.
+// Only members of a group can read/modify that group's data.
+// ============================================================================
+
+import { db } from "./db.js"; // your drizzle instance
+import { groups, gameStates, pointsGames, users } from "@shared/schema";
+import { eq } from "drizzle-orm";
+import type { Player } from "@shared/schema";
+
+/** Get group ensuring requester is a member. */
+export async function getGroupSecure(groupId: string, requesterId: string) {
+  const group = await db.select().from(groups).where(eq(groups.id, groupId)).limit(1);
+  if (!group.length) return null;
+  const g = group[0] as any;
+  const isMember = (g.players as Player[]).some(p => p.id === requesterId);
+  if (!isMember) throw Object.assign(new Error("Forbidden"), { status: 403 });
+  return g;
+}
+
+/** Get game state ensuring membership. */
+export async function getGameStateByIdSecure(gameStateId: string, requesterId: string) {
+  const gsRows = await db.select().from(gameStates).where(eq(gameStates.id, gameStateId)).limit(1);
+  if (!gsRows.length) return null;
+  const gs: any = gsRows[0];
+  const g = await getGroupSecure(gs.groupId, requesterId);
+  return { ...gs, group: g };
+}
+
+/** Get points game ensuring membership. */
+export async function getPointsGameByIdSecure(pointsGameId: string, requesterId: string) {
+  const pgRows = await db.select().from(pointsGames).where(eq(pointsGames.id, pointsGameId)).limit(1);
+  if (!pgRows.length) return null;
+  const pg: any = pgRows[0];
+  const g = await getGroupSecure(pg.groupId, requesterId);
+  return { ...pg, group: g };
+}
+
+/** Create group; creator is auto-member; shareCode must be unique. */
+export async function createGroupSecure(
+  name: string,
+  creator: { id: string; firstName?: string; email?: string }
+) {
+  const shareCode = generateShareCode();
+  const player: Player = {
+    id: creator.id,
+    name: creator.firstName || creator.email || "User",
+    initials: (creator.firstName || "U").slice(0,2).toUpperCase(),
+    color: "#10b981"
+  };
+  const [g] = await db.insert(groups).values({
+    name,
+    players: [player],
+    shareCode
+  }).returning();
+  return g;
+}
+
+/** Join group by share code. No duplicates; returns updated group. */
+export async function joinGroupByCodeSecure(shareCode: string, user: { id: string; firstName?: string; email?: string }) {
+  const grp = await db.select().from(groups).where(eq(groups.shareCode, shareCode)).limit(1);
+  if (!grp.length) throw Object.assign(new Error("Group not found"), { status: 404 });
+  const g = grp[0] as any;
+  const players: Player[] = g.players || [];
+  if (!players.some(p => p.id === user.id)) {
+    const newP: Player = {
+      id: user.id,
+      name: user.firstName || user.email || "User",
+      initials: (user.firstName || "U").slice(0,2).toUpperCase(),
+      color: randomColor()
+    };
+    const updated = [...players, newP];
+    await db.update(groups).set({ players: updated }).where(eq(groups.id, g.id));
+    g.players = updated;
+  }
+  return g;
+}
+
+function generateShareCode() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let s = "";
+  for (let i=0;i<8;i++) s += chars[Math.floor(Math.random()*chars.length)];
+  return s;
+}
+function randomColor() {
+  const colors = ["#10b981","#3b82f6","#f59e0b","#ef4444","#8b5cf6","#06b6d4","#84cc16"];
+  return colors[Math.floor(Math.random()*colors.length)];
+}
+
+
+// ============================================================================
+// FILE: server/newRoutes.ts
+// Canonical payouts endpoint + secure, multi-user aware group/game routes.
+// All tiles must call ONLY /api/calculate-combined-games to avoid drift.
+// ============================================================================
+
+import type { Express } from "express";
+import { createServer, type Server } from "http";
+import { z } from "zod";
+import { setupAuth } from "./replitAuth.js"; // your existing auth bootstrapping
+import { isAuthenticated, getUserId } from "./auth/isAuthenticated.js";
+import {
+  calculateCardsGame, calculatePointsGame, buildFbtNetsFromPointsGame,
+  combineGames, settleWhoOwesWho
+} from "./secureGameLogic.js";
+import {
+  getGroupSecure, getGameStateByIdSecure, getPointsGameByIdSecure,
+  createGroupSecure, joinGroupByCodeSecure
+} from "./storage.js";
+import { storage } from "./storage.js"; // if you still need legacy helpers elsewhere
+import { insertGroupSchema, insertGameStateSchema, insertPointsGameSchema } from "@shared/schema";
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  await setupAuth(app);
+
+  // ---- Auth helpers (samples; you already have register/login elsewhere) ----
+  app.get('/api/auth/me', isAuthenticated, async (req, res) => {
+    const user: any = (req as any).user;
+    res.json({ user: { id: user.claims.sub, email: user.claims.email, firstName: user.claims.first_name, lastName: user.claims.last_name } });
+  });
+
+  app.post('/api/auth/logout', isAuthenticated, async (req, res) => {
+    req.logout?.(() => {});
+    (req as any).session?.destroy?.(()=>{});
+    res.json({ message: "Logged out" });
+  });
+
+  // ---- Groups (secure, membership aware) ----
+  app.post('/api/groups', isAuthenticated, async (req, res) => {
+    try {
+      const uid = getUserId(req);
+      const { name } = req.body;
+      if (!name) return res.status(400).json({ message: "Name required" });
+      const user: any = (req as any).user?.claims || {};
+      const g = await createGroupSecure(name, { id: uid, firstName: user.first_name, email: user.email });
+      res.status(201).json(g);
+    } catch (e:any) {
+      res.status(e.status || 500).json({ message: e.message || "Create group failed" });
+    }
+  });
+
+  app.post('/api/groups/join', isAuthenticated, async (req, res) => {
+    try {
+      const uid = getUserId(req);
+      const { shareCode } = req.body;
+      if (!shareCode) return res.status(400).json({ message: "shareCode required" });
+      const user: any = (req as any).user?.claims || {};
+      const g = await joinGroupByCodeSecure(shareCode, { id: uid, firstName: user.first_name, email: user.email });
+      res.json(g);
+    } catch (e:any) {
+      res.status(e.status || 500).json({ message: e.message || "Join failed" });
+    }
+  });
+
+  app.get('/api/groups/:groupId', isAuthenticated, async (req, res) => {
+    try {
+      const uid = getUserId(req);
+      const g = await getGroupSecure(req.params.groupId, uid);
+      res.json(g);
+    } catch (e:any) {
+      res.status(e.status || 500).json({ message: e.message || "Fetch failed" });
+    }
+  });
+
+  // ---- Canonical Combined Games Calculation (single pathway) ----
+  app.post('/api/calculate-combined-games', isAuthenticated, async (req: any, res) => {
+    try {
+      const uid = getUserId(req);
+      const { groupId, gameStateId, pointsGameId, selectedGames, pointValue, fbtValue } = req.body;
+
+      if (!Array.isArray(selectedGames) || selectedGames.length === 0) {
+        return res.status(400).json({ message: 'No games selected' });
+      }
+
+      const group = await getGroupSecure(groupId, uid);
+      const gameState = gameStateId ? await getGameStateByIdSecure(gameStateId, uid) : null;
+      const pointsGame = pointsGameId ? await getPointsGameByIdSecure(pointsGameId, uid) : null;
+
+      const nets: Record<string, number>[] = [];
+      const active: string[] = [];
+
+      // CARDS
+      if (selectedGames.includes('cards') && (gameState as any)?.cardHistory?.length > 0) {
+        const latest: Record<string, any> = {};
+        for (const a of (gameState as any).cardHistory) latest[a.cardId] = a;
+        const debts: Record<string, number> = {};
+        for (const p of group.players) debts[p.id] = 0;
+        for (const a of Object.values(latest)) if (debts[(a as any).playerId] !== undefined) debts[(a as any).playerId] += (a as any).cardValue || 0;
+        nets.push(calculateCardsGame(debts)); // RAW
+        active.push('cards');
+      }
+
+      // POINTS
+      if (selectedGames.includes('points') && pointsGame && parseFloat(pointValue) > 0) {
+        const totals: Record<string, number> = {};
+        for (const p of group.players) totals[p.id] = 0;
+        for (const [, holePoints] of Object.entries((pointsGame as any).points || {})) {
+          for (const pid of Object.keys(totals)) totals[pid] += (holePoints as any)?.[pid] || 0;
+        }
+        nets.push(calculatePointsGame(totals, parseFloat(pointValue))); // RAW
+        active.push('points');
+      }
+
+      // FBT
+      if (selectedGames.includes('fbt') && pointsGame && parseFloat(fbtValue) > 0) {
+        nets.push(buildFbtNetsFromPointsGame(group.players, pointsGame as any, parseFloat(fbtValue))); // RAW
+        active.push('fbt');
+      }
+
+      // Combine (round once), then settle
+      const combinedNet = combineGames(...nets);
+      const transactions = settleWhoOwesWho(combinedNet).map(t => {
+        const fromP = group.players.find((p:any) => p.id === t.from);
+        const toP = group.players.find((p:any) => p.id === t.to);
+        return { ...t, fromName: fromP?.name || 'Unknown', toName: toP?.name || 'Unknown' };
+      });
+
+      res.json({ payouts: combinedNet, transactions, selectedGames: active, success: true });
+    } catch (error:any) {
+      console.error('Combined games calculation error:', error);
+      res.status(error.status || 500).json({ message: error.message || 'Failed to calculate combined games' });
+    }
+  });
+
+  // (Optional) If you still expose an FBT-only route for legacy UI, make it call the SAME helpers:
+  app.get('/api/points-games/:pointsGameId/fbt-payouts/:potValue', isAuthenticated, async (req: any, res) => {
+    try {
+      const uid = getUserId(req);
+      const { pointsGameId, potValue } = req.params;
+      const pg = await getPointsGameByIdSecure(pointsGameId, uid);
+      if (!pg) return res.status(404).json({ message: 'Points game not found' });
+      const pot = Math.max(0, parseFloat(potValue));
+      const raw = buildFbtNetsFromPointsGame((pg as any).group.players, pg as any, pot);
+      // Round once for parity with combineGames
+      const rounded: Record<string, number> = {};
+      for (const k of Object.keys(raw)) rounded[k] = Math.round(raw[k]*100)/100;
+      const tx = settleWhoOwesWho(rounded).map(t => {
+        const fromP = (pg as any).group.players.find((p:any)=>p.id===t.from);
+        const toP = (pg as any).group.players.find((p:any)=>p.id===t.to);
+        return { ...t, fromName: fromP?.name || 'Unknown', toName: toP?.name || 'Unknown' };
+      });
+      res.json({ payouts: rounded, transactions: tx });
+    } catch (e:any) {
+      res.status(e.status || 500).json({ message: e.message || 'FBT payouts failed' });
+    }
+  });
+
+  const server = createServer(app);
+  return server;
+}
+
+
+// ============================================================================
+// FILE: client/src/pages/home.tsx (snippet — TypeScript fix in header user block)
+// Prevent "unknown not assignable to ReactNode" by forcing boolean check.
+// ============================================================================
+
+// ... within your JSX header menu:
+{Boolean(user) ? (
+  <>
+    <div className="px-3 py-2 text-sm">
+      <div className="font-medium text-gray-900">
+        {(user as any)?.firstName || (user as any)?.email || 'User'}
+      </div>
+      <div className="text-gray-500 text-xs">
+        {(user as any)?.email || ''}
+      </div>
+    </div>
+    <DropdownMenuSeparator />
+  </>
+) : null}

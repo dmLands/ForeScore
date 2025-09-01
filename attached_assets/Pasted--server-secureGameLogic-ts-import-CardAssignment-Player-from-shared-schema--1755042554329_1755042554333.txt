@@ -1,0 +1,229 @@
+// ===== server/secureGameLogic.ts =====
+
+import { CardAssignment, Player } from "@shared/schema";
+
+export interface ProportionalShareResult {
+  totalPot: number;
+  maxDebt: number;
+  payouts: Array<{
+    playerId: string;
+    playerName: string;
+    debt: number;
+    advantage: number;
+    share: number;
+    netPayout: number;
+  }>;
+}
+
+/**
+ * Pure proportional-share math on a debt map (NO ROUNDING).
+ * Returns raw nets keyed by playerId.
+ */
+function proportionalShareFromDebts(
+  debts: Record<string, number>
+): Record<string, number> {
+  const playerIds = Object.keys(debts);
+  if (playerIds.length === 0) return {};
+
+  const totalPot = Object.values(debts).reduce((s, d) => s + d, 0);
+  const maxDebt = Math.max(...Object.values(debts));
+
+  // advantages over the worst debtor
+  const advantages: Record<string, number> = {};
+  for (const pid of playerIds) {
+    advantages[pid] = maxDebt - (debts[pid] ?? 0);
+  }
+
+  const totalAdvantage = Object.values(advantages).reduce((s, a) => s + a, 0);
+
+  const nets: Record<string, number> = {};
+  for (const pid of playerIds) {
+    const adv = advantages[pid];
+    const share = totalAdvantage > 0 ? (adv / totalAdvantage) * totalPot : 0;
+    // NO rounding here
+    nets[pid] = share - (debts[pid] ?? 0);
+  }
+  return nets;
+}
+
+/**
+ * Cards game calculation — returns RAW (unrounded) nets.
+ */
+export function calculateCardsGame(
+  cardsDebt: Record<string, number>
+): Record<string, number> {
+  return proportionalShareFromDebts(cardsDebt);
+}
+
+/**
+ * Detailed Cards game calculation for UI — now matches combined game logic exactly.
+ */
+export function calculateProportionalShare(
+  cardHistory: CardAssignment[],
+  players: Player[]
+): ProportionalShareResult {
+  const currentAssignments: Record<string, CardAssignment> = {};
+  for (const a of cardHistory) currentAssignments[a.cardId] = a;
+
+  const debts: Record<string, number> = {};
+  for (const p of players) debts[p.id] = 0;
+  for (const a of Object.values(currentAssignments)) {
+    if (debts[a.playerId] !== undefined) debts[a.playerId] += a.cardValue || 0;
+  }
+
+  const netsRaw = proportionalShareFromDebts(debts);
+  const totalPot = Object.values(debts).reduce((s, d) => s + d, 0);
+  const maxDebt = Math.max(...Object.values(debts));
+  const totalAdvantage = Object.values(debts)
+    .map((d) => maxDebt - d)
+    .reduce((s, a) => s + a, 0);
+
+  const payouts = players.map((p) => {
+    const debt = debts[p.id] ?? 0;
+    const advantage = maxDebt - debt;
+    const share = totalAdvantage > 0 ? (advantage / totalAdvantage) * totalPot : 0;
+    const netPayout = netsRaw[p.id] ?? 0;
+    return {
+      playerId: p.id,
+      playerName: p.name,
+      debt,
+      advantage,
+      share,
+      netPayout,
+    };
+  });
+
+  return { totalPot, maxDebt, payouts };
+}
+
+/**
+ * Points game — keep raw, round later.
+ */
+export function calculatePointsGame(
+  pointsScores: Record<string, number>,
+  valuePerPoint: number = 1
+): Record<string, number> {
+  const players = Object.keys(pointsScores);
+  const net: Record<string, number> = {};
+  players.forEach((p) => (net[p] = 0));
+
+  for (let i = 0; i < players.length; i++) {
+    for (let j = i + 1; j < players.length; j++) {
+      const p1 = players[i];
+      const p2 = players[j];
+      const diff = (pointsScores[p1] ?? 0) - (pointsScores[p2] ?? 0);
+      if (diff > 0) {
+        net[p1] += diff * valuePerPoint;
+        net[p2] -= diff * valuePerPoint;
+      } else if (diff < 0) {
+        net[p2] += -diff * valuePerPoint;
+        net[p1] -= -diff * valuePerPoint;
+      }
+    }
+  }
+  return net; // NO rounding here
+}
+
+/**
+ * FBT game — keep raw, round later.
+ */
+export function calculateFbtGame(
+  frontPoints: Record<string, number>,
+  backPoints: Record<string, number>,
+  totalPoints: Record<string, number>,
+  potValue: number = 10
+): Record<string, number> {
+  const net: Record<string, number> = {};
+  const allPlayers = Object.keys(frontPoints);
+  allPlayers.forEach((p) => (net[p] = 0));
+
+  const segments = [frontPoints, backPoints, totalPoints];
+  for (const segment of segments) {
+    const vals = Object.values(segment);
+    if (vals.length === 0) continue;
+    const maxScore = Math.max(...vals);
+    const winners = Object.entries(segment)
+      .filter(([, s]) => s === maxScore)
+      .map(([pid]) => pid);
+    const losers = allPlayers.filter((p) => !winners.includes(p));
+
+    if (winners.length === allPlayers.length) continue;
+
+    const winShare = potValue / winners.length;
+    const loseShare = potValue / losers.length;
+
+    winners.forEach((w) => (net[w] += winShare));
+    losers.forEach((l) => (net[l] -= loseShare));
+  }
+  return net; // NO rounding here
+}
+
+/**
+ * Combine multiple game nets — round once here.
+ */
+export function combineGames(
+  ...nets: Record<string, number>[]
+): Record<string, number> {
+  if (nets.length === 0) return {};
+  const players = Array.from(new Set(nets.flatMap((m) => Object.keys(m))));
+  const result: Record<string, number> = {};
+  for (const pid of players) {
+    const total = nets.reduce((s, m) => s + (m[pid] ?? 0), 0);
+    result[pid] = Math.round(total * 100) / 100; // Round once here
+  }
+  return result;
+}
+
+/**
+ * Who-owes-who settlement with penny reconciliation.
+ */
+export function settleWhoOwesWho(
+  net: Record<string, number>
+): Array<{ from: string; to: string; amount: number }> {
+  const payers = Object.entries(net)
+    .filter(([, amt]) => amt < 0)
+    .map(([player, amt]) => ({ player, amount: Math.round(-amt * 100) / 100 }))
+    .sort((a, b) => b.amount - a.amount);
+
+  const receivers = Object.entries(net)
+    .filter(([, amt]) => amt > 0)
+    .map(([player, amt]) => ({ player, amount: Math.round(amt * 100) / 100 }))
+    .sort((a, b) => b.amount - a.amount);
+
+  const tx: Array<{ from: string; to: string; amount: number }> = [];
+  let pi = 0, ri = 0;
+
+  while (pi < payers.length && ri < receivers.length) {
+    const p = payers[pi];
+    const r = receivers[ri];
+    const payAmount = Math.min(p.amount, r.amount);
+
+    if (payAmount >= 0.01) {
+      tx.push({
+        from: p.player,
+        to: r.player,
+        amount: Math.round(payAmount * 100) / 100,
+      });
+    }
+
+    p.amount = Math.round((p.amount - payAmount) * 100) / 100;
+    r.amount = Math.round((r.amount - payAmount) * 100) / 100;
+
+    if (p.amount < 0.01) pi++;
+    if (r.amount < 0.01) ri++;
+  }
+
+  // Penny reconciliation
+  const targetPos = Object.values(net)
+    .filter((v) => v > 0)
+    .reduce((s, v) => s + Math.round(v * 100) / 100, 0);
+  const txTotal = Math.round(tx.reduce((s, t) => s + t.amount, 0) * 100) / 100;
+  let drift = Math.round((targetPos - txTotal) * 100); // in cents
+
+  if (drift !== 0 && tx.length > 0) {
+    const last = tx[tx.length - 1];
+    last.amount = Math.round((last.amount + drift / 100) * 100) / 100;
+  }
+
+  return tx;
+}

@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Users, Gamepad2, BookOpen, ChevronRight, Edit, Layers, Trophy, ArrowLeft, Info, HelpCircle, LogOut, Menu } from "lucide-react";
+import { Plus, Users, Gamepad2, BookOpen, ChevronRight, Edit, Layers, Trophy, ArrowLeft, Info, HelpCircle, LogOut, Menu, Loader2 } from "lucide-react";
 import { CreateGroupModal } from "@/components/create-group-modal";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { Tutorial } from "@/components/tutorial";
@@ -19,6 +19,7 @@ import { useGameState } from "@/hooks/use-game-state";
 import { useWebSocket } from "@/hooks/use-websocket";
 import { useToast } from "@/hooks/use-toast";
 import { useAutosaveObject } from "@/hooks/useAutosave";
+import { useTabPersistence } from "@/hooks/useTabPersistence";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import type { Group, GameState, Card as GameCard, PointsGame } from "@shared/schema";
 
@@ -77,17 +78,8 @@ function useGamePayouts(gameStateId: string | undefined, cardValuesKey?: string)
 
 // Utility functions for card styling and emojis
 const getCardColor = (type: string) => {
-  switch (type) {
-    case 'camel': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-    case 'fish': return 'bg-blue-100 text-blue-800 border-blue-200';
-    case 'roadrunner': return 'bg-orange-100 text-orange-800 border-orange-200';
-    case 'ghost': return 'bg-purple-100 text-purple-800 border-purple-200';
-    case 'skunk': return 'bg-gray-100 text-gray-800 border-gray-200';
-    case 'snake': return 'bg-green-100 text-green-800 border-green-200';
-    case 'yeti': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
-    case 'custom': return 'bg-pink-100 text-pink-800 border-pink-200';
-    default: return 'bg-gray-100 text-gray-800 border-gray-200';
-  }
+  // Standardized grey styling for ALL card types (including custom cards)
+  return 'bg-gray-100 text-gray-800 border-gray-200';
 };
 
 const getCardEmoji = (type: string, card?: GameCard) => {
@@ -148,7 +140,7 @@ function CardGamePayouts({ selectedGroup, gameState, payoutData, selectedPointsG
                         <p className="text-sm text-gray-500">Loading...</p>
                       ) : (
                         <>
-                          <p className={`text-2xl font-bold ${Math.abs(netAmount) < 0.01 ? 'text-gray-600' : isReceiving ? 'text-green-600' : 'text-red-600'}`}>
+                          <p className={`text-lg font-bold ${Math.abs(netAmount) < 0.01 ? 'text-gray-600' : isReceiving ? 'text-green-600' : 'text-red-600'}`}>
                             ${Math.abs(netAmount).toFixed(2)}
                           </p>
                           <p className="text-xs text-gray-500">
@@ -163,7 +155,8 @@ function CardGamePayouts({ selectedGroup, gameState, payoutData, selectedPointsG
                     {playerCards.map((card: GameCard, index: number) => (
                       <Badge 
                         key={`${card.id}-${index}`}
-                        className={`px-3 py-1 text-sm font-medium border ${getCardColor(card.type)}`}
+                        variant="outline"
+                        className="px-3 py-1 text-sm font-medium bg-gray-100 text-gray-800 border-gray-200"
                       >
                         <span className="mr-1">{card.type === 'custom' ? card.emoji : getCardEmoji(card.type)}</span>
                         {(() => {
@@ -203,9 +196,20 @@ function CardGamePayouts({ selectedGroup, gameState, payoutData, selectedPointsG
 
 export default function Home() {
   const { user } = useAuth();
-  const [currentTab, setCurrentTab] = useState<'games' | 'deck' | 'scoreboard' | 'rules' | 'points'>('games');
-  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
-  const [selectedGame, setSelectedGame] = useState<GameState | null>(null);
+  
+  // Track payout data readiness for the restoration logic
+  const [payoutDataReady, setPayoutDataReady] = useState(true);
+  
+  // V6.5: Use complete game state persistence with payout data readiness
+  const { 
+    currentTab, 
+    changeTab, 
+    selectedGroup, 
+    changeGroup, 
+    selectedGame, 
+    changeGame,
+    isRestoring 
+  } = useTabPersistence(payoutDataReady);
   
   // Payouts query will be defined after the groupGames query
   
@@ -215,8 +219,46 @@ export default function Home() {
   const [holeStrokes, setHoleStrokes] = useState<Record<string, string>>({});
   const [pointValue, setPointValue] = useState<string>("1.00");
   const [fbtValue, setFbtValue] = useState<string>("10.00");
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [payoutMode, setPayoutMode] = useState<'points' | 'fbt'>('points');
   const [combinedPayoutMode, setCombinedPayoutMode] = useState<'points' | 'fbt' | 'both'>('points');
+
+  // V6.5: Save point/FBT values to server
+  const savePointFbtValues = async () => {
+    if (!selectedPointsGame) {
+      toast({ title: "Error", description: "No points game selected", variant: "destructive" });
+      return;
+    }
+
+    setSaveStatus('saving');
+    try {
+      const response = await apiRequest('PUT', `/api/points-games/${selectedPointsGame.id}/settings`, {
+        pointValue: parseFloat(pointValue),
+        fbtValue: parseFloat(fbtValue)
+      });
+      
+      const result = await response.json();
+      console.log('Point/FBT values saved:', result);
+      
+      // Update local state with saved values
+      const updatedPointsGame = { ...selectedPointsGame, settings: result.settings };
+      setSelectedPointsGame(updatedPointsGame);
+      
+      // Invalidate queries to refresh calculations
+      queryClient.invalidateQueries({ queryKey: ['/api/points-games'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/calculate-combined-games'] });
+      
+      setSaveStatus('saved');
+      
+      // Reset status after 2 seconds
+      setTimeout(() => setSaveStatus('idle'), 2000);
+    } catch (error) {
+      console.error('Error saving point/FBT values:', error);
+      setSaveStatus('error');
+      toast({ title: "Error", description: "Failed to save point and FBT values", variant: "destructive" });
+      setTimeout(() => setSaveStatus('idle'), 3000);
+    }
+  };
   
   // Local state for card values (for responsive editing)
   // Individual autosave hooks for each card type
@@ -269,7 +311,7 @@ export default function Home() {
       const updatedGame = Array.isArray(updatedGames) ? updatedGames.find((g: any) => g.id === selectedGame.id) : null;
       if (updatedGame) {
         console.log('Updating selectedGame with fresh card values:', updatedGame.cardValues);
-        setSelectedGame(updatedGame);
+        changeGame(updatedGame);
         
         // Force query invalidation with the new card values
         const newCardValuesKey = JSON.stringify(updatedGame.cardValues);
@@ -419,7 +461,7 @@ export default function Home() {
       console.log(`FBT payouts data for ${selectedPointsGame.id}:`, data);
       return data;
     },
-    enabled: !!selectedGroup?.id && !!selectedPointsGame?.id && parseFloat(fbtValue) > 0,
+    enabled: !!selectedGroup?.id && !!selectedPointsGame?.id && (payoutMode === 'fbt' || parseFloat(fbtValue) > 0),
     retry: false,
     refetchOnWindowFocus: false,
   });
@@ -543,7 +585,6 @@ export default function Home() {
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
   const [assignCardOpen, setAssignCardOpen] = useState(false);
   const [selectedCardType, setSelectedCardType] = useState<string | null>(null);
-  const [showShareDialog, setShowShareDialog] = useState(false);
   const [showJoinDialog, setShowJoinDialog] = useState(false);
   const [joinCode, setJoinCode] = useState("");
   const [showCreateCardDialog, setShowCreateCardDialog] = useState(false);
@@ -606,7 +647,7 @@ export default function Home() {
   const payoutQuery = useGamePayouts(selectedGame?.id, cardValuesKey);
   const payoutData = payoutQuery.data;
 
-  const { data: pointsGames = [] } = useQuery<PointsGame[]>({
+  const { data: pointsGames = [], isLoading: pointsGamesLoading } = useQuery<PointsGame[]>({
     queryKey: ['/api/points-games', selectedGroup?.id, selectedGame?.id],
     queryFn: async () => {
       if (!selectedGroup?.id) throw new Error('No group selected');
@@ -662,6 +703,116 @@ export default function Home() {
     }
   }, [selectedGroup, selectedGame, pointsGames, selectedPointsGame]);
 
+  // V6.6: Refetch points games data when switching to 2/9/16 tab to ensure saved scores are visible
+  useEffect(() => {
+    if (currentTab === 'points' && selectedGroup?.id) {
+      console.log('Switching to 2/9/16 tab - refetching points games data to ensure saved scores are visible');
+      queryClient.invalidateQueries({ queryKey: ['/api/points-games', selectedGroup.id] });
+      // Force refetch to get latest hole strokes and point data
+      queryClient.refetchQueries({ queryKey: ['/api/points-games', selectedGroup.id, selectedGame?.id] });
+    }
+  }, [currentTab, selectedGroup?.id, selectedGame?.id, queryClient]);
+
+  // V6.6: Load hole strokes from server data when points game data changes or hole selection changes
+  useEffect(() => {
+    if (selectedPointsGame && selectedGroup && selectedHole) {
+      console.log('Loading hole strokes for hole', selectedHole, 'from server data');
+      const existingStrokes = selectedPointsGame.holes?.[selectedHole] || {};
+      const strokesAsStrings: Record<string, string> = {};
+      selectedGroup.players.forEach(player => {
+        strokesAsStrings[player.id] = existingStrokes[player.id]?.toString() || '';
+      });
+      setHoleStrokes(strokesAsStrings);
+      console.log('Populated hole strokes from server:', strokesAsStrings);
+    }
+  }, [selectedPointsGame, selectedGroup, selectedHole]);
+
+  // V6.5: Load saved combined payout results
+  const { data: savedCombinedResults } = useQuery<{
+    id: string;
+    selectedGames: string[];
+    pointValue: number;
+    fbtValue: number;
+    calculationResult: any;
+    createdAt: string;
+  } | null>({
+    queryKey: ['/api/combined-payout-results', selectedGroup?.id, selectedGame?.id, selectedPointsGame?.id],
+    queryFn: async () => {
+      if (!selectedGroup?.id) return null;
+      
+      // Fixed API URL structure - groupId as URL parameter, others as query params
+      const queryParams = new URLSearchParams();
+      if (selectedGame?.id) queryParams.append('gameStateId', selectedGame.id);
+      if (selectedPointsGame?.id) queryParams.append('pointsGameId', selectedPointsGame.id);
+      
+      const url = `/api/combined-payout-results/${selectedGroup.id}${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+      
+      const response = await fetch(url, {
+        credentials: 'include'
+      });
+      
+      // Handle 404 as no saved results (normal case)
+      if (response.status === 404) {
+        console.log('No saved combined results found');
+        return null;
+      }
+      
+      if (!response.ok) {
+        console.error('Error loading saved combined results:', response.statusText);
+        return null;
+      }
+      
+      const result = await response.json();
+      console.log('Loaded saved combined result:', result);
+      return result;
+    },
+    enabled: !!selectedGroup?.id,
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+
+  // V6.5: Load saved point/FBT values when points game is selected
+  useEffect(() => {
+    if (selectedPointsGame?.settings) {
+      const savedPointValue = selectedPointsGame.settings.pointValue;
+      const savedFbtValue = selectedPointsGame.settings.fbtValue;
+      
+      if (savedPointValue !== undefined) {
+        setPointValue(savedPointValue.toFixed(2));
+      }
+      if (savedFbtValue !== undefined) {
+        setFbtValue(savedFbtValue.toFixed(2));
+      }
+      
+      console.log('Loaded saved point/FBT values:', { savedPointValue, savedFbtValue });
+    }
+  }, [selectedPointsGame]);
+
+  // V6.5: Load saved combined results and restore selection
+  useEffect(() => {
+    if (savedCombinedResults) {
+      console.log('Loaded saved combined results:', savedCombinedResults);
+      
+      // Restore the selected games that were saved - this triggers the UI to show results
+      if (savedCombinedResults.selectedGames && savedCombinedResults.selectedGames.length > 0) {
+        setMultiSelectGames(savedCombinedResults.selectedGames);
+        console.log('Restored selected games - UI should now show combined results:', savedCombinedResults.selectedGames);
+      }
+      
+      // Update point/FBT values if they were saved with the combined results
+      if (savedCombinedResults.pointValue !== undefined) {
+        setPointValue(savedCombinedResults.pointValue.toFixed(2));
+      }
+      if (savedCombinedResults.fbtValue !== undefined) {
+        setFbtValue(savedCombinedResults.fbtValue.toFixed(2));
+      }
+    } else {
+      // No saved results - ensure UI starts in "no selection" state
+      setMultiSelectGames([]);
+      console.log('No saved combined results - cleared selection state');
+    }
+  }, [savedCombinedResults]);
+
   const { gameState, isLoading: gameLoading, drawCard, assignCard, startGame } = useGameState(selectedGroup?.id);
   
   // Defensive check for gameState to prevent crashes
@@ -673,6 +824,72 @@ export default function Home() {
     isActive: false
   };
   const { isConnected } = useWebSocket(selectedGroup?.id);
+
+  // Calculate if payout data is ready for Payouts tab
+  const calculatePayoutDataReady = () => {
+    if (!selectedGroup || !selectedGame) return true; // No game selected, don't wait
+    
+    const isCardsActive = selectedGame && gameState && gameState.cardHistory?.length > 0;
+    const is2916Active = selectedPointsGame && 
+      Object.values(selectedPointsGame.holes || {}).some(hole => 
+        Object.values(hole as Record<string, any>).some((strokes: any) => strokes > 0)
+      );
+    const hasPayoutValues = (parseFloat(pointValue) > 0) || (parseFloat(fbtValue) > 0);
+    const is2916WithValues = is2916Active && hasPayoutValues;
+    
+    // If no games are active, payout data is ready (empty state)
+    if (!isCardsActive && !is2916WithValues) return true;
+    
+    // If only cards active, need payoutData
+    if (isCardsActive && !is2916WithValues) {
+      return !!payoutData;
+    }
+    
+    // If only 2/9/16 active, need points/fbt payouts
+    if (!isCardsActive && is2916WithValues) {
+      const pointValueNum = parseFloat(pointValue) || 0;
+      const fbtValueNum = parseFloat(fbtValue) || 0;
+      
+      const needPoints = pointValueNum > 0;
+      const needFbt = fbtValueNum > 0;
+      
+      if (needPoints && !selectedPointsPayouts) return false;
+      if (needFbt && !selectedFbtPayouts) return false;
+      if (needPoints && needFbt && !pointsFbtCombinedResult) return false;
+      
+      return true;
+    }
+    
+    // If both games active, need all payout data
+    if (isCardsActive && is2916WithValues) {
+      const pointValueNum = parseFloat(pointValue) || 0;
+      const fbtValueNum = parseFloat(fbtValue) || 0;
+      
+      // Need basic payouts
+      if (!payoutData) return false;
+      
+      // Need points/fbt data
+      const needPoints = pointValueNum > 0;
+      const needFbt = fbtValueNum > 0;
+      
+      if (needPoints && !selectedPointsPayouts) return false;
+      if (needFbt && !selectedFbtPayouts) return false;
+      if (needPoints && needFbt && !pointsFbtCombinedResult) return false;
+      
+      // Need combined results if multiSelectGames are set
+      if (multiSelectGames.length > 0 && !combinedGamesResult) return false;
+      
+      return true;
+    }
+    
+    return true;
+  };
+  
+  // Now update the payoutDataReady state reactively
+  const newPayoutDataReady = calculatePayoutDataReady();
+  useEffect(() => {
+    setPayoutDataReady(newPayoutDataReady);
+  }, [newPayoutDataReady]);
 
   // Mutations
   const updateCardValuesMutation = useMutation({
@@ -716,8 +933,8 @@ export default function Home() {
       return response.json();
     },
     onSuccess: (group: Group) => {
-      setSelectedGroup(group);
-      setCurrentTab('deck');
+      changeGroup(group);
+      changeTab('points');
       setShowJoinDialog(false);
       setJoinCode("");
       queryClient.invalidateQueries({ queryKey: ['/api/groups'] });
@@ -740,7 +957,7 @@ export default function Home() {
       return response.json();
     },
     onSuccess: (updatedGroup: Group) => {
-      setSelectedGroup(updatedGroup);
+      changeGroup(updatedGroup);
       setShowCreateCardDialog(false);
       setCustomCardName("");
       setCustomCardEmoji("");
@@ -767,7 +984,7 @@ export default function Home() {
       return response.json();
     },
     onSuccess: (updatedGroup: Group) => {
-      setSelectedGroup(updatedGroup);
+      changeGroup(updatedGroup);
       queryClient.invalidateQueries({ queryKey: ['/api/groups'] });
       queryClient.invalidateQueries({ queryKey: ['/api/groups', updatedGroup.id, 'games'] });
     },
@@ -786,10 +1003,10 @@ export default function Home() {
       return response.json();
     },
     onSuccess: (newGame: GameState) => {
-      setSelectedGame(newGame);
+      changeGame(newGame);
       setShowCreateGameDialog(false);
       setNewGameName("");
-      setCurrentTab('deck');
+      changeTab('points');
       queryClient.invalidateQueries({ queryKey: ['/api/groups', selectedGroup?.id, 'games'] });
       queryClient.invalidateQueries({ queryKey: ['/api/game-state', selectedGroup?.id] });
       queryClient.refetchQueries({ queryKey: ['/api/groups', selectedGroup?.id, 'games'] });
@@ -835,11 +1052,11 @@ export default function Home() {
       return { group: newGroup, game: newGame };
     },
     onSuccess: ({ group, game }) => {
-      setSelectedGroup(group);
-      setSelectedGame(game);
+      changeGroup(group);
+      changeGame(game);
       setShowCreateGameDialog(false);
       setNewGameName("");
-      setCurrentTab('deck');
+      changeTab('points');
       queryClient.invalidateQueries({ queryKey: ['/api/groups'] });
       queryClient.invalidateQueries({ queryKey: ['/api/groups', group.id, 'games'] });
       queryClient.invalidateQueries({ queryKey: ['/api/game-state', group.id] });
@@ -870,7 +1087,7 @@ export default function Home() {
       return response.json();
     },
     onSuccess: () => {
-      setSelectedGame(null);
+      changeGame(null);
       queryClient.invalidateQueries({ queryKey: ['/api/groups', selectedGroup?.id, 'games'] });
       queryClient.invalidateQueries({ queryKey: ['/api/game-state', selectedGroup?.id] });
     },
@@ -922,6 +1139,17 @@ export default function Home() {
       // Force immediate data refresh for instant updates
       queryClient.invalidateQueries({ queryKey: ['/api/points-games', selectedGroup?.id] });
       queryClient.refetchQueries({ queryKey: ['/api/points-games', selectedGroup?.id] });
+      
+      // CRITICAL: Invalidate payout calculation queries to update FBT and Points payouts immediately
+      queryClient.invalidateQueries({ 
+        queryKey: ['/api/calculate-combined-games', selectedGroup?.id, 'fbt-only', updatedGame.id, fbtValue]
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ['/api/calculate-combined-games', selectedGroup?.id, 'points-only', updatedGame.id, pointValue]
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ['/api/calculate-combined-games']
+      });
     },
     onError: () => {
       toast({
@@ -933,8 +1161,8 @@ export default function Home() {
   });
 
   const handleGroupSelect = (group: Group) => {
-    setSelectedGroup(group);
-    setSelectedGame(null); // Reset game selection when switching groups
+    changeGroup(group);
+    changeGame(null); // Reset game selection when switching groups
     // DON'T reset selectedPointsGame - preserve it for reaccess
     // Stay on groups tab to show game selection
   };
@@ -969,26 +1197,6 @@ export default function Home() {
     startGame.mutate(selectedGroup.id);
   };
 
-  const handleShareGame = async () => {
-    if (!selectedGame?.shareCode) return;
-    
-    const shareText = `Join my ForeScore game "${selectedGame.name}"!\n\nGame Code: ${selectedGame.shareCode}\n\nOpen your ForeScore app and enter this code to join.`;
-    
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `ForeScore Game - ${selectedGame.name}`,
-          text: shareText,
-        });
-      } catch (error) {
-        // User cancelled sharing, fallback to clipboard
-        navigator.clipboard.writeText(selectedGame.shareCode);
-      }
-    } else {
-      // Fallback to clipboard
-      navigator.clipboard.writeText(selectedGame.shareCode);
-    }
-  };
 
   const getCardEmoji = (type: string, card?: GameCard) => {
     switch (type) {
@@ -1031,16 +1239,29 @@ export default function Home() {
     }
   };
 
+  if (isRestoring) {
+    return (
+      <div className="min-h-screen grid place-items-center">
+        <div className="flex items-center gap-3 text-gray-600">
+          <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor"/></svg>
+          <span>Restoring your game…</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-md mx-auto bg-white min-h-screen shadow-lg">
       {/* Header */}
       <header className="bg-emerald-600 text-white p-4 shadow-md">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold">ForeScore</h1>
-            <Badge variant="outline" className="text-emerald-100 border-emerald-100">
-              V5 Secure
-            </Badge>
+            <h1 className="text-xl font-bold">
+              ForeScore
+              {selectedGame && (
+                <span className="text-lg font-normal"> - {selectedGame.name}</span>
+              )}
+            </h1>
           </div>
           <div className="flex items-center gap-2">
             <DropdownMenu>
@@ -1087,25 +1308,6 @@ export default function Home() {
                 Create New Game
               </Button>
               
-              <div className="grid grid-cols-2 gap-3">
-                <Button 
-                  onClick={() => setShowJoinDialog(true)}
-                  variant="outline"
-                  className="p-3 h-auto font-medium border-emerald-200 hover:bg-emerald-50"
-                >
-                  <Users className="mr-2 h-4 w-4" />
-                  Join Game
-                </Button>
-                
-                <Button 
-                  onClick={() => setCreateGroupOpen(true)}
-                  variant="outline"
-                  className="p-3 h-auto font-medium border-emerald-200 hover:bg-emerald-50"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create Group
-                </Button>
-              </div>
             </div>
 
             {/* Selected Group Games */}
@@ -1116,7 +1318,7 @@ export default function Home() {
                     <div className="mb-3">
                       <div className="flex items-center gap-2 mb-3">
                         <Button
-                          onClick={() => setSelectedGroup(null)}
+                          onClick={() => changeGroup(null)}
                           variant="ghost"
                           size="sm"
                           className="text-gray-600 hover:text-gray-800 p-1"
@@ -1141,49 +1343,27 @@ export default function Home() {
                       {groupGames.length === 0 ? (
                         <p className="text-gray-500 text-center py-4">No games yet. Create your first game!</p>
                       ) : (
-                        groupGames.map((game) => (
+                        groupGames.slice(0, 5).map((game) => (
                           <div key={game.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 hover-lift color-transition">
                             <div className="flex-1">
                               <div className="flex items-center gap-2">
                                 <h4 className="font-medium text-gray-800">{game.name}</h4>
-                                {game.isActive === 1 && (
-                                  <Badge variant="secondary" className="bg-green-100 text-green-700">Active</Badge>
-                                )}
                               </div>
                               <p className="text-sm text-gray-500">
-                                Share Code: {game.shareCode} • Created {new Date(game.createdAt).toLocaleDateString()}
+                                Created {new Date(game.createdAt).toLocaleDateString()}
                               </p>
                             </div>
                             <div className="flex items-center gap-2">
                               <Button
                                 onClick={() => {
-                                  setSelectedGame(game);
-                                  setCurrentTab('deck');
+                                  changeGame(game);
+                                  changeTab('points');
                                 }}
                                 size="sm"
                                 variant="outline"
-                                className="btn-interactive btn-bouncy"
+                                className="btn-interactive btn-bouncy border-emerald-500 text-emerald-600 hover:bg-emerald-50"
                               >
                                 Play
-                              </Button>
-                              <Button
-                                onClick={() => {
-                                  setSelectedGame(game);
-                                  handleShareGame();
-                                }}
-                                size="sm"
-                                variant="outline"
-                                className="btn-interactive btn-bouncy"
-                              >
-                                Share
-                              </Button>
-                              <Button
-                                onClick={() => deleteGameMutation.mutate(game.id)}
-                                size="sm"
-                                variant="destructive"
-                                className="px-2"
-                              >
-                                ×
                               </Button>
                             </div>
                           </div>
@@ -1196,7 +1376,18 @@ export default function Home() {
             )}
 
             <div className="mb-4">
-              <h2 className="text-lg font-semibold text-gray-800 mb-3">Recent Groups</h2>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-lg font-semibold text-gray-800">Recent Groups</h2>
+                <Button 
+                  onClick={() => setCreateGroupOpen(true)}
+                  variant="outline"
+                  size="sm"
+                  className="border-emerald-500 text-emerald-600 hover:bg-emerald-50"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Group
+                </Button>
+              </div>
               
               {groupsLoading ? (
                 <div className="space-y-3">
@@ -1274,29 +1465,6 @@ export default function Home() {
               </Card>
             ) : (
               <>
-                {/* Game Header */}
-                <Card className="mb-4">
-                  <CardContent className="p-4">
-                    <div className="mb-3">
-                      <h2 className="text-lg font-semibold text-gray-800">{selectedGroup.name}</h2>
-                      {selectedGame && (
-                        <div className="flex items-center justify-between mt-2">
-                          <div>
-                            <p className="text-sm text-gray-600">Game: {selectedGame.name}</p>
-                            <p className="text-xs text-gray-500">Share Code: {selectedGame.shareCode}</p>
-                          </div>
-                          <Button
-                            onClick={handleShareGame}
-                            size="sm"
-                            variant="outline"
-                          >
-                            Share Game
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
 
                 {/* Game Selection or Start */}
                 {!selectedGame ? (
@@ -1311,14 +1479,11 @@ export default function Home() {
                               {groupGames.slice(0, 3).map(game => (
                                 <Button
                                   key={game.id}
-                                  onClick={() => setSelectedGame(game)}
+                                  onClick={() => changeGame(game)}
                                   variant="outline"
-                                  className="w-full mb-2 justify-between"
+                                  className="w-full mb-2 justify-start"
                                 >
                                   <span>{game.name}</span>
-                                  {game.isActive === 1 && (
-                                    <Badge variant="secondary" className="bg-green-100 text-green-700">Active</Badge>
-                                  )}
                                 </Button>
                               ))}
                             </div>
@@ -1762,7 +1927,7 @@ export default function Home() {
                                     <p className="text-sm text-gray-500">No data</p>
                                   ) : (
                                     <>
-                                      <p className={`text-2xl font-bold ${Math.abs(netAmount) < 0.01 ? 'text-gray-600' : isReceiving ? 'text-green-600' : 'text-red-600'}`}>
+                                      <p className={`text-lg font-bold ${Math.abs(netAmount) < 0.01 ? 'text-gray-600' : isReceiving ? 'text-green-600' : 'text-red-600'}`}>
                                         ${Math.abs(netAmount).toFixed(2)}
                                       </p>
                                       <p className="text-xs text-gray-500">
@@ -1777,7 +1942,8 @@ export default function Home() {
                                 {playerCards.map((card: GameCard, index: number) => (
                                   <Badge 
                                     key={`${card.id}-${index}`}
-                                    className={`px-3 py-1 text-sm font-medium border ${getCardColor(card.type)}`}
+                                    variant="outline" 
+                                    className="px-3 py-1 text-sm font-medium bg-gray-100 text-gray-800 border-gray-200"
                                   >
                                     <span className="mr-1">{card.type === 'custom' ? card.emoji : getCardEmoji(card.type)}</span>
                                     {(() => {
@@ -1910,24 +2076,6 @@ export default function Home() {
                   </Card>
                 ) : (
                   <>
-                    {/* Game Header */}
-                    <Card className="mb-4">
-                      <CardContent className="p-4">
-                        <div className="flex items-center gap-4">
-                          {selectedGroup.groupPhoto && (
-                            <img
-                              src={selectedGroup.groupPhoto}
-                              alt="Group photo"
-                              className="w-16 h-16 rounded-full object-cover border-2 border-gray-300"
-                            />
-                          )}
-                          <div className="flex-1">
-                            <h2 className="text-lg font-semibold text-gray-800">{selectedGroup.name} - {selectedGame.name}</h2>
-                            <p className="text-sm text-gray-600">Share Code: {selectedGame.shareCode}</p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
 
                     {/* MODAL-BASED WHO OWES WHO - MOVED TO TOP */}
                     {(() => {
@@ -1973,7 +2121,7 @@ export default function Home() {
                                   }}
                                   variant="outline"
                                   size="sm"
-                                  className="btn-interactive hover-lift"
+                                  className="btn-interactive hover-lift border-emerald-500 text-emerald-600 hover:bg-emerald-50"
                                 >
                                   Edit Payouts
                                 </Button>
@@ -2083,48 +2231,6 @@ export default function Home() {
                       </Card>
                     )}
 
-                    {/* Tile 2: Card Game Only Settlement - ONLY show when cards are active */}
-                    {(() => {
-                      const isCardsActive = selectedGame && gameState && gameState.cardHistory?.length > 0;
-                      return isCardsActive;
-                    })() && (
-                      <Card className="mb-4 card-interactive hover-lift fade-in">
-                        <CardContent className="p-4">
-                          <h3 className="text-lg font-semibold text-gray-800 mb-3">🎴 Who Owes Who - Card Game</h3>
-                          <div className="space-y-2">
-                            {(() => {
-                              // Use server-side whoOwesWho data for card game transactions
-                              const transactions = payoutData?.whoOwesWho || [];
-                              
-
-
-                              return transactions.length > 0 ? (
-                                <>
-                                  {transactions.map((transaction: any, index: number) => (
-                                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                      <div className="flex items-center gap-3">
-                                        <div className="text-sm">
-                                          <span className="font-medium text-red-600">{transaction.fromPlayerName || transaction.fromName || transaction.from}</span>
-                                          <span className="text-gray-600"> owes </span>
-                                          <span className="font-medium text-green-600">{transaction.toPlayerName || transaction.toName || transaction.to}</span>
-                                        </div>
-                                      </div>
-                                      <div className="text-right">
-                                        <p className="text-lg font-bold text-black">${transaction.amount.toFixed(2)}</p>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </>
-                              ) : (
-                                <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                                  <p className="text-sm text-green-800">All players are even - no payments needed!</p>
-                                </div>
-                              );
-                            })()}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )}
 
                     {/* Combined Cards + 2/9/16 Settlement - ONLY show when BOTH games are active */}
                     {(() => {
@@ -2216,12 +2322,6 @@ export default function Home() {
                       </Card>
                     )}
 
-                    {/* Card Game Payouts */}
-                    <CardGamePayouts 
-                      selectedGroup={selectedGroup}
-                      gameState={gameState}
-                      payoutData={payoutData}
-                    />
 
                     {(() => {
                       // Determine which games are active
@@ -2413,6 +2513,56 @@ export default function Home() {
                       );
                     })()}
 
+                    {/* Tile: Card Game Only Settlement - MOVED TO BOTTOM */}
+                    {(() => {
+                      const isCardsActive = selectedGame && gameState && gameState.cardHistory?.length > 0;
+                      return isCardsActive;
+                    })() && (
+                      <Card className="mb-4 card-interactive hover-lift fade-in">
+                        <CardContent className="p-4">
+                          <h3 className="text-lg font-semibold text-gray-800 mb-3">🎴 Who Owes Who - Card Game</h3>
+                          <div className="space-y-2">
+                            {(() => {
+                              // Use server-side whoOwesWho data for card game transactions
+                              const transactions = payoutData?.whoOwesWho || [];
+                              
+
+
+                              return transactions.length > 0 ? (
+                                <>
+                                  {transactions.map((transaction: any, index: number) => (
+                                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                      <div className="flex items-center gap-3">
+                                        <div className="text-sm">
+                                          <span className="font-medium text-red-600">{transaction.fromPlayerName || transaction.fromName || transaction.from}</span>
+                                          <span className="text-gray-600"> owes </span>
+                                          <span className="font-medium text-green-600">{transaction.toPlayerName || transaction.toName || transaction.to}</span>
+                                        </div>
+                                      </div>
+                                      <div className="text-right">
+                                        <p className="text-lg font-bold text-black">${transaction.amount.toFixed(2)}</p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </>
+                              ) : (
+                                <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                                  <p className="text-sm text-green-800">All players are even - no payments needed!</p>
+                                </div>
+                              );
+                            })()}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Card Game Payouts - MOVED TO BOTTOM */}
+                    <CardGamePayouts 
+                      selectedGroup={selectedGroup}
+                      gameState={gameState}
+                      payoutData={payoutData}
+                    />
+
               </>
             )}
             </>
@@ -2429,13 +2579,13 @@ export default function Home() {
                 {!selectedPointsGame ? (
                   <Card>
                     <CardContent className="p-6">
-                      <h2 className="text-2xl font-bold text-gray-800 mb-4">2/9/16 Game</h2>
+                      <h2 className="text-lg font-bold text-gray-800 mb-4">2/9/16 Game</h2>
                       
-                      {pointsGames.length > 0 ? (
+                      {pointsGamesLoading || (pointsGames.length > 0 && !selectedPointsGame) ? (
                         <div className="text-center space-y-4">
                           <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
                             <h3 className="text-lg font-semibold text-emerald-800 mb-2">
-                              {pointsGames[0].name}
+                              {pointsGames.length > 0 ? pointsGames[0].name : "2/9/16 Game"}
                             </h3>
                             <p className="text-sm text-emerald-600">
                               Loading your 2/9/16 game...
@@ -2444,7 +2594,6 @@ export default function Home() {
                         </div>
                       ) : (
                         <div className="text-center space-y-4">
-
                           <p className="text-gray-600">No 2/9/16 games yet. Create one to start tracking scores.</p>
                           <Button 
                             onClick={() => createPointsGameMutation.mutate({
@@ -2527,14 +2676,25 @@ export default function Home() {
                           <Button 
                             onClick={() => {
                               const strokes: Record<string, number> = {};
+                              let allPlayersHaveScores = true;
+                              
                               selectedGroup.players.forEach(player => {
-                                const strokeValue = parseInt(holeStrokes[player.id]) || 0;
-                                if (strokeValue > 0) {
-                                  strokes[player.id] = strokeValue;
+                                const strokeValue = holeStrokes[player.id];
+                                // Check if the player has entered a score (empty string or undefined means no score)
+                                if (strokeValue === '' || strokeValue === undefined) {
+                                  allPlayersHaveScores = false;
+                                } else {
+                                  // Parse the score - 0 is NOT a valid golf score
+                                  const parsedValue = parseInt(strokeValue);
+                                  if (parsedValue > 0) {
+                                    strokes[player.id] = parsedValue;
+                                  } else {
+                                    allPlayersHaveScores = false;
+                                  }
                                 }
                               });
                               
-                              if (Object.keys(strokes).length === selectedGroup.players.length) {
+                              if (allPlayersHaveScores) {
                                 updateHoleScoresMutation.mutate({
                                   gameId: selectedPointsGame.id,
                                   hole: selectedHole,
@@ -2737,6 +2897,23 @@ export default function Home() {
                               </div>
                             </div>
 
+                            {/* V6.5: Save Button for Point/FBT Values */}
+                            <div className="mb-4">
+                              <Button
+                                onClick={savePointFbtValues}
+                                disabled={saveStatus === 'saving' || !selectedPointsGame}
+                                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                                data-testid="button-save-point-fbt-values"
+                              >
+                                {saveStatus === 'saving' && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>}
+                                {saveStatus === 'saved' && <span className="mr-2">✓</span>}
+                                {saveStatus === 'error' && <span className="mr-2">✗</span>}
+                                {saveStatus === 'saving' ? 'Saving...' : 
+                                 saveStatus === 'saved' ? 'Saved!' :
+                                 saveStatus === 'error' ? 'Error - Retry' : 'Update Values'}
+                              </Button>
+                            </div>
+
                             {/* Payout Calculations */}
                             <div className="space-y-2">
                               {[...selectedGroup.players]
@@ -2936,144 +3113,20 @@ export default function Home() {
             {/* Tutorial Section */}
             <Tutorial />
             
-            {/* Rules Reference */}
+            {/* 2/9/16 Game Rules */}
             <Card>
               <CardContent className="p-6">
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">Quick Reference</h2>
-                
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
-                      <span className="w-6 h-6 bg-emerald-500 text-white rounded-full flex items-center justify-center text-sm font-bold">1</span>
-                      Setup
-                    </h3>
-                    <p className="text-gray-600 leading-relaxed">Create a group of 2-4 players. Set the monetary value for each card type before starting the game.</p>
-                  </div>
-
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
-                      <span className="w-6 h-6 bg-emerald-500 text-white rounded-full flex items-center justify-center text-sm font-bold">2</span>
-                      Drawing Cards
-                    </h3>
-                    <p className="text-gray-600 leading-relaxed">Players take turns drawing cards from the shared deck. Each card drawn must be assigned to one of the players in the group.</p>
-                  </div>
-
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
-                      <span className="w-6 h-6 bg-emerald-500 text-white rounded-full flex items-center justify-center text-sm font-bold">3</span>
-                      Card Types
-                    </h3>
-                    <div className="space-y-3 ml-8">
-                      <div className="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg">
-                        <span className="text-2xl">🐪</span>
-                        <div>
-                          <p className="font-medium text-gray-800">Camel</p>
-                          <p className="text-sm text-gray-600">Land in a sand trap</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-                        <span className="text-2xl">🐟</span>
-                        <div>
-                          <p className="font-medium text-gray-800">Fish</p>
-                          <p className="text-sm text-gray-600">Ball in the water</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3 p-3 bg-orange-50 rounded-lg">
-                        <span className="text-2xl">🐦</span>
-                        <div>
-                          <p className="font-medium text-gray-800">Roadrunner</p>
-                          <p className="text-sm text-gray-600">Hit the cart path</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                        <span className="text-2xl">👻</span>
-                        <div>
-                          <p className="font-medium text-gray-800">Ghost</p>
-                          <p className="text-sm text-gray-600">Lost ball or out of bounds</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
-                        <span className="text-2xl">🦨</span>
-                        <div>
-                          <p className="font-medium text-gray-800">Skunk</p>
-                          <p className="text-sm text-gray-600">Double bogey or worse</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
-                        <span className="text-2xl">🐍</span>
-                        <div>
-                          <p className="font-medium text-gray-800">Snake</p>
-                          <p className="text-sm text-gray-600">Three or more putts</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3 p-3 bg-cyan-50 rounded-lg">
-                        <span className="text-2xl">🌲</span>
-                        <div>
-                          <p className="font-medium text-gray-800">Yeti</p>
-                          <p className="text-sm text-gray-600">Hit a tree</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
-                      <span className="w-6 h-6 bg-emerald-500 text-white rounded-full flex items-center justify-center text-sm font-bold">4</span>
-                      Custom Cards
-                    </h3>
-                    <p className="text-gray-600 leading-relaxed ml-8">Create your own penalty cards with custom names, emojis, and values to match your group's specific rules. Examples: Whiff, Shank, Hit a House.</p>
-                  </div>
-
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
-                      <span className="w-6 h-6 bg-emerald-500 text-white rounded-full flex items-center justify-center text-sm font-bold">5</span>
-                      Trading & Reassignment
-                    </h3>
-                    <p className="text-gray-600 leading-relaxed ml-8">Cards can be reassigned between players throughout the round. This allows for strategic trading and negotiation.</p>
-                  </div>
-
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
-                      <span className="w-6 h-6 bg-emerald-500 text-white rounded-full flex items-center justify-center text-sm font-bold">6</span>
-                      Winning
-                    </h3>
-                    <p className="text-gray-600 leading-relaxed">At the end of the round, players pay out based on the cards they hold. The game continues for multiple rounds as desired.</p>
-                  </div>
-
-                  <Separator />
-
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Tips for Success</h3>
-                    <ul className="space-y-2 text-gray-600">
-                      <li className="flex items-start gap-2">
-                        <span className="text-emerald-500 mt-0.5">✓</span>
-                        <span>Keep track of which cards have been drawn</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-emerald-500 mt-0.5">✓</span>
-                        <span>Agree on card values before starting</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-emerald-500 mt-0.5">✓</span>
-                        <span>Use the app to avoid disputes over card assignments</span>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Points Game Rules */}
-            <Card>
-              <CardContent className="p-6">
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">2/9/16 Game Rules</h2>
+                <h2 className="text-lg font-bold text-gray-800 mb-4">2/9/16 Game Rules</h2>
                 <div className="space-y-4 text-gray-600">
                   <p className="leading-relaxed">
                     The 2/9/16 Game is a stroke-based competition where players earn points based on their performance relative to other players on each hole.
                   </p>
 
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">How Points Are Awarded</h3>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                      <span className="w-6 h-6 bg-emerald-500 text-white rounded-full flex items-center justify-center text-sm font-bold">1</span>
+                      How Points Are Awarded
+                    </h3>
                     
                     <div className="ml-4 space-y-3">
                       <div>
@@ -3111,41 +3164,43 @@ export default function Home() {
                   </div>
 
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Playing the Game</h3>
-                    <ol className="space-y-2 ml-4">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                      <span className="w-6 h-6 bg-emerald-500 text-white rounded-full flex items-center justify-center text-sm font-bold">2</span>
+                      Playing the Game
+                    </h3>
+                    <ol className="space-y-2 ml-8">
                       <li className="flex items-start gap-2">
-                        <span className="text-emerald-500 font-bold">1.</span>
-                        <span>Select the 2/9/16 tab and create a game for your group</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-emerald-500 font-bold">2.</span>
+                        <span className="text-gray-800 font-bold">1.</span>
                         <span>After each hole, enter everyone's stroke count</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-emerald-500 font-bold">3.</span>
+                        <span className="text-gray-800 font-bold">2.</span>
                         <span>Points are automatically calculated and added to the leaderboard</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-emerald-500 font-bold">4.</span>
+                        <span className="text-gray-800 font-bold">3.</span>
                         <span>Check the Payouts tab to see money calculations</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-emerald-500 font-bold">5.</span>
+                        <span className="text-gray-800 font-bold">4.</span>
                         <span>Play both games simultaneously for maximum fun!</span>
                       </li>
                     </ol>
                   </div>
 
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Dual Payout Systems</h3>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                      <span className="w-6 h-6 bg-emerald-500 text-white rounded-full flex items-center justify-center text-sm font-bold">3</span>
+                      3 Payout Systems - Points, FBT, Both
+                    </h3>
                     <p className="text-gray-600 mb-3">
-                      The 2/9/16 Game includes two payout systems that run simultaneously - choose your preferred method:
+                      The 2/9/16 Game includes three payout systems that run simultaneously - choose your preferred method:
                     </p>
                     
                     <div className="space-y-4">
                       <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                        <h4 className="font-medium text-blue-800 mb-2">Points System</h4>
-                        <ul className="space-y-1 text-sm text-blue-700">
+                        <h4 className="font-medium text-gray-800 mb-2">Points System</h4>
+                        <ul className="space-y-1 text-sm text-gray-700">
                           <li>• Each player pays/receives money based on point differences</li>
                           <li>• Higher-scoring players receive from lower-scoring players</li>
                           <li>• Set Point Value (e.g., $1.00 per point) to calculate amounts</li>
@@ -3154,8 +3209,8 @@ export default function Home() {
                       </div>
                       
                       <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                        <h4 className="font-medium text-green-800 mb-2">FBT System (Front/Back/Total)</h4>
-                        <ul className="space-y-1 text-sm text-green-700">
+                        <h4 className="font-medium text-gray-800 mb-2">FBT System (Front/Back/Total)</h4>
+                        <ul className="space-y-1 text-sm text-gray-700">
                           <li>• Winners determined by lowest stroke count:</li>
                           <li className="ml-4">- Front 9 (holes 1-9)</li>
                           <li className="ml-4">- Back 9 (holes 10-18)</li>
@@ -3175,12 +3230,132 @@ export default function Home() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Card Game Rules Reference */}
+            <Card>
+              <CardContent className="p-6">
+                <h2 className="text-lg font-bold text-gray-800 mb-4">Card Game Rules</h2>
+                
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                      <span className="w-6 h-6 bg-emerald-500 text-white rounded-full flex items-center justify-center text-sm font-bold">1</span>
+                      Setup
+                    </h3>
+                    <p className="text-gray-600 leading-relaxed ml-8">Set the monetary value for each card type before starting the game.</p>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                      <span className="w-6 h-6 bg-emerald-500 text-white rounded-full flex items-center justify-center text-sm font-bold">2</span>
+                      Drawing Cards
+                    </h3>
+                    <p className="text-gray-600 leading-relaxed ml-8">Players are assigned cards when they hit a shot corresponding to one of the card types below. Cards are re-assigned as additional players perform the same mishap. Each card can only be held by one player at a time.</p>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                      <span className="w-6 h-6 bg-emerald-500 text-white rounded-full flex items-center justify-center text-sm font-bold">3</span>
+                      Card Types
+                    </h3>
+                    <div className="space-y-3 ml-8">
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border">
+                        <span className="text-2xl">🐪</span>
+                        <div>
+                          <p className="font-medium text-gray-800">Camel</p>
+                          <p className="text-sm text-gray-600">Land in a sand trap</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border">
+                        <span className="text-2xl">🐟</span>
+                        <div>
+                          <p className="font-medium text-gray-800">Fish</p>
+                          <p className="text-sm text-gray-600">Ball in the water</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border">
+                        <span className="text-2xl">🐦</span>
+                        <div>
+                          <p className="font-medium text-gray-800">Roadrunner</p>
+                          <p className="text-sm text-gray-600">Hit the cart path</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border">
+                        <span className="text-2xl">👻</span>
+                        <div>
+                          <p className="font-medium text-gray-800">Ghost</p>
+                          <p className="text-sm text-gray-600">Lost ball or out of bounds</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border">
+                        <span className="text-2xl">🦨</span>
+                        <div>
+                          <p className="font-medium text-gray-800">Skunk</p>
+                          <p className="text-sm text-gray-600">Double bogey or worse</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border">
+                        <span className="text-2xl">🐍</span>
+                        <div>
+                          <p className="font-medium text-gray-800">Snake</p>
+                          <p className="text-sm text-gray-600">Three or more putts</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border">
+                        <span className="text-2xl">🌲</span>
+                        <div>
+                          <p className="font-medium text-gray-800">Yeti</p>
+                          <p className="text-sm text-gray-600">Hit a tree</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                      <span className="w-6 h-6 bg-emerald-500 text-white rounded-full flex items-center justify-center text-sm font-bold">4</span>
+                      Custom Cards
+                    </h3>
+                    <p className="text-gray-600 leading-relaxed ml-8">Create your own penalty cards with custom names, emojis, and values to match your group's specific rules. Examples: Whiff, Shank, Hit a House.</p>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                      <span className="w-6 h-6 bg-emerald-500 text-white rounded-full flex items-center justify-center text-sm font-bold">5</span>
+                      Winning
+                    </h3>
+                    <p className="text-gray-600 leading-relaxed ml-8">At the end of the round, players pay out based on the cards they hold.</p>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Tips for Success</h3>
+                    <ul className="space-y-2 text-gray-600">
+                      <li className="flex items-start gap-2">
+                        <span className="text-emerald-500 mt-0.5">✓</span>
+                        <span>Keep track of which cards have been drawn</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-emerald-500 mt-0.5">✓</span>
+                        <span>Agree on card values before starting</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-emerald-500 mt-0.5">✓</span>
+                        <span>Use the app to avoid disputes over card assignments</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
           </div>
         )}
       </main>
 
       <BottomNavigation currentTab={currentTab} onTabChange={(tab) => {
-        setCurrentTab(tab);
+        changeTab(tab);
         // Scroll to top when switching to Payouts tab
         if (tab === 'scoreboard') {
           window.scrollTo(0, 0);
@@ -3191,7 +3366,7 @@ export default function Home() {
         onOpenChange={setShowCreateGroupModal}
         onSuccess={(group: Group) => {
           // Auto-select the new group for game creation
-          setSelectedGroup(group);
+          changeGroup(group);
           queryClient.invalidateQueries({ queryKey: ['/api/groups'] });
           
           // If we have a pending game name, create the game automatically
@@ -3302,55 +3477,6 @@ export default function Home() {
         </DialogContent>
       </Dialog>
 
-      {/* Share Game Dialog */}
-      <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-semibold text-gray-800">Share Game</DialogTitle>
-            <DialogDescription>
-              Share this code with others so they can join your game from their device.
-            </DialogDescription>
-          </DialogHeader>
-          
-          {selectedGroup?.shareCode && (
-            <div className="space-y-4">
-              <div className="text-center">
-                <div className="bg-gray-100 rounded-lg p-6 mb-4">
-                  <div className="text-3xl font-mono font-bold text-gray-800 tracking-wider">
-                    {selectedGroup.shareCode}
-                  </div>
-                </div>
-                <p className="text-sm text-gray-600">
-                  Game: <span className="font-semibold">{selectedGroup.name}</span>
-                </p>
-                <div className="flex items-center justify-center gap-2 mt-2">
-                  <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                  <span className="text-xs text-gray-500">
-                    {isConnected ? 'Real-time sync active' : 'Connecting...'}
-                  </span>
-                </div>
-              </div>
-              
-              <Button 
-                onClick={() => {
-                  navigator.clipboard.writeText(selectedGroup.shareCode!);
-                }}
-                className="w-full"
-              >
-                Copy Share Code
-              </Button>
-              
-              <Button 
-                variant="ghost" 
-                onClick={() => setShowShareDialog(false)}
-                className="w-full"
-              >
-                Close
-              </Button>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
 
       {/* Join Game Dialog */}
       <Dialog open={showJoinDialog} onOpenChange={setShowJoinDialog}>
@@ -3504,12 +3630,12 @@ export default function Home() {
             <div>
               <Button
                 onClick={() => {
-                  setSelectedGroup(null);
+                  changeGroup(null);
                   setShowCreateGroupModal(true);
                   setShowCreateGameDialog(false);
                 }}
-                variant={selectedGroup ? "outline" : "default"}
-                className="w-full justify-start"
+                variant="outline"
+                className="w-full justify-start border-emerald-500 text-emerald-600 hover:bg-emerald-50"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Create New Group
@@ -3526,7 +3652,7 @@ export default function Home() {
                 {groups.map((group) => (
                   <Button
                     key={group.id}
-                    onClick={() => setSelectedGroup(group)}
+                    onClick={() => changeGroup(group)}
                     variant={selectedGroup?.id === group.id ? "default" : "outline"}
                     className="w-full justify-start"
                   >
@@ -3541,7 +3667,7 @@ export default function Home() {
               <Button 
                 onClick={() => {
                   setShowCreateGameDialog(false);
-                  setSelectedGroup(null);
+                  changeGroup(null);
                   setNewGameName("");
                 }}
                 variant="outline"
@@ -3748,14 +3874,56 @@ export default function Home() {
               </Button>
               
               <Button 
-                onClick={() => {
+                onClick={async () => {
                   setMultiSelectGames(tempSelectedGames);
                   setShowPayoutModal(false);
+                  
+                  // V6.5: Trigger calculation with saveResults=true
+                  if (tempSelectedGames.length > 0 && selectedGroup?.id) {
+                    try {
+                      const response = await fetch('/api/calculate-combined-games', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                          groupId: selectedGroup.id,
+                          gameStateId: selectedGame?.id,
+                          pointsGameId: selectedPointsGame?.id,
+                          selectedGames: tempSelectedGames,
+                          pointValue: parseFloat(pointValue),
+                          fbtValue: parseFloat(fbtValue),
+                          saveResults: true
+                        })
+                      });
+                      
+                      if (response.ok) {
+                        const result = await response.json();
+                        console.log('Combined payout calculation saved:', result);
+                        
+                        // Invalidate queries to refresh UI and load saved results
+                        queryClient.invalidateQueries({ queryKey: ['/api/calculate-combined-games'] });
+                        queryClient.invalidateQueries({ queryKey: ['/api/combined-payout-results'] });
+                        
+                        // Force immediate refetch to ensure UI updates with latest data
+                        await queryClient.refetchQueries({ 
+                          queryKey: ['/api/calculate-combined-games'],
+                          type: 'active'
+                        });
+                      } else {
+                        const errorData = await response.json();
+                        console.error('Save failed:', errorData);
+                        toast({ title: "Error", description: "Failed to save payout results", variant: "destructive" });
+                      }
+                    } catch (error) {
+                      console.error('Error saving combined results:', error);
+                      toast({ title: "Error", description: "Failed to save payout results", variant: "destructive" });
+                    }
+                  }
                 }}
                 disabled={tempSelectedGames.length === 0}
                 className="flex-1 btn-interactive btn-bouncy bg-emerald-500 hover:bg-emerald-600 text-white"
               >
-                Calculate
+                Save
               </Button>
             </div>
           </div>

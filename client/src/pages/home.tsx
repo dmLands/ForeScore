@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Users, Gamepad2, BookOpen, ChevronRight, Edit, Layers, Trophy, ArrowLeft, Info, HelpCircle, LogOut, Menu, Loader2 } from "lucide-react";
+import { Plus, Users, Gamepad2, BookOpen, ChevronRight, Edit, Layers, Trophy, ArrowLeft, Info, HelpCircle, LogOut, Menu, Loader2, User, FileText } from "lucide-react";
 import { CreateGroupModal } from "@/components/create-group-modal";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { Tutorial } from "@/components/tutorial";
@@ -1271,19 +1271,57 @@ export default function Home() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-{user && typeof user === 'object' ? (
+                {user && typeof user === 'object' ? (
                   <>
+                    {/* Header with username only */}
                     <div className="px-3 py-2 text-sm">
                       <div className="font-medium text-gray-900">
                         {(user as any).firstName || (user as any).email || 'User'}
                       </div>
-                      <div className="text-gray-500 text-xs">
-                        {(user as any).email || ''}
+                    </div>
+                    <DropdownMenuSeparator />
+                    
+                    {/* Profile Section */}
+                    <div className="px-3 py-2">
+                      <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Profile</div>
+                      <div className="space-y-1">
+                        <DropdownMenuItem className="cursor-pointer">
+                          <User className="h-4 w-4 mr-2" />
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium">Name</span>
+                            <span className="text-xs text-gray-500">{(user as any).firstName || 'Not set'}</span>
+                          </div>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="cursor-pointer">
+                          <User className="h-4 w-4 mr-2" />
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium">Email</span>
+                            <span className="text-xs text-gray-500">{(user as any).email || 'Not set'}</span>
+                          </div>
+                        </DropdownMenuItem>
+                      </div>
+                    </div>
+                    <DropdownMenuSeparator />
+                    
+                    {/* About Section */}
+                    <div className="px-3 py-2">
+                      <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">About</div>
+                      <div className="space-y-1">
+                        <DropdownMenuItem className="cursor-pointer">
+                          <Info className="h-4 w-4 mr-2" />
+                          About Forescore
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="cursor-pointer">
+                          <FileText className="h-4 w-4 mr-2" />
+                          Terms of Service
+                        </DropdownMenuItem>
                       </div>
                     </div>
                     <DropdownMenuSeparator />
                   </>
                 ) : null}
+                
+                {/* Sign Out */}
                 <DropdownMenuItem onClick={handleLogout} className="text-red-600">
                   <LogOut className="h-4 w-4 mr-2" />
                   Sign Out

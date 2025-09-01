@@ -1,10 +1,24 @@
-# ForeScoreV6.4 - Enterprise-Grade Security & Authentication
+# ForeScoreV6.7 - Enterprise-Grade Security & Authentication
 
 ## Overview
-ForeScore V6.4 is a secure, full-stack application designed as a companion for the golf penalty game "Animal." It provides enterprise-grade local authentication, server-side security validation, and enhanced payout visualization. The application supports complete group management, card game mechanics utilizing a Proportional Share Algorithm, isolated 2/9/16 points games per session, and multiple payout calculation views. All game calculations are performed server-side to prevent tampering, ensuring secure user authentication and session management. The project's vision is to offer a robust, reliable, and secure platform for managing golf penalty games, with ambitions to become the leading digital tool in this niche.
+ForeScore V6.7 is a secure, full-stack application designed as a companion for the golf penalty game "Animal." It provides enterprise-grade local authentication, server-side security validation, and enhanced payout visualization. The application supports complete group management, card game mechanics utilizing a Proportional Share Algorithm, isolated 2/9/16 points games per session, and multiple payout calculation views. All game calculations are performed server-side to prevent tampering, ensuring secure user authentication and session management. The project's vision is to offer a robust, reliable, and secure platform for managing golf penalty games, with ambitions to become the leading digital tool in this niche.
 
 ## Recent Changes
-### V6.4 (Current) - January 2025
+### V6.7 (Current) - September 2025
+- **Hamburger Menu Restructure**:
+  - **Username Display**: Maintained username only in submenu header for clean presentation
+  - **Profile Section**: Added new Profile section displaying user information including name and email with organized layout
+  - **About Section**: Created new About section with two subsections - "About Forescore" and "Terms of Service" for better information organization
+  - **Visual Improvements**: Enhanced menu structure with proper icons, spacing, and section separators for improved user experience
+
+### V6.6 - September 2025
+- **Flicker Fix Implementation**:
+  - **Extended isRestoring Logic**: Implemented comprehensive payout data readiness detection for Payouts tab
+  - **Conditional Tile Rendering**: Fixed all rehydration flicker issues by waiting for payout-critical data before marking restoration complete
+  - **Data Dependencies**: Enhanced restoration logic to check payoutData, selectedPointsPayouts, selectedFbtPayouts, combinedGamesResult, and pointsFbtCombinedResult
+  - **User Experience**: Eliminated visual flickering and premature tile re-ordering during app initialization
+
+### V6.4 - January 2025
 - **UI/UX Structural Improvements**:
   - **Games Tab Cleanup**: Removed non-functional "Join Game" button and repositioned "Create Group" button under Recent Groups header for cleaner layout
   - **Game Selection Interface**: Removed "Active" pills from game selection since games don't have completion status tracking
@@ -41,7 +55,7 @@ I want iterative development. Ask before making major changes. Do not make chang
 - **Color Scheme**: Consistent gray styling throughout the application, with specific elements like the "Calculate Payouts" button using an emerald green theme.
 - **UI Components**: Utilizes shadcn/ui (Radix UI primitives) for accessible and professional-looking components.
 - **Navigation**: Tabbed navigation (Groups, Deck, Scoreboard, Rules, 2/9/16 Game).
-- **User Flow**: Clean landing page, hamburger menu for user profile and logout.
+- **User Flow**: Clean landing page, restructured hamburger menu with Profile and About sections for enhanced user information access.
 - **Tutorial**: Includes a comprehensive 7-step interactive tutorial.
 
 ### Technical Implementations

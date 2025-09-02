@@ -1297,7 +1297,7 @@ export default function Home() {
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
                           <Link href="/forgot-password" className="cursor-pointer text-gray-900 hover:text-gray-700">
-                            <User className="h-4 w-4 mr-2" />
+                            <HelpCircle className="h-4 w-4 mr-2" />
                             Forgot Password
                           </Link>
                         </DropdownMenuItem>

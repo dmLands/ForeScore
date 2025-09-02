@@ -1314,7 +1314,7 @@ export default function Home() {
                           onClick={() => setShowAboutForescore(true)}
                         >
                           <Info className="h-4 w-4 mr-2" />
-                          About Forescore
+                          About ForeScore
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           className="cursor-pointer" 
@@ -3983,17 +3983,11 @@ export default function Home() {
             <DialogTitle>About ForeScore</DialogTitle>
           </DialogHeader>
           <div className="prose prose-sm max-w-none">
-            <p>ForeScore is a mobile application designed to make golf more engaging by simplifying the way players track scores, side games, and payouts. Built for both casual rounds and competitive play, ForeScore helps golfers stay focused on the game while ensuring fair and transparent scorekeeping.</p>
-            
             <p>ForeScore is owned and operated by danoNano, LLC, a limited liability company registered in the State of Arizona, doing business as ForeScore. All rights to the application and its associated technology are reserved.</p>
             
             <p>For questions, feedback, or support, please contact us at:</p>
             
             <p><strong>Email:</strong> support@forescore.xyz</p>
-            
-            <p><strong>Website:</strong> https://forescore.xyz</p>
-            
-            <p><strong>Mailing Address:</strong> danoNano, LLC dba ForeScore, [insert your business mailing address here]</p>
           </div>
         </DialogContent>
       </Dialog>

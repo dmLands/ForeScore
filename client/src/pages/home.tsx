@@ -1295,10 +1295,10 @@ export default function Home() {
                           </div>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
-                          <a href="/forgot-password" className="cursor-pointer text-emerald-600 hover:text-emerald-700">
+                          <Link href="/forgot-password" className="cursor-pointer text-gray-900 hover:text-gray-700">
                             <User className="h-4 w-4 mr-2" />
-                            Forgot Password?
-                          </a>
+                            Forgot Password
+                          </Link>
                         </DropdownMenuItem>
                       </div>
                     </div>

@@ -136,13 +136,16 @@ export default function Login() {
           
           <div className="mt-6 text-center space-y-2">
             <p className="text-sm text-gray-600">
+              <Link href="/forgot-password" className="text-green-600 hover:text-green-700 font-medium" data-testid="link-forgot-password">
+                Forgot your password?
+              </Link>
+            </p>
+            <p className="text-sm text-gray-600">
               Don't have an account?{" "}
               <Link href="/register" className="text-green-600 hover:text-green-700 font-medium">
                 Create one
               </Link>
             </p>
-            
-
           </div>
         </CardContent>
       </Card>

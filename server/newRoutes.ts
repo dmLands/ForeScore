@@ -6,9 +6,11 @@ import { setupAuth, isAuthenticated, generateRoomToken } from "./replitAuth.js";
 import { calculateCardGameDetails, calculate2916Points, validateCardAssignment, calculateCardsGame, calculatePointsGame, calculateFbtGame, buildFbtNetsFromPointsGame, combineGames, settleWhoOwesWho, combineTotals, generateSettlement } from "./secureGameLogic.js";
 import { SecureWebSocketManager } from "./secureWebSocket.js";
 import { registerUser, authenticateUser, registerSchema, loginSchema } from "./localAuth.js";
-import { insertGroupSchema, insertGameStateSchema, insertPointsGameSchema, cardValuesSchema, pointsGameSettingsSchema, gameStates, roomStates, userPreferences, insertUserPreferencesSchema, type Card, type CardAssignment } from "@shared/schema";
+import { insertGroupSchema, insertGameStateSchema, insertPointsGameSchema, cardValuesSchema, pointsGameSettingsSchema, gameStates, roomStates, userPreferences, insertUserPreferencesSchema, passwordResetTokens, insertPasswordResetTokenSchema, users, type Card, type CardAssignment } from "@shared/schema";
 import { db } from "./db.js";
-import { sql } from "drizzle-orm";
+import { sql, eq, and, gt } from "drizzle-orm";
+import { sendPasswordResetEmail } from "./emailService.js";
+import bcrypt from "bcryptjs";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
@@ -95,6 +97,120 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json({ message: "Logged out successfully" });
       });
     });
+  });
+
+  // V6.8: Password Reset Routes
+  app.post('/api/auth/forgot-password', async (req, res) => {
+    try {
+      const { email } = z.object({ email: z.string().email() }).parse(req.body);
+      
+      // Find user by email
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, email))
+        .limit(1);
+      
+      if (!user) {
+        // Don't reveal whether email exists for security
+        return res.json({ message: "If an account with that email exists, a password reset link has been sent." });
+      }
+      
+      // Only allow password reset for local auth users
+      if (user.authMethod !== 'local') {
+        return res.status(400).json({ message: "Password reset is not available for this account type." });
+      }
+      
+      // Generate secure token
+      const token = crypto.getRandomValues(new Uint8Array(32)).reduce((hex, byte) => hex + byte.toString(16).padStart(2, '0'), '');
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
+      
+      // Store token in database
+      await db.insert(passwordResetTokens).values({
+        userId: user.id,
+        token,
+        expiresAt,
+        used: 0
+      });
+      
+      // Create reset link
+      const resetLink = `${req.protocol}://${req.get('host')}/reset-password?token=${token}`;
+      
+      // Send email
+      const emailSent = await sendPasswordResetEmail({
+        to: user.email!,
+        firstName: user.firstName || 'User',
+        resetLink
+      });
+      
+      if (!emailSent) {
+        return res.status(500).json({ message: "Failed to send password reset email. Please try again." });
+      }
+      
+      res.json({ message: "If an account with that email exists, a password reset link has been sent." });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: 'Invalid email format', 
+          errors: error.errors 
+        });
+      }
+      console.error("Forgot password error:", error);
+      res.status(500).json({ message: "An error occurred. Please try again." });
+    }
+  });
+
+  app.post('/api/auth/reset-password', async (req, res) => {
+    try {
+      const { token, password } = z.object({ 
+        token: z.string(),
+        password: z.string().min(8, "Password must be at least 8 characters")
+      }).parse(req.body);
+      
+      // Find valid token
+      const [resetToken] = await db
+        .select()
+        .from(passwordResetTokens)
+        .where(
+          and(
+            eq(passwordResetTokens.token, token),
+            eq(passwordResetTokens.used, 0),
+            gt(passwordResetTokens.expiresAt, new Date())
+          )
+        )
+        .limit(1);
+      
+      if (!resetToken) {
+        return res.status(400).json({ message: "Invalid or expired reset token." });
+      }
+      
+      // Hash new password
+      const saltRounds = 12;
+      const passwordHash = await bcrypt.hash(password, saltRounds);
+      
+      // Update user password
+      await db
+        .update(users)
+        .set({ passwordHash })
+        .where(eq(users.id, resetToken.userId));
+      
+      // Mark token as used
+      await db
+        .update(passwordResetTokens)
+        .set({ used: 1 })
+        .where(eq(passwordResetTokens.id, resetToken.id));
+      
+      res.json({ message: "Password reset successfully. You can now log in with your new password." });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: 'Invalid data', 
+          errors: error.errors 
+        });
+      }
+      console.error("Reset password error:", error);
+      res.status(500).json({ message: "An error occurred. Please try again." });
+    }
   });
 
   // Get current user endpoint

@@ -251,3 +251,21 @@ export const insertUserPreferencesSchema = createInsertSchema(userPreferences).o
 export type UserPreferences = typeof userPreferences.$inferSelect;
 export type InsertUserPreferences = z.infer<typeof insertUserPreferencesSchema>;
 
+// Password Reset Tokens Table - V6.8 Feature
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  token: varchar("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  used: integer("used").notNull().default(0), // 0 = not used, 1 = used
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertPasswordResetTokenSchema = createInsertSchema(passwordResetTokens).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
+export type InsertPasswordResetToken = z.infer<typeof insertPasswordResetTokenSchema>;
+

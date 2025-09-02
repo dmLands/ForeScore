@@ -8,6 +8,8 @@ import Home from "@/pages/home";
 import Landing from "@/pages/landing";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
+import ForgotPassword from "@/pages/forgot-password";
+import ResetPassword from "@/pages/reset-password";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -33,6 +35,8 @@ function Router() {
           <Route path="/" component={Landing} />
           <Route path="/login" component={Login} />
           <Route path="/register" component={Register} />
+          <Route path="/forgot-password" component={ForgotPassword} />
+          <Route path="/reset-password" component={ResetPassword} />
         </>
       )}
       <Route component={NotFound} />

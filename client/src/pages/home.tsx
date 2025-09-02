@@ -1287,19 +1287,18 @@ export default function Home() {
                     <div className="px-3 py-2">
                       <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Profile</div>
                       <div className="space-y-1">
-                        <DropdownMenuItem className="cursor-pointer">
-                          <User className="h-4 w-4 mr-2" />
-                          <div className="flex flex-col">
-                            <span className="text-sm font-medium">Name</span>
-                            <span className="text-xs text-gray-500">{(user as any).firstName || 'Not set'}</span>
-                          </div>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="cursor-pointer">
+                        <DropdownMenuItem>
                           <Mail className="h-4 w-4 mr-2" />
                           <div className="flex flex-col">
                             <span className="text-sm font-medium">Email</span>
                             <span className="text-xs text-gray-500">{(user as any).email || 'Not set'}</span>
                           </div>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <a href="/forgot-password" className="cursor-pointer text-emerald-600 hover:text-emerald-700">
+                            <User className="h-4 w-4 mr-2" />
+                            Forgot Password?
+                          </a>
                         </DropdownMenuItem>
                       </div>
                     </div>

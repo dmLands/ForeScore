@@ -3987,7 +3987,7 @@ export default function Home() {
             
             <p>For questions, feedback, or support, please contact us at:</p>
             
-            <p><strong>Email:</strong> support@forescore.xyz</p>
+            <p><strong>Email:</strong> support@danonano.com</p>
           </div>
         </DialogContent>
       </Dialog>

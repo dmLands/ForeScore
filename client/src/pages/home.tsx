@@ -223,6 +223,7 @@ export default function Home() {
   const [payoutMode, setPayoutMode] = useState<'points' | 'fbt'>('points');
   const [combinedPayoutMode, setCombinedPayoutMode] = useState<'points' | 'fbt' | 'both'>('points');
   const [showTermsOfService, setShowTermsOfService] = useState(false);
+  const [showAboutForescore, setShowAboutForescore] = useState(false);
 
   // V6.5: Save point/FBT values to server
   const savePointFbtValues = async () => {
@@ -1308,7 +1309,10 @@ export default function Home() {
                     <div className="px-3 py-2">
                       <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">About</div>
                       <div className="space-y-1">
-                        <DropdownMenuItem className="cursor-pointer">
+                        <DropdownMenuItem 
+                          className="cursor-pointer" 
+                          onClick={() => setShowAboutForescore(true)}
+                        >
                           <Info className="h-4 w-4 mr-2" />
                           About Forescore
                         </DropdownMenuItem>
@@ -3968,6 +3972,28 @@ export default function Home() {
                 Save
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* About ForeScore Dialog */}
+      <Dialog open={showAboutForescore} onOpenChange={setShowAboutForescore}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>About ForeScore</DialogTitle>
+          </DialogHeader>
+          <div className="prose prose-sm max-w-none">
+            <p>ForeScore is a mobile application designed to make golf more engaging by simplifying the way players track scores, side games, and payouts. Built for both casual rounds and competitive play, ForeScore helps golfers stay focused on the game while ensuring fair and transparent scorekeeping.</p>
+            
+            <p>ForeScore is owned and operated by danoNano, LLC, a limited liability company registered in the State of Arizona, doing business as ForeScore. All rights to the application and its associated technology are reserved.</p>
+            
+            <p>For questions, feedback, or support, please contact us at:</p>
+            
+            <p><strong>Email:</strong> support@forescore.xyz</p>
+            
+            <p><strong>Website:</strong> https://forescore.xyz</p>
+            
+            <p><strong>Mailing Address:</strong> danoNano, LLC dba ForeScore, [insert your business mailing address here]</p>
           </div>
         </DialogContent>
       </Dialog>

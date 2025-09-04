@@ -35,7 +35,7 @@ export default function ForgotPasswordPage() {
     setMessage(null);
 
     try {
-      const response = await apiRequest('POST', '/api/auth/magic-link', data);
+      const response = await apiRequest('POST', '/api/auth/forgot-password', data);
 
       const result = await response.json();
       setMessage(result.message);
@@ -63,9 +63,9 @@ export default function ForgotPasswordPage() {
                 <span className="font-bold text-lg">ForeScore</span>
               </div>
             </div>
-            <CardTitle className="text-2xl">Magic Link Login</CardTitle>
+            <CardTitle className="text-2xl">Forgot Password</CardTitle>
             <CardDescription>
-              Enter your email address and we'll send you a secure link to log in instantly.
+              Enter your email address and we'll send you a link to reset your password.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -108,9 +108,9 @@ export default function ForgotPasswordPage() {
                   type="submit" 
                   className="w-full bg-emerald-600 hover:bg-emerald-700" 
                   disabled={isLoading}
-                  data-testid="button-send-magic-link"
+                  data-testid="button-send-reset-link"
                 >
-                  {isLoading ? 'Sending...' : 'Send Magic Link'}
+                  {isLoading ? 'Sending...' : 'Send Reset Link'}
                 </Button>
               </form>
             </Form>

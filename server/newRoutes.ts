@@ -9,7 +9,7 @@ import { registerUser, authenticateUser, registerSchema, loginSchema } from "./l
 import { insertGroupSchema, insertGameStateSchema, insertPointsGameSchema, cardValuesSchema, pointsGameSettingsSchema, gameStates, roomStates, userPreferences, insertUserPreferencesSchema, passwordResetTokens, insertPasswordResetTokenSchema, users, type Card, type CardAssignment } from "@shared/schema";
 import { db } from "./db.js";
 import { sql, eq, and, gt } from "drizzle-orm";
-import { sendMagicLinkEmail } from "./emailService.js";
+import { sendForgotPasswordEmail } from "./emailService.js";
 import { randomBytes } from "crypto";
 import bcrypt from "bcryptjs";
 
@@ -101,7 +101,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // V6.8: Password Reset Routes
-  app.post('/api/auth/magic-link', async (req, res) => {
+  app.post('/api/auth/forgot-password', async (req, res) => {
     try {
       const { email } = z.object({ email: z.string().email() }).parse(req.body);
       
@@ -134,11 +134,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         used: 0
       });
       
-      // Create magic login link
-      const loginLink = `${req.protocol}://${req.get('host')}/magic-login?token=${token}`;
+      // Create password reset link  
+      const loginLink = `${req.protocol}://${req.get('host')}/reset-password?token=${token}`;
       
       // Send email
-      const emailSent = await sendMagicLinkEmail({
+      const emailSent = await sendForgotPasswordEmail({
         to: user.email!,
         firstName: user.firstName || 'User',
         loginLink
@@ -163,7 +163,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/auth/magic-login', async (req, res) => {
+  app.post('/api/auth/reset-password', async (req, res) => {
     try {
       const { token } = z.object({ 
         token: z.string()

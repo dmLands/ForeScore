@@ -7,13 +7,13 @@ if (!process.env.SENDGRID_API_KEY) {
 const mailService = new MailService();
 mailService.setApiKey(process.env.SENDGRID_API_KEY);
 
-interface MagicLinkEmailParams {
+interface ForgotPasswordEmailParams {
   to: string;
   firstName: string;
   loginLink: string;
 }
 
-export async function sendMagicLinkEmail(params: MagicLinkEmailParams): Promise<boolean> {
+export async function sendForgotPasswordEmail(params: ForgotPasswordEmailParams): Promise<boolean> {
   const { to, firstName, loginLink } = params;
   
   const emailContent = {
@@ -22,7 +22,7 @@ export async function sendMagicLinkEmail(params: MagicLinkEmailParams): Promise<
         email: process.env.SENDGRID_FROM_EMAIL || 'support@danonano.com',
         name: process.env.SENDGRID_FROM_NAME || 'ForeScore Support'
       },
-      subject: 'Your ForeScore Login Link',
+      subject: 'Reset Your ForeScore Password',
       html: `
         <!DOCTYPE html>
         <html>
@@ -81,26 +81,26 @@ export async function sendMagicLinkEmail(params: MagicLinkEmailParams): Promise<
         <body>
           <div class="header">
             <h1>🏌️ ForeScore</h1>
-            <p>Magic Login Link</p>
+            <p>Password Reset Request</p>
           </div>
           
           <div class="content">
             <h2>Hello ${firstName}!</h2>
             
-            <p>Click the button below to instantly log into your ForeScore account. No password needed!</p>
+            <p>We received a request to reset your ForeScore password. Click the button below to securely reset your password:</p>
             
             <div style="text-align: center;">
-              <a href="${loginLink}" class="reset-button">Login to ForeScore</a>
+              <a href="${loginLink}" class="reset-button">Reset Password</a>
             </div>
             
             <div class="warning">
               <strong>⚠️ Security Notice:</strong><br>
-              This link will expire in 30 minutes for your security. If you don't log in within this time, you'll need to request a new login link.
+              This link will expire in 30 minutes for your security. If you don't reset your password within this time, you'll need to request a new reset link.
             </div>
             
-            <p>If you didn't request this login link, you can safely ignore this email. Your account remains secure.</p>
+            <p>If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.</p>
             
-            <p>For security reasons, this link can only be used once. After you log in, this link will no longer work.</p>
+            <p>For security reasons, this link can only be used once. After you reset your password, this link will no longer work.</p>
           </div>
           
           <div class="footer">
@@ -115,13 +115,13 @@ export async function sendMagicLinkEmail(params: MagicLinkEmailParams): Promise<
       text: `
 Hello ${firstName}!
 
-Click the link below to instantly log into your ForeScore account:
+We received a request to reset your ForeScore password. Click the link below to securely reset your password:
 
 ${loginLink}
 
 This link will expire in 30 minutes for your security.
 
-If you didn't request this login link, you can safely ignore this email. Your account remains secure.
+If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.
 
 For security reasons, this link can only be used once.
 
@@ -133,7 +133,7 @@ This email was sent from ForeScore, owned and operated by danoNano, LLC.
 
   try {
     await mailService.send(emailContent);
-    console.log(`Magic link email sent successfully to ${to}`);
+    console.log(`Password reset email sent successfully to ${to}`);
     return true;
   } catch (error: any) {
     console.error('SendGrid send error', {

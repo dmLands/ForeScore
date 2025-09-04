@@ -9,7 +9,7 @@ import Landing from "@/pages/landing";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
 import ForgotPassword from "@/pages/forgot-password";
-import MagicLogin from "@/pages/magic-login";
+import ResetPassword from "@/pages/reset-password";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -32,7 +32,7 @@ function Router() {
         <>
           <Route path="/" component={Home} />
           <Route path="/forgot-password" component={ForgotPassword} />
-          <Route path="/magic-login" component={MagicLogin} />
+          <Route path="/reset-password" component={ResetPassword} />
         </>
       ) : (
         <>
@@ -40,7 +40,7 @@ function Router() {
           <Route path="/login" component={Login} />
           <Route path="/register" component={Register} />
           <Route path="/forgot-password" component={ForgotPassword} />
-          <Route path="/magic-login" component={MagicLogin} />
+          <Route path="/reset-password" component={ResetPassword} />
         </>
       )}
       <Route component={NotFound} />

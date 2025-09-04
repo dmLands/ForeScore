@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Eye, EyeOff, CheckCircle, XCircle, Loader2 } from 'lucide-react';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 
 const resetPasswordSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters'),
@@ -95,8 +95,15 @@ export default function ResetPasswordPage() {
       setMessage(result.message);
       form.reset();
       
-      // Redirect to login after 3 seconds
-      setTimeout(() => {
+      // Log out the user first, then redirect to login after 3 seconds
+      setTimeout(async () => {
+        try {
+          await fetch('/api/auth/logout', { method: 'POST' });
+          // Invalidate auth queries to immediately update auth state
+          queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+        } catch (error) {
+          // Ignore logout errors, just redirect
+        }
         setLocation('/login');
       }, 3000);
     } catch (error) {

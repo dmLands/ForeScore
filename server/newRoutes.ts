@@ -150,7 +150,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error('Magic link email failed to send for user:', user.id);
       }
       
-      res.json({ message: "If an account with that email exists, a magic login link has been sent." });
+      res.json({ message: "If an account with that email exists, a link to reset your password has been sent." });
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ 
@@ -183,7 +183,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .limit(1);
       
       if (!resetToken) {
-        return res.status(400).json({ message: "Invalid or expired login token." });
+        return res.status(400).json({ message: "Invalid or expired reset token." });
       }
       
       // Get user for login
@@ -194,22 +194,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .limit(1);
       
       if (!user) {
-        return res.status(400).json({ message: "Invalid login token." });
+        return res.status(400).json({ message: "Invalid reset token." });
       }
       
-      // Mark token as used
-      await db
-        .update(passwordResetTokens)
-        .set({ used: 1 })
-        .where(eq(passwordResetTokens.id, resetToken.id));
+      // Don't mark token as used yet - save for when password is actually updated
       
-      // Log the user in
-      req.login(user, (err) => {
-        if (err) {
-          console.error('Magic link login error:', err);
-          return res.status(500).json({ message: "Login failed. Please try again." });
-        }
-        res.json({ message: "Successfully logged in!" });
+      // Token is valid - allow password reset
+      res.json({ 
+        message: "Token validated successfully.",
+        success: true,
+        userId: user.id
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -218,8 +212,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
           errors: error.errors 
         });
       }
-      console.error("Magic login error:", error);
+      console.error("Reset password validation error:", error);
       res.status(500).json({ message: "An error occurred. Please try again." });
+    }
+  });
+
+  // Actually update the password
+  app.post('/api/auth/update-password', async (req, res) => {
+    try {
+      const { token, userId, password } = z.object({ 
+        token: z.string(),
+        userId: z.string(),
+        password: z.string().min(8, "Password must be at least 8 characters")
+      }).parse(req.body);
+      
+      // Find valid token again
+      const [resetToken] = await db
+        .select()
+        .from(passwordResetTokens)
+        .where(
+          and(
+            eq(passwordResetTokens.token, token),
+            eq(passwordResetTokens.userId, userId),
+            eq(passwordResetTokens.used, 0),
+            gt(passwordResetTokens.expiresAt, new Date())
+          )
+        )
+        .limit(1);
+      
+      if (!resetToken) {
+        return res.status(400).json({ message: "Invalid or expired reset token." });
+      }
+      
+      // Hash new password
+      const saltRounds = 12;
+      const passwordHash = await bcrypt.hash(password, saltRounds);
+      
+      // Update user password
+      await db
+        .update(users)
+        .set({ passwordHash })
+        .where(eq(users.id, userId));
+      
+      // Mark token as used
+      await db
+        .update(passwordResetTokens)
+        .set({ used: 1 })
+        .where(eq(passwordResetTokens.id, resetToken.id));
+      
+      res.json({ message: "Password reset successfully. You can now log in with your new password." });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: 'Invalid data', 
+          errors: error.errors 
+        });
+      }
+      console.error("Update password error:", error);
+      res.status(500).json({ message: "Failed to update password. Please try again." });
     }
   });
 

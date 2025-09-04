@@ -33,8 +33,6 @@ function Router() {
           <Route path="/" component={Home} />
           <Route path="/forgot-password" component={ForgotPassword} />
           <Route path="/reset-password" component={ResetPassword} />
-          <Route path="/login" component={Login} />
-          <Route path="/register" component={Register} />
         </>
       ) : (
         <>

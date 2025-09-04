@@ -95,16 +95,9 @@ export default function ResetPasswordPage() {
       setMessage(result.message);
       form.reset();
       
-      // Log out the user first, then redirect to login after 3 seconds
-      setTimeout(async () => {
-        try {
-          await fetch('/api/auth/logout', { method: 'POST' });
-          // Invalidate auth queries to immediately update auth state
-          queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-        } catch (error) {
-          // Ignore logout errors, just redirect
-        }
-        setLocation('/login');
+      // Redirect to home after 3 seconds (user will see login page due to logout)
+      setTimeout(() => {
+        setLocation('/');
       }, 3000);
     } catch (error) {
       setMessage('Failed to reset password. Please try again.');

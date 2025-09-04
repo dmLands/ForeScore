@@ -53,7 +53,7 @@ export default function ForgotPasswordPage() {
         <Card className="shadow-lg">
           <CardHeader className="space-y-1">
             <div className="flex items-center gap-2 mb-4">
-              <Link href="/login" className="text-muted-foreground hover:text-foreground transition-colors">
+              <Link href="/" className="text-muted-foreground hover:text-foreground transition-colors">
                 <ArrowLeft className="h-4 w-4" />
               </Link>
               <div className="flex items-center gap-2">
@@ -117,11 +117,11 @@ export default function ForgotPasswordPage() {
 
             <div className="mt-4 text-center">
               <Link 
-                href="/login" 
+                href="/" 
                 className="text-sm text-muted-foreground hover:text-emerald-600 transition-colors"
-                data-testid="link-back-to-login"
+                data-testid="link-back-to-home"
               >
-                Back to Sign In
+                Back to Home
               </Link>
             </div>
           </CardContent>

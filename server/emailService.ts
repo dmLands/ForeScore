@@ -19,7 +19,7 @@ export async function sendPasswordResetEmail(params: PasswordResetEmailParams): 
     
     const emailContent = {
       to,
-      from: 'support@danonano.com', // Verified sender
+      from: 'noreply@replit.app', // Use Replit's verified domain
       subject: 'Reset Your ForeScore Password',
       html: `
         <!DOCTYPE html>

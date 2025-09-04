@@ -7,23 +7,22 @@ if (!process.env.SENDGRID_API_KEY) {
 const mailService = new MailService();
 mailService.setApiKey(process.env.SENDGRID_API_KEY);
 
-interface PasswordResetEmailParams {
+interface MagicLinkEmailParams {
   to: string;
   firstName: string;
-  resetLink: string;
+  loginLink: string;
 }
 
-export async function sendPasswordResetEmail(params: PasswordResetEmailParams): Promise<boolean> {
-  try {
-    const { to, firstName, resetLink } = params;
-    
-    const emailContent = {
+export async function sendMagicLinkEmail(params: MagicLinkEmailParams): Promise<boolean> {
+  const { to, firstName, loginLink } = params;
+  
+  const emailContent = {
       to,
       from: {
         email: process.env.SENDGRID_FROM_EMAIL || 'support@danonano.com',
         name: process.env.SENDGRID_FROM_NAME || 'ForeScore Support'
       },
-      subject: 'Reset Your ForeScore Password',
+      subject: 'Your ForeScore Login Link',
       html: `
         <!DOCTYPE html>
         <html>
@@ -82,31 +81,31 @@ export async function sendPasswordResetEmail(params: PasswordResetEmailParams): 
         <body>
           <div class="header">
             <h1>🏌️ ForeScore</h1>
-            <p>Password Reset Request</p>
+            <p>Magic Login Link</p>
           </div>
           
           <div class="content">
             <h2>Hello ${firstName}!</h2>
             
-            <p>We received a request to reset your ForeScore password. If you made this request, click the button below to create a new password:</p>
+            <p>Click the button below to instantly log into your ForeScore account. No password needed!</p>
             
             <div style="text-align: center;">
-              <a href="${resetLink}" class="reset-button">Reset Password</a>
+              <a href="${loginLink}" class="reset-button">Login to ForeScore</a>
             </div>
             
             <div class="warning">
               <strong>⚠️ Security Notice:</strong><br>
-              This link will expire in 1 hour for your security. If you don't reset your password within this time, you'll need to request a new reset link.
+              This link will expire in 30 minutes for your security. If you don't log in within this time, you'll need to request a new login link.
             </div>
             
-            <p>If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.</p>
+            <p>If you didn't request this login link, you can safely ignore this email. Your account remains secure.</p>
             
-            <p>For security reasons, this link can only be used once. After you reset your password, this link will no longer work.</p>
+            <p>For security reasons, this link can only be used once. After you log in, this link will no longer work.</p>
           </div>
           
           <div class="footer">
             <p><strong>Need help?</strong> Contact our support team at support@danonano.com</p>
-            <p>If this link doesn't work, you can copy and paste this URL into your browser: ${resetLink}</p>
+            <p>If this link doesn't work, you can copy and paste this URL into your browser: ${loginLink}</p>
             <p>This email was sent from ForeScore, owned and operated by danoNano, LLC.</p>
             <p><small>Please do not reply to this automated email.</small></p>
           </div>
@@ -116,13 +115,13 @@ export async function sendPasswordResetEmail(params: PasswordResetEmailParams): 
       text: `
 Hello ${firstName}!
 
-We received a request to reset your ForeScore password. If you made this request, click the link below to create a new password:
+Click the link below to instantly log into your ForeScore account:
 
-${resetLink}
+${loginLink}
 
-This link will expire in 1 hour for your security.
+This link will expire in 30 minutes for your security.
 
-If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.
+If you didn't request this login link, you can safely ignore this email. Your account remains secure.
 
 For security reasons, this link can only be used once.
 
@@ -132,8 +131,9 @@ This email was sent from ForeScore, owned and operated by danoNano, LLC.
       `
     };
 
+  try {
     await mailService.send(emailContent);
-    console.log(`Password reset email sent successfully to ${to}`);
+    console.log(`Magic link email sent successfully to ${to}`);
     return true;
   } catch (error: any) {
     console.error('SendGrid send error', {

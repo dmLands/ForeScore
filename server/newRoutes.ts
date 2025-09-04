@@ -9,7 +9,7 @@ import { registerUser, authenticateUser, registerSchema, loginSchema } from "./l
 import { insertGroupSchema, insertGameStateSchema, insertPointsGameSchema, cardValuesSchema, pointsGameSettingsSchema, gameStates, roomStates, userPreferences, insertUserPreferencesSchema, passwordResetTokens, insertPasswordResetTokenSchema, users, type Card, type CardAssignment } from "@shared/schema";
 import { db } from "./db.js";
 import { sql, eq, and, gt } from "drizzle-orm";
-import { sendPasswordResetEmail } from "./emailService.js";
+import { sendMagicLinkEmail } from "./emailService.js";
 import { randomBytes } from "crypto";
 import bcrypt from "bcryptjs";
 
@@ -101,7 +101,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // V6.8: Password Reset Routes
-  app.post('/api/auth/forgot-password', async (req, res) => {
+  app.post('/api/auth/magic-link', async (req, res) => {
     try {
       const { email } = z.object({ email: z.string().email() }).parse(req.body);
       
@@ -124,7 +124,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Generate secure token
       const token = randomBytes(32).toString('hex');
-      const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
+      const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes from now
       
       // Store token in database
       await db.insert(passwordResetTokens).values({
@@ -134,23 +134,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         used: 0
       });
       
-      // Create reset link
-      const resetLink = `${req.protocol}://${req.get('host')}/reset-password?token=${token}`;
+      // Create magic login link
+      const loginLink = `${req.protocol}://${req.get('host')}/magic-login?token=${token}`;
       
       // Send email
-      const emailSent = await sendPasswordResetEmail({
+      const emailSent = await sendMagicLinkEmail({
         to: user.email!,
         firstName: user.firstName || 'User',
-        resetLink
+        loginLink
       });
       
       // Always return success for security (don't reveal if email send failed)
       // Log internally for debugging but don't expose to user
       if (!emailSent) {
-        console.error('Password reset email failed to send for user:', user.id);
+        console.error('Magic link email failed to send for user:', user.id);
       }
       
-      res.json({ message: "If an account with that email exists, a password reset link has been sent." });
+      res.json({ message: "If an account with that email exists, a magic login link has been sent." });
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ 
@@ -158,16 +158,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           errors: error.errors 
         });
       }
-      console.error("Forgot password error:", error);
+      console.error("Magic link error:", error);
       res.status(500).json({ message: "An error occurred. Please try again." });
     }
   });
 
-  app.post('/api/auth/reset-password', async (req, res) => {
+  app.post('/api/auth/magic-login', async (req, res) => {
     try {
-      const { token, password } = z.object({ 
-        token: z.string(),
-        password: z.string().min(8, "Password must be at least 8 characters")
+      const { token } = z.object({ 
+        token: z.string()
       }).parse(req.body);
       
       // Find valid token
@@ -184,18 +183,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .limit(1);
       
       if (!resetToken) {
-        return res.status(400).json({ message: "Invalid or expired reset token." });
+        return res.status(400).json({ message: "Invalid or expired login token." });
       }
       
-      // Hash new password
-      const saltRounds = 12;
-      const passwordHash = await bcrypt.hash(password, saltRounds);
+      // Get user for login
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, resetToken.userId))
+        .limit(1);
       
-      // Update user password
-      await db
-        .update(users)
-        .set({ passwordHash })
-        .where(eq(users.id, resetToken.userId));
+      if (!user) {
+        return res.status(400).json({ message: "Invalid login token." });
+      }
       
       // Mark token as used
       await db
@@ -203,7 +203,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .set({ used: 1 })
         .where(eq(passwordResetTokens.id, resetToken.id));
       
-      res.json({ message: "Password reset successfully. You can now log in with your new password." });
+      // Log the user in
+      req.login(user, (err) => {
+        if (err) {
+          console.error('Magic link login error:', err);
+          return res.status(500).json({ message: "Login failed. Please try again." });
+        }
+        res.json({ message: "Successfully logged in!" });
+      });
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ 
@@ -211,7 +218,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           errors: error.errors 
         });
       }
-      console.error("Reset password error:", error);
+      console.error("Magic login error:", error);
       res.status(500).json({ message: "An error occurred. Please try again." });
     }
   });

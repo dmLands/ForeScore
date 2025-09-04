@@ -53,8 +53,8 @@ export async function sendForgotPasswordEmail(params: ForgotPasswordEmailParams)
               border: 1px solid #e5e7eb;
             }
             .reset-button {
-              background-color: #059669;
-              color: white;
+              background-color: #dc2626;
+              color: #ffffff !important;
               padding: 12px 24px;
               text-decoration: none;
               border-radius: 6px;
@@ -90,7 +90,7 @@ export async function sendForgotPasswordEmail(params: ForgotPasswordEmailParams)
             <p>We received a request to reset your ForeScore password. Click the button below to securely reset your password:</p>
             
             <div style="text-align: center;">
-              <a href="${loginLink}" class="reset-button">Reset Password</a>
+              <a href="${loginLink}" class="reset-button" style="background-color:#dc2626;color:#ffffff !important;text-decoration:none !important;display:inline-block;padding:12px 24px;border-radius:6px;font-weight:bold;">Reset Password</a>
             </div>
             
             <div class="warning">

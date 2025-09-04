@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Link, useLocation } from "wouter";
+import { useAuth } from "@/hooks/useAuth";
 import { z } from "zod";
 
 const loginSchema = z.object({
@@ -19,6 +20,14 @@ type LoginForm = z.infer<typeof loginSchema>;
 export default function Login() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { isAuthenticated, isLoading } = useAuth();
+
+  // Redirect to home if already authenticated
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      setLocation('/');
+    }
+  }, [isAuthenticated, isLoading, setLocation]);
   const [formData, setFormData] = useState<LoginForm>({
     email: "",
     password: "",

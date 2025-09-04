@@ -10,6 +10,7 @@ import { insertGroupSchema, insertGameStateSchema, insertPointsGameSchema, cardV
 import { db } from "./db.js";
 import { sql, eq, and, gt } from "drizzle-orm";
 import { sendPasswordResetEmail } from "./emailService.js";
+import { randomBytes } from "crypto";
 import bcrypt from "bcryptjs";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -122,7 +123,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Generate secure token
-      const token = crypto.getRandomValues(new Uint8Array(32)).reduce((hex, byte) => hex + byte.toString(16).padStart(2, '0'), '');
+      const token = randomBytes(32).toString('hex');
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
       
       // Store token in database

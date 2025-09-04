@@ -137,9 +137,16 @@ This email was sent from ForeScore, owned and operated by danoNano, LLC.
     return true;
   } catch (error: any) {
     console.error('SendGrid send error', {
-      message: error.message,
-      code: error.code,
-      response: error.response?.body || error.response,
+      message: error?.message,
+      code: error?.code,
+      statusCode: error?.response?.statusCode,
+      body: error?.response?.body ? JSON.stringify(error.response.body, null, 2) : undefined,
+      headers: error?.response?.headers,
+      context: {
+        from: emailContent.from?.email,
+        to: emailContent.to,
+        subject: emailContent.subject,
+      },
     });
     return false;
   }

@@ -4,7 +4,14 @@
 ForeScore V6.7 is a secure, full-stack application designed as a companion for the golf penalty game "Animal." It provides enterprise-grade local authentication, server-side security validation, and enhanced payout visualization. The application supports complete group management, card game mechanics utilizing a Proportional Share Algorithm, isolated 2/9/16 points games per session, and multiple payout calculation views. All game calculations are performed server-side to prevent tampering, ensuring secure user authentication and session management. The project's vision is to offer a robust, reliable, and secure platform for managing golf penalty games, with ambitions to become the leading digital tool in this niche.
 
 ## Recent Changes
-### V6.7 (Current) - September 2025
+### V6.8 (Current) - September 2025
+- **SendGrid Email Integration Hardening**:
+  - **Proper Sender Configuration**: Made from email configurable via SENDGRID_FROM_EMAIL environment variable (defaults to support@danonano.com)
+  - **Enhanced Error Logging**: Added detailed SendGrid response logging to troubleshoot API errors while maintaining user security
+  - **Security Improvements**: Password reset always returns success message regardless of email send status to prevent account enumeration
+  - **Brand Consistency**: Maintained branded sender email from @danonano.com domain instead of switching to generic providers
+
+### V6.7 - September 2025
 - **Hamburger Menu Restructure**:
   - **Username Display**: Maintained username only in submenu header for clean presentation
   - **Profile Section**: Added new Profile section displaying user information including name and email with organized layout

@@ -143,8 +143,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         resetLink
       });
       
+      // Always return success for security (don't reveal if email send failed)
+      // Log internally for debugging but don't expose to user
       if (!emailSent) {
-        return res.status(500).json({ message: "Failed to send password reset email. Please try again." });
+        console.error('Password reset email failed to send for user:', user.id);
       }
       
       res.json({ message: "If an account with that email exists, a password reset link has been sent." });

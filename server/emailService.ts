@@ -19,7 +19,10 @@ export async function sendPasswordResetEmail(params: PasswordResetEmailParams): 
     
     const emailContent = {
       to,
-      from: 'noreply@replit.app', // Use Replit's verified domain
+      from: {
+        email: process.env.SENDGRID_FROM_EMAIL || 'support@danonano.com',
+        name: process.env.SENDGRID_FROM_NAME || 'ForeScore Support'
+      },
       subject: 'Reset Your ForeScore Password',
       html: `
         <!DOCTYPE html>
@@ -103,6 +106,7 @@ export async function sendPasswordResetEmail(params: PasswordResetEmailParams): 
           
           <div class="footer">
             <p><strong>Need help?</strong> Contact our support team at support@danonano.com</p>
+            <p>If this link doesn't work, you can copy and paste this URL into your browser: ${resetLink}</p>
             <p>This email was sent from ForeScore, owned and operated by danoNano, LLC.</p>
             <p><small>Please do not reply to this automated email.</small></p>
           </div>
@@ -131,8 +135,12 @@ This email was sent from ForeScore, owned and operated by danoNano, LLC.
     await mailService.send(emailContent);
     console.log(`Password reset email sent successfully to ${to}`);
     return true;
-  } catch (error) {
-    console.error('Failed to send password reset email:', error);
+  } catch (error: any) {
+    console.error('SendGrid send error', {
+      message: error.message,
+      code: error.code,
+      response: error.response?.body || error.response,
+    });
     return false;
   }
 }

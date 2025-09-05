@@ -11,12 +11,18 @@ import { db } from "./db.js";
 import { sql, eq, and, gt } from "drizzle-orm";
 import { sendForgotPasswordEmail } from "./emailService.js";
 import { stripeService, SUBSCRIPTION_PLANS } from "./stripeService.js";
+import { requireSubscriptionAccess, isPublicRoute } from "./subscriptionMiddleware.js";
 import { randomBytes } from "crypto";
 import bcrypt from "bcryptjs";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication
   await setupAuth(app);
+
+  // Apply subscription middleware to protected routes only
+  const subscriptionProtected = (req: any, res: any, next: any) => {
+    return requireSubscriptionAccess(req, res, next);
+  };
 
   // Auth routes - removed duplicate, using the one below
 
@@ -444,7 +450,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Groups endpoints (protected) - User isolation
-  app.get('/api/groups', isAuthenticated, async (req: any, res) => {
+  app.get('/api/groups', isAuthenticated, subscriptionProtected, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const groups = await storage.getGroupsByUser(userId);
@@ -468,7 +474,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/groups', isAuthenticated, async (req: any, res) => {
+  app.post('/api/groups', isAuthenticated, subscriptionProtected, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const validatedData = insertGroupSchema.parse(req.body);
@@ -546,7 +552,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Simple game creation endpoint
-  app.post('/api/game-state', isAuthenticated, async (req: any, res) => {
+  app.post('/api/game-state', isAuthenticated, subscriptionProtected, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { groupId, name } = req.body;
@@ -1071,7 +1077,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // CRITICAL: Add missing points games routes that were in routes.ts but not here
   // Points Game routes - Get all points games for a group/gameState
-  app.get("/api/points-games/:groupId", isAuthenticated, async (req: any, res) => {
+  app.get("/api/points-games/:groupId", isAuthenticated, subscriptionProtected, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { gameStateId } = req.query; // Optional gameStateId filter

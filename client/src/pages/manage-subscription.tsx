@@ -123,9 +123,9 @@ export default function ManageSubscription() {
     switch (statusInfo.status) {
       case 'trial':
         return {
-          title: 'Free Trial Active',
-          description: `Your 7-day free trial ends on ${formatDate(accessInfo?.trialEndsAt)}`,
-          badge: <Badge className="bg-blue-100 text-blue-800">Trial</Badge>
+          title: 'Subscription Active',
+          description: 'Your ForeScore subscription is active and ready to use',
+          badge: <Badge className="bg-blue-100 text-blue-800">Active</Badge>
         };
       case 'active':
         return {
@@ -135,14 +135,14 @@ export default function ManageSubscription() {
         };
       case 'expired':
         return {
-          title: 'Trial Expired',
-          description: 'Your free trial has ended. Upgrade to continue using ForeScore',
-          badge: <Badge className="bg-red-100 text-red-800">Expired</Badge>
+          title: 'Subscription Required',
+          description: 'Subscribe to continue using ForeScore',
+          badge: <Badge className="bg-red-100 text-red-800">Inactive</Badge>
         };
       default:
         return {
           title: 'No Active Subscription',
-          description: 'Start your free trial to access ForeScore Pro features',
+          description: 'Subscribe to access ForeScore features',
           badge: <Badge variant="secondary">Inactive</Badge>
         };
     }
@@ -192,25 +192,6 @@ export default function ManageSubscription() {
             </div>
           </CardHeader>
           
-          {statusInfo.status === 'trial' && accessInfo?.trialEndsAt && (
-            <CardContent>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex items-start space-x-3">
-                  <Clock className="w-5 h-5 text-blue-600 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium text-blue-900">Trial Information</h4>
-                    <p className="text-sm text-blue-700 mt-1">
-                      Your free trial gives you full access to ForeScore Pro features. 
-                      To continue using the app after your trial ends, you'll need to subscribe.
-                    </p>
-                    <p className="text-sm font-medium text-blue-800 mt-2">
-                      Days remaining: {Math.max(0, Math.ceil((new Date(accessInfo.trialEndsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          )}
         </Card>
 
         {/* Actions Card */}

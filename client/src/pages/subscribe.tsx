@@ -87,11 +87,11 @@ const SubscribeForm = ({ selectedPlan, onSubscriptionComplete }: {
           <div className="flex items-center space-x-2">
             <Clock className="h-5 w-5 text-blue-600" />
             <p className="text-sm text-blue-800">
-              <strong>Your 7-day free trial starts now!</strong> No charge today.
+              <strong>Start your trial now!</strong> No charge for 7 days.
             </p>
           </div>
           <p className="text-xs text-blue-600 mt-1">
-            You can cancel anytime during your trial with no charge.
+            Full access to all features included.
           </p>
         </div>
         <PaymentElement />
@@ -179,7 +179,7 @@ const PlanCard = ({
           </div>
           <div className="flex items-center space-x-2">
             <Clock className="h-4 w-4 text-blue-600" />
-            <span className="text-sm font-medium text-blue-600">7-day free trial</span>
+            <span className="text-sm font-medium text-blue-600">Free trial included</span>
           </div>
         </div>
       </CardContent>

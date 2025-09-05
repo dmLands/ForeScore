@@ -24,35 +24,20 @@ export function useSubscriptionAccess() {
     refetchOnMount: true,
   });
 
-  // Handle subscription access redirects
-  useEffect(() => {
-    if (!isLoading && accessInfo && !accessInfo.hasAccess) {
-      // Check if we're already on the subscribe page to avoid redirect loop
-      if (!window.location.pathname.includes('/subscribe')) {
-        toast({
-          title: "Subscription Required",
-          description: accessInfo.reason === 'Trial expired' 
-            ? "Your free trial has ended. Please upgrade to continue using ForeScore."
-            : "You need an active subscription to access ForeScore features.",
-          variant: "destructive",
-        });
-        
-        setLocation('/subscribe');
-      }
-    }
-  }, [accessInfo, isLoading, setLocation, toast]);
+  // No longer redirect based on subscription status since users are logged out when expired
 
-  // Handle API errors (403 responses from subscription middleware)
+  // Handle API errors (401 responses now indicate session expired due to no subscription)
   useEffect(() => {
-    if (error && 'status' in error && error.status === 403) {
-      if (!window.location.pathname.includes('/subscribe')) {
+    if (error && 'status' in error && error.status === 401) {
+      // User was logged out due to expired subscription - redirect to login
+      if (!window.location.pathname.includes('/login')) {
         toast({
-          title: "Subscription Required",
-          description: "Please upgrade your account to access this feature.",
+          title: "Session Expired",
+          description: "Please log in again to continue.",
           variant: "destructive",
         });
         
-        setLocation('/subscribe');
+        setLocation('/login');
       }
     }
   }, [error, setLocation, toast]);

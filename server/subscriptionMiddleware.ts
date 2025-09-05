@@ -41,12 +41,27 @@ export async function requireSubscriptionAccess(
       return next();
     }
 
-    // No access - return subscription required response
-    return res.status(403).json({
-      message: 'Subscription required',
-      redirectTo: '/subscribe',
-      reason: accessInfo.reason,
-      trialEndsAt: accessInfo.trialEndsAt
+    // No access - log user out and require re-authentication with payment
+    req.logout((err) => {
+      if (err) {
+        console.error('Logout error during subscription check:', err);
+      }
+      
+      // Destroy session
+      req.session.destroy((err) => {
+        if (err) {
+          console.error('Session destroy error:', err);
+        }
+        
+        // Clear session cookie
+        res.clearCookie('connect.sid');
+        
+        // Return unauthorized to force login flow
+        return res.status(401).json({
+          message: 'Your session has expired. Please log in again.',
+          redirectTo: '/login'
+        });
+      });
     });
 
   } catch (error) {

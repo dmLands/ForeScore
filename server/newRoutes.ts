@@ -67,17 +67,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         expires_at: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60), // 7 days
       };
       
-      req.login((req as any).user, (err) => {
+      req.login((req as any).user, async (err) => {
         if (err) {
           return res.status(500).json({ message: "Login failed" });
         }
         
-        // Return user without sensitive data
-        const { passwordHash, ...userResponse } = user;
-        res.json({ 
-          message: "Login successful",
-          user: userResponse 
-        });
+        // Check subscription status after successful login
+        try {
+          const accessInfo = await stripeService.hasAccess(user.id);
+          
+          // Return user data with subscription info for frontend routing
+          const { passwordHash, ...userResponse } = user;
+          res.json({ 
+            message: "Login successful",
+            user: userResponse,
+            requiresSubscription: !accessInfo.hasAccess
+          });
+        } catch (error) {
+          console.error('Error checking subscription during login:', error);
+          // Still allow login but let middleware handle subscription later
+          const { passwordHash, ...userResponse } = user;
+          res.json({ 
+            message: "Login successful",
+            user: userResponse 
+          });
+        }
       });
     } catch (error) {
       if (error instanceof z.ZodError) {

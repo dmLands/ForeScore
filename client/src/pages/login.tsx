@@ -38,11 +38,16 @@ export default function Login() {
       }
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       // Invalidate auth queries to refresh user state
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      // No success banner, direct redirect to home
-      setLocation("/");
+      
+      // Check if subscription is required and redirect accordingly
+      if (data.requiresSubscription) {
+        setLocation('/subscribe');
+      } else {
+        setLocation('/');
+      }
     },
     onError: (error: any) => {
       toast({

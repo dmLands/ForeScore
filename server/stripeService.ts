@@ -112,20 +112,24 @@ export class StripeService {
     await storage.updateUserSubscription(userId, {
       stripeSubscriptionId: subscription.id,
       subscriptionStatus: subscription.status as any, // Will be 'incomplete' until payment confirmed
-      trialEndsAt: null, // Trial starts after payment confirmation via webhook
+      trialEndsAt: undefined, // Trial starts after payment confirmation via webhook
     });
     
     // For incomplete subscriptions, we need to create a SetupIntent to collect payment method
     let clientSecret: string | null = null;
     
     if (subscription.status === 'incomplete') {
+      console.log('Creating SetupIntent for subscription:', subscription.id);
+      
       // Check if there's a payment intent from the invoice first
       const invoice = subscription.latest_invoice as Stripe.Invoice;
       const paymentIntent = (invoice as any)?.payment_intent as Stripe.PaymentIntent;
       
       if (paymentIntent?.client_secret) {
+        console.log('Using PaymentIntent client_secret');
         clientSecret = paymentIntent.client_secret;
       } else {
+        console.log('Creating new SetupIntent');
         // Create a SetupIntent for payment method collection
         const setupIntent = await stripe.setupIntents.create({
           customer: customerId,
@@ -137,8 +141,17 @@ export class StripeService {
           },
         });
         clientSecret = setupIntent.client_secret;
+        console.log('SetupIntent created with client_secret:', clientSecret ? 'present' : 'missing');
       }
+    } else {
+      console.log('Subscription status is not incomplete:', subscription.status);
     }
+    
+    console.log('Returning subscription response:', {
+      subscriptionId: subscription.id,
+      clientSecret: clientSecret ? 'present' : null,
+      status: subscription.status,
+    });
     
     return {
       subscriptionId: subscription.id,
@@ -193,7 +206,7 @@ export class StripeService {
       case 'setup_intent.succeeded':
         // When payment method setup succeeds, start trial
         const setupIntent = event.data.object as Stripe.SetupIntent;
-        if (setupIntent.metadata.subscriptionId) {
+        if (setupIntent.metadata?.subscriptionId) {
           await this.startTrialAfterPayment(setupIntent.metadata.subscriptionId);
         }
         break;
@@ -201,8 +214,8 @@ export class StripeService {
       case 'invoice.payment_succeeded':
         // When first payment succeeds on incomplete subscription, start trial
         const invoice = event.data.object as Stripe.Invoice;
-        if (invoice.subscription) {
-          await this.startTrialAfterPayment(invoice.subscription as string);
+        if (invoice.subscription && typeof invoice.subscription === 'string') {
+          await this.startTrialAfterPayment(invoice.subscription);
         }
         break;
         
@@ -214,8 +227,8 @@ export class StripeService {
         
       case 'invoice.payment_failed':
         const failedInvoice = event.data.object as Stripe.Invoice;
-        if (failedInvoice.subscription) {
-          const sub = await stripe.subscriptions.retrieve(failedInvoice.subscription as string);
+        if (failedInvoice.subscription && typeof failedInvoice.subscription === 'string') {
+          const sub = await stripe.subscriptions.retrieve(failedInvoice.subscription);
           await this.updateSubscriptionStatus(sub);
         }
         break;

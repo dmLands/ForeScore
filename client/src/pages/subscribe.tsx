@@ -172,46 +172,33 @@ const PlanCard = ({
         </Badge>
       )}
       
-      <CardHeader className="text-center">
-        <CardTitle className="text-xl">
+      <CardHeader className="text-center pb-3">
+        <CardTitle className="text-lg">
           {plan.interval === 'month' ? 'Monthly' : 'Annual'}
         </CardTitle>
         <CardDescription>
-          <span className="text-3xl font-bold text-gray-900">
+          <span className="text-2xl font-bold text-gray-900">
             ${monthlyPrice.toFixed(2)}
           </span>
-          <span className="text-gray-600">
+          <span className="text-gray-600 text-sm block">
             /{plan.interval === 'month' ? 'month' : 'year'}
           </span>
         </CardDescription>
         {savings > 0 && (
-          <Badge variant="secondary" className="mt-2">
-30% annual savings
+          <Badge variant="secondary" className="mt-1 text-xs">
+            Save 30%
           </Badge>
         )}
       </CardHeader>
       
-      <CardContent>
-        <div className="space-y-3">
-          <div className="flex items-center space-x-2">
-            <CheckCircle className="h-4 w-4 text-green-600" />
-            <span className="text-sm">Unlimited golf groups</span>
+      <CardContent className="pt-0">
+        <div className="text-center">
+          <div className="flex items-center justify-center space-x-1 mb-2">
+            <Clock className="h-3 w-3 text-blue-600" />
+            <span className="text-xs font-medium text-blue-600">7-day trial</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <CheckCircle className="h-4 w-4 text-green-600" />
-            <span className="text-sm">Advanced payout calculations</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <CheckCircle className="h-4 w-4 text-green-600" />
-            <span className="text-sm">Custom penalty cards</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <CheckCircle className="h-4 w-4 text-green-600" />
-            <span className="text-sm">Real-time score tracking</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Clock className="h-4 w-4 text-blue-600" />
-            <span className="text-sm font-medium text-blue-600">Free trial included</span>
+          <div className="text-xs text-gray-500">
+            All features included
           </div>
         </div>
       </CardContent>
@@ -332,27 +319,8 @@ export default function Subscribe() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* CTA Button - Now first */}
-        <div className="text-center mb-8">
-          <Button
-            onClick={handlePlanSelect}
-            disabled={createSubscriptionMutation.isPending}
-            className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-8 py-3 text-lg w-full max-w-md"
-            data-testid="button-select-plan"
-          >
-            {createSubscriptionMutation.isPending 
-              ? "Setting up trial..." 
-              : "Start 7-Day Free Trial"
-            }
-          </Button>
-          
-          <p className="mt-3 text-sm text-gray-500">
-            No commitment • Cancel anytime • Secure payment by Stripe
-          </p>
-        </div>
-
-        {/* Pricing Plans - Stacked vertically for mobile */}
-        <div className="space-y-4 max-w-md mx-auto mb-8">
+        {/* Pricing Plans - Side by side, smaller tiles */}
+        <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto mb-6">
           {plans && (
             <>
               <PlanCard
@@ -370,6 +338,25 @@ export default function Subscribe() {
               />
             </>
           )}
+        </div>
+
+        {/* CTA Button - Now below pricing */}
+        <div className="text-center mb-8">
+          <Button
+            onClick={handlePlanSelect}
+            disabled={createSubscriptionMutation.isPending}
+            className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-8 py-3 text-lg w-full max-w-sm"
+            data-testid="button-select-plan"
+          >
+            {createSubscriptionMutation.isPending 
+              ? "Setting up trial..." 
+              : "Start 7-Day Free Trial"
+            }
+          </Button>
+          
+          <p className="mt-3 text-sm text-gray-500">
+            No commitment • Cancel anytime • Secure payment by Stripe
+          </p>
         </div>
 
         {/* Features Section - Now last */}

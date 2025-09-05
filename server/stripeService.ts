@@ -158,18 +158,30 @@ export class StripeService {
    * Check if user has access (active subscription or in trial)
    */
   async hasAccess(userId: string): Promise<{ hasAccess: boolean; reason?: string; trialEndsAt?: Date }> {
+    console.log('🔍 hasAccess check for userId:', userId);
+    
     const user = await storage.getUser(userId);
+    console.log('👤 User found:', user ? { 
+      id: user.id, 
+      email: user.email,
+      subscriptionStatus: user.subscriptionStatus,
+      trialEndsAt: user.trialEndsAt 
+    } : 'null');
+    
     if (!user) {
+      console.log('❌ User not found');
       return { hasAccess: false, reason: 'User not found' };
     }
     
     // Check subscription status
     if (user.subscriptionStatus === 'active') {
+      console.log('✅ Active subscription - access granted');
       return { hasAccess: true };
     }
     
     // Don't allow access for incomplete subscriptions
     if (user.subscriptionStatus === 'incomplete' || user.subscriptionStatus === 'incomplete_expired') {
+      console.log('❌ Incomplete subscription - access denied');
       return { hasAccess: false, reason: 'Payment required' };
     }
     
@@ -178,9 +190,18 @@ export class StripeService {
       const now = new Date();
       const trialEnd = new Date(user.trialEndsAt);
       
+      console.log('🔍 Trial check:', {
+        status: user.subscriptionStatus,
+        now: now.toISOString(),
+        trialEnd: trialEnd.toISOString(),
+        timeRemaining: trialEnd.getTime() - now.getTime()
+      });
+      
       if (now < trialEnd) {
+        console.log('✅ Trial active - access granted');
         return { hasAccess: true, trialEndsAt: trialEnd };
       } else {
+        console.log('❌ Trial expired - updating status');
         // Trial expired
         await storage.updateUserSubscription(userId, {
           subscriptionStatus: 'past_due',
@@ -189,6 +210,7 @@ export class StripeService {
       }
     }
     
+    console.log('❌ No active subscription or trial');
     return { hasAccess: false, reason: 'No active subscription' };
   }
   

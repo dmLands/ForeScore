@@ -94,13 +94,17 @@ export class StripeService {
     const trialEnd = new Date();
     trialEnd.setDate(trialEnd.getDate() + plan.trialDays);
     
-    // Create subscription with trial
+    // Create subscription with trial that requires payment method upfront
     const subscription = await stripe.subscriptions.create({
       customer: customerId,
       items: [{
         price: plan.priceId,
       }],
       trial_end: Math.floor(trialEnd.getTime() / 1000), // Stripe expects Unix timestamp
+      payment_behavior: 'default_incomplete', // Require payment method setup
+      payment_settings: {
+        save_default_payment_method: 'on_subscription', // Save payment method for future use
+      },
       expand: ['latest_invoice.payment_intent'],
       metadata: {
         userId,
@@ -108,10 +112,10 @@ export class StripeService {
       },
     });
     
-    // Update user record
+    // Update user record - don't mark as trialing until payment is confirmed
     await storage.updateUserSubscription(userId, {
       stripeSubscriptionId: subscription.id,
-      subscriptionStatus: subscription.status as any,
+      subscriptionStatus: subscription.status as any, // Will be 'incomplete' until payment confirmed
       trialEndsAt: trialEnd,
     });
     
@@ -138,6 +142,11 @@ export class StripeService {
     // Check subscription status
     if (user.subscriptionStatus === 'active') {
       return { hasAccess: true };
+    }
+    
+    // Don't allow access for incomplete subscriptions
+    if (user.subscriptionStatus === 'incomplete' || user.subscriptionStatus === 'incomplete_expired') {
+      return { hasAccess: false, reason: 'Payment required' };
     }
     
     // Check if in trial period

@@ -1,9 +1,19 @@
-# ForeScoreV6.8 - Complete Password Recovery System
+# ForeScore V7.0 - Complete Stripe Subscription Integration
 
 ## Overview
-ForeScore V6.8 is a secure, full-stack application designed as a companion for the golf penalty game "Animal." It provides enterprise-grade local authentication with complete password recovery functionality, server-side security validation, and enhanced payout visualization. The application supports complete group management, card game mechanics utilizing a Proportional Share Algorithm, isolated 2/9/16 points games per session, and multiple payout calculation views. All game calculations are performed server-side to prevent tampering, ensuring secure user authentication and session management. The project's vision is to offer a robust, reliable, and secure platform for managing golf penalty games, with ambitions to become the leading digital tool in this niche.
+ForeScore V7.0 is a secure, full-stack application designed as a companion for the golf penalty game "Animal." It provides enterprise-grade local authentication with complete password recovery functionality, server-side security validation, enhanced payout visualization, and now features a complete Stripe subscription system with "invisible trial" strategy. The application supports complete group management, card game mechanics utilizing a Proportional Share Algorithm, isolated 2/9/16 points games per session, and multiple payout calculation views. All game calculations are performed server-side to prevent tampering, ensuring secure user authentication, session management, and subscription access control. The project's vision is to offer a robust, reliable, and secure platform for managing golf penalty games, with ambitions to become the leading digital tool in this niche.
 
 ## Recent Changes
+### V7.0 (COMPLETED) - September 2025
+- **Complete Stripe Subscription Integration**:
+  - **Invisible Trial Strategy**: Implemented 7-day free trial with upfront payment collection but no expiration warnings or countdown timers to users
+  - **Binary Access Model**: Users either have full access (during trial or paid) or are completely logged out (expired) - no degraded functionality
+  - **Proper Payment Flow**: Payment method collection BEFORE subscription creation, eliminating address validation errors
+  - **Enhanced Subscription Management**: Clean UI showing trial status, upgrade options, and subscription cancellation with proper "ForeScore" branding (removed all "Pro" references)
+  - **Tax Calculation**: Automatic tax collection with billing address fields for proper location-based tax calculation
+  - **Live Stripe Integration**: Monthly ($1.99) and Annual ($16.99) pricing with proper invoice generation and 7-day trial display
+  - **Production-Ready Security**: Webhook integration, proper subscription middleware, and server-side subscription status validation
+
 ### V6.8 (COMPLETED) - September 2025
 - **Complete Password Recovery System**:
   - **End-to-End Workflow**: Implemented full password reset flow from forgot password request to successful login with new password

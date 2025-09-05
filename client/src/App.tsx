@@ -12,6 +12,7 @@ import Register from "@/pages/register";
 import ForgotPassword from "@/pages/forgot-password";
 import ResetPassword from "@/pages/reset-password";
 import Subscribe from "@/pages/subscribe";
+import ManageSubscription from "@/pages/manage-subscription";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -37,6 +38,7 @@ function Router() {
         <>
           <Route path="/" component={Home} />
           <Route path="/subscribe" component={Subscribe} />
+          <Route path="/manage-subscription" component={ManageSubscription} />
           <Route path="/forgot-password" component={ForgotPassword} />
           <Route path="/reset-password" component={ResetPassword} />
         </>
@@ -46,6 +48,7 @@ function Router() {
           <Route path="/login" component={Login} />
           <Route path="/register" component={Register} />
           <Route path="/subscribe" component={Subscribe} />
+          <Route path="/manage-subscription" component={ManageSubscription} />
           <Route path="/forgot-password" component={ForgotPassword} />
           <Route path="/reset-password" component={ResetPassword} />
         </>

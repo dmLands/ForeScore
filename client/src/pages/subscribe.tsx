@@ -248,19 +248,16 @@ export default function Subscribe() {
   };
 
   const handleSubscriptionComplete = () => {
-    console.log('🎉 Subscription completed, redirecting in 2 seconds...');
-    
-    // Give server time to process webhook and update user status
+    // Give webhook time to create subscription and update user status
     setTimeout(() => {
       queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       
-      // Add another small delay before redirect to let queries complete
+      // Add another delay before redirect to let queries complete
       setTimeout(() => {
-        console.log('🏠 Redirecting to home...');
         setLocation('/');
       }, 500);
-    }, 2000);
+    }, 3000); // Longer delay for webhook processing
   };
 
   if (subscriptionCreated && clientSecret) {

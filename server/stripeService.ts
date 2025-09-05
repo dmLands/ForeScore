@@ -66,12 +66,12 @@ export class StripeService {
   }
   
   /**
-   * Create a subscription with 7-day trial
+   * Create SetupIntent for payment method collection (FIRST STEP)
    */
-  async createSubscription(userId: string, planKey: keyof typeof SUBSCRIPTION_PLANS): Promise<{ 
-    subscriptionId: string; 
-    clientSecret: string | null; 
-    status: string;
+  async createSetupIntent(userId: string, planKey: keyof typeof SUBSCRIPTION_PLANS): Promise<{ 
+    clientSecret: string;
+    customerId: string;
+    planKey: string;
   }> {
     const user = await storage.getUser(userId);
     if (!user) {
@@ -90,64 +90,79 @@ export class StripeService {
       `${user.firstName} ${user.lastName}`
     );
     
-    // Calculate trial end date (7 days from now)
-    const trialEnd = new Date();
-    trialEnd.setDate(trialEnd.getDate() + plan.trialDays);
-    
-    // Create subscription without tax collection initially (no address yet)
-    const subscription = await stripe.subscriptions.create({
+    // Create SetupIntent to collect payment method + address FIRST
+    const setupIntent = await stripe.setupIntents.create({
       customer: customerId,
-      items: [{
-        price: plan.priceId,
-      }],
-      trial_end: Math.floor(trialEnd.getTime() / 1000), // 7-day trial on invoice
-      payment_behavior: 'default_incomplete', // Require payment method setup
-      payment_settings: {
-        save_default_payment_method: 'on_subscription',
-      },
-      // Note: automatic_tax will be enabled after payment method setup with address
-      expand: ['latest_invoice.payment_intent'],
+      payment_method_types: ['card'],
+      usage: 'off_session',
       metadata: {
         userId,
         planKey,
       },
     });
     
-    // Update user record with trial information
-    await storage.updateUserSubscription(userId, {
-      stripeSubscriptionId: subscription.id,
-      subscriptionStatus: subscription.status as any, // Will be 'incomplete' until payment confirmed
-      trialEndsAt: trialEnd, // Trial end date properly set
+    return {
+      clientSecret: setupIntent.client_secret!,
+      customerId,
+      planKey,
+    };
+  }
+  
+  /**
+   * Create subscription AFTER payment method is collected (SECOND STEP)
+   */
+  async createSubscriptionAfterPayment(setupIntentId: string): Promise<{ 
+    subscriptionId: string; 
+    status: string;
+  }> {
+    // Retrieve the completed SetupIntent
+    const setupIntent = await stripe.setupIntents.retrieve(setupIntentId);
+    
+    if (setupIntent.status !== 'succeeded') {
+      throw new Error('Payment method setup was not completed');
+    }
+    
+    const userId = setupIntent.metadata.userId;
+    const planKey = setupIntent.metadata.planKey as keyof typeof SUBSCRIPTION_PLANS;
+    const customerId = setupIntent.customer as string;
+    const paymentMethodId = setupIntent.payment_method as string;
+    
+    if (!userId || !planKey) {
+      throw new Error('Missing metadata from SetupIntent');
+    }
+    
+    const plan = SUBSCRIPTION_PLANS[planKey];
+    
+    // Calculate trial end date (7 days from now)
+    const trialEnd = new Date();
+    trialEnd.setDate(trialEnd.getDate() + plan.trialDays);
+    
+    // Now create subscription with saved payment method and tax calculation
+    const subscription = await stripe.subscriptions.create({
+      customer: customerId,
+      default_payment_method: paymentMethodId,
+      items: [{
+        price: plan.priceId,
+      }],
+      trial_end: Math.floor(trialEnd.getTime() / 1000), // 7-day trial
+      automatic_tax: {
+        enabled: true, // NOW we can enable tax calculation with address
+      },
+      metadata: {
+        userId,
+        planKey,
+      },
     });
     
-    // For incomplete subscriptions, we need to create a SetupIntent to collect payment method
-    let clientSecret: string | null = null;
-    
-    if (subscription.status === 'incomplete') {
-        // Check if there's a payment intent from the invoice first
-      const invoice = subscription.latest_invoice as Stripe.Invoice;
-      const paymentIntent = (invoice as any)?.payment_intent as Stripe.PaymentIntent;
-      
-      if (paymentIntent?.client_secret) {
-        clientSecret = paymentIntent.client_secret;
-      } else {
-        // Create a SetupIntent for payment method collection
-        const setupIntent = await stripe.setupIntents.create({
-          customer: customerId,
-          payment_method_types: ['card'],
-          usage: 'off_session',
-          metadata: {
-            subscriptionId: subscription.id,
-            userId,
-          },
-        });
-        clientSecret = setupIntent.client_secret;
-      }
-    }
+    // Update user record with subscription info
+    await storage.updateUserSubscription(userId, {
+      stripeSubscriptionId: subscription.id,
+      subscriptionStatus: subscription.status as any,
+      trialEndsAt: trialEnd,
+    });
     
     return {
       subscriptionId: subscription.id,
-      clientSecret,
       status: subscription.status,
     };
   }
@@ -196,10 +211,10 @@ export class StripeService {
   async handleWebhook(event: Stripe.Event): Promise<void> {
     switch (event.type) {
       case 'setup_intent.succeeded':
-        // When payment method setup succeeds, start trial
+        // When payment method setup succeeds, CREATE SUBSCRIPTION NOW
         const setupIntent = event.data.object as Stripe.SetupIntent;
-        if (setupIntent.metadata?.subscriptionId) {
-          await this.startTrialAfterPayment(setupIntent.metadata.subscriptionId);
+        if (setupIntent.metadata?.userId && setupIntent.metadata?.planKey) {
+          await this.createSubscriptionAfterPayment(setupIntent.id);
         }
         break;
         

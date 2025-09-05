@@ -135,12 +135,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Invalid plan selected' });
       }
       
-      const subscription = await stripeService.createSubscription(userId, planKey);
-      res.json(subscription);
+      // STEP 1: Create SetupIntent to collect payment method first
+      const setupIntent = await stripeService.createSetupIntent(userId, planKey);
+      res.json({
+        clientSecret: setupIntent.clientSecret,
+        planKey: setupIntent.planKey,
+      });
     } catch (error) {
-      console.error('Subscription creation error:', error);
+      console.error('Setup intent creation error:', error);
       res.status(500).json({ 
-        message: 'Failed to create subscription',
+        message: 'Failed to create subscription setup',
         error: error instanceof Error ? error.message : 'Unknown error'
       });
     }

@@ -48,21 +48,27 @@ const SubscribeForm = ({ selectedPlan, onSubscriptionComplete }: {
     setIsLoading(true);
 
     try {
+      console.log('Attempting to confirm setup with Stripe...');
+      
       // For trial subscriptions, we use SetupIntent for payment method collection
-      const { error } = await stripe.confirmSetup({
+      const result = await stripe.confirmSetup({
         elements,
         confirmParams: {
           return_url: `${window.location.origin}/`,
         },
       });
+      
+      console.log('Stripe confirmSetup result:', result);
 
-      if (error) {
+      if (result.error) {
+        console.error('Stripe setup error:', result.error);
         toast({
           title: "Payment Setup Failed",
-          description: error.message,
+          description: result.error.message || "Payment setup failed. Please try again.",
           variant: "destructive",
         });
       } else {
+        console.log('Setup successful, trial starting...');
         toast({
           title: "Trial Started!",
           description: "Your 7-day free trial has begun. Enjoy ForeScore!",
@@ -70,9 +76,10 @@ const SubscribeForm = ({ selectedPlan, onSubscriptionComplete }: {
         onSubscriptionComplete();
       }
     } catch (error) {
+      console.error('Stripe confirmSetup exception:', error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        description: `Setup failed: ${error instanceof Error ? error.message : "An unexpected error occurred"}`,
         variant: "destructive",
       });
     } finally {

@@ -10,12 +10,14 @@ import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Users, Gamepad2, BookOpen, ChevronRight, Edit, Layers, Trophy, ArrowLeft, Info, HelpCircle, LogOut, Menu, Loader2, User, FileText, Mail } from "lucide-react";
+import { Plus, Users, Gamepad2, BookOpen, ChevronRight, Edit, Layers, Trophy, ArrowLeft, Info, HelpCircle, LogOut, Menu, Loader2, User, FileText, Mail, Crown, Clock, CreditCard, AlertTriangle } from "lucide-react";
 import { CreateGroupModal } from "@/components/create-group-modal";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { Tutorial } from "@/components/tutorial";
+import { TrialStatusBanner } from "@/components/trial-status-banner";
 
 import { useAuth } from "@/hooks/useAuth";
+import { useSubscriptionAccess } from "@/hooks/useSubscriptionAccess";
 import { useGameState } from "@/hooks/use-game-state";
 import { useWebSocket } from "@/hooks/use-websocket";
 import { useToast } from "@/hooks/use-toast";
@@ -197,6 +199,7 @@ function CardGamePayouts({ selectedGroup, gameState, payoutData, selectedPointsG
 
 export default function Home() {
   const { user } = useAuth();
+  const { hasAccess, trialEndsAt, reason } = useSubscriptionAccess();
   
   // Track payout data readiness for the restoration logic
   const [payoutDataReady, setPayoutDataReady] = useState(true);
@@ -1305,6 +1308,51 @@ export default function Home() {
                     </div>
                     <DropdownMenuSeparator />
                     
+                    {/* Subscription Section */}
+                    <div className="px-3 py-2">
+                      <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Subscription</div>
+                      <div className="space-y-1">
+                        {hasAccess ? (
+                          trialEndsAt ? (
+                            <DropdownMenuItem asChild>
+                              <Link href="/manage-subscription" className="cursor-pointer text-blue-900 hover:text-blue-700">
+                                <Clock className="h-4 w-4 mr-2 text-blue-600" />
+                                <div className="flex flex-col">
+                                  <span className="text-sm font-medium">Free Trial</span>
+                                  <span className="text-xs text-blue-600">
+                                    {Math.max(0, Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))} days left
+                                  </span>
+                                </div>
+                              </Link>
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem asChild>
+                              <Link href="/manage-subscription" className="cursor-pointer text-green-900 hover:text-green-700">
+                                <Crown className="h-4 w-4 mr-2 text-green-600" />
+                                <div className="flex flex-col">
+                                  <span className="text-sm font-medium">Pro Active</span>
+                                  <span className="text-xs text-green-600">Manage subscription</span>
+                                </div>
+                              </Link>
+                            </DropdownMenuItem>
+                          )
+                        ) : (
+                          <DropdownMenuItem asChild>
+                            <Link href="/subscribe" className="cursor-pointer text-orange-900 hover:text-orange-700">
+                              <AlertTriangle className="h-4 w-4 mr-2 text-orange-600" />
+                              <div className="flex flex-col">
+                                <span className="text-sm font-medium">Upgrade Required</span>
+                                <span className="text-xs text-orange-600">
+                                  {reason === 'Trial expired' ? 'Trial ended' : 'Start free trial'}
+                                </span>
+                              </div>
+                            </Link>
+                          </DropdownMenuItem>
+                        )}
+                      </div>
+                    </div>
+                    <DropdownMenuSeparator />
+                    
                     {/* About Section */}
                     <div className="px-3 py-2">
                       <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">About</div>
@@ -1339,6 +1387,13 @@ export default function Home() {
           </div>
         </div>
       </header>
+
+      {/* Trial Status Banner */}
+      <TrialStatusBanner 
+        hasAccess={hasAccess}
+        trialEndsAt={trialEndsAt}
+        reason={reason}
+      />
 
       {/* Main Content */}
       <main className="pb-20">

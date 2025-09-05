@@ -119,17 +119,13 @@ export class StripeService {
     let clientSecret: string | null = null;
     
     if (subscription.status === 'incomplete') {
-      console.log('Creating SetupIntent for subscription:', subscription.id);
-      
-      // Check if there's a payment intent from the invoice first
+        // Check if there's a payment intent from the invoice first
       const invoice = subscription.latest_invoice as Stripe.Invoice;
       const paymentIntent = (invoice as any)?.payment_intent as Stripe.PaymentIntent;
       
       if (paymentIntent?.client_secret) {
-        console.log('Using PaymentIntent client_secret');
         clientSecret = paymentIntent.client_secret;
       } else {
-        console.log('Creating new SetupIntent');
         // Create a SetupIntent for payment method collection
         const setupIntent = await stripe.setupIntents.create({
           customer: customerId,
@@ -141,17 +137,8 @@ export class StripeService {
           },
         });
         clientSecret = setupIntent.client_secret;
-        console.log('SetupIntent created with client_secret:', clientSecret ? 'present' : 'missing');
       }
-    } else {
-      console.log('Subscription status is not incomplete:', subscription.status);
     }
-    
-    console.log('Returning subscription response:', {
-      subscriptionId: subscription.id,
-      clientSecret: clientSecret ? 'present' : null,
-      status: subscription.status,
-    });
     
     return {
       subscriptionId: subscription.id,
@@ -290,17 +277,28 @@ export class StripeService {
   }
   
   /**
-   * Cancel subscription (at end of period)
+   * Cancel subscription - immediate for incomplete, at end of period for active/trialing
    */
   async cancelSubscription(userId: string): Promise<void> {
     const user = await storage.getUser(userId);
     if (!user?.stripeSubscriptionId) {
       throw new Error('No active subscription found');
     }
+
+    // Get current subscription status from Stripe
+    const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
     
-    await stripe.subscriptions.update(user.stripeSubscriptionId, {
-      cancel_at_period_end: true,
-    });
+    if (subscription.status === 'incomplete' || subscription.status === 'incomplete_expired') {
+      // For incomplete subscriptions, cancel immediately to prevent any charges
+      await stripe.subscriptions.cancel(user.stripeSubscriptionId);
+      console.log(`Immediately canceled incomplete subscription: ${user.stripeSubscriptionId}`);
+    } else {
+      // For active/trialing subscriptions, cancel at end of period so user keeps access
+      await stripe.subscriptions.update(user.stripeSubscriptionId, {
+        cancel_at_period_end: true,
+      });
+      console.log(`Scheduled end-of-period cancellation for subscription: ${user.stripeSubscriptionId}`);
+    }
   }
   
   /**

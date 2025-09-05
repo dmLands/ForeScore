@@ -136,7 +136,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const subscription = await stripeService.createSubscription(userId, planKey);
-      console.log('Subscription response being sent to frontend:', subscription);
       res.json(subscription);
     } catch (error) {
       console.error('Subscription creation error:', error);

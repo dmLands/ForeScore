@@ -210,11 +210,12 @@ export default function Subscribe() {
         setClientSecret(data.clientSecret);
         setSubscriptionCreated(true);
       } else {
+        // This should never happen with payment_behavior: 'default_incomplete'
         toast({
-          title: "Trial Started!",
-          description: "Your free trial has begun. Welcome to ForeScore!",
+          title: "Setup Error",
+          description: "Payment setup failed. Please try again or contact support.",
+          variant: "destructive",
         });
-        setLocation('/');
       }
     },
     onError: (error: any) => {

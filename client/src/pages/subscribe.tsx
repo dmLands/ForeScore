@@ -59,10 +59,16 @@ const SubscribeForm = ({ selectedPlan, onSubscriptionComplete }: {
       console.log('Stripe confirmSetup result:', result);
 
       if (result.error) {
-        console.error('Stripe setup error:', result.error);
+        console.error('Stripe setup error details:', {
+          type: result.error.type,
+          code: result.error.code,
+          message: result.error.message,
+          decline_code: result.error.decline_code,
+          param: result.error.param
+        });
         toast({
           title: "Payment Setup Failed",
-          description: result.error.message || "Payment setup failed. Please try again.",
+          description: `${result.error.message || "Payment setup failed"}${result.error.code ? ` (${result.error.code})` : ""}`,
           variant: "destructive",
         });
       } else {

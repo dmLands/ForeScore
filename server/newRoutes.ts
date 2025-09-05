@@ -176,18 +176,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // V7.1 - Tutorial completion endpoint
-  app.post('/api/user/complete-tutorial', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      await storage.markTutorialComplete(userId);
-      res.json({ success: true });
-    } catch (error) {
-      console.error('Error completing tutorial:', error);
-      res.status(500).json({ message: 'Failed to complete tutorial' });
-    }
-  });
-
   // MISSING WEBHOOK ENDPOINT - This was the bug!
   app.post('/api/webhooks/stripe', express.raw({type: 'application/json'}), async (req, res) => {
     try {
@@ -472,14 +460,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lastName: req.user.claims.last_name
       } : req.user;
       
-      // Get full user data from database to include tutorial status
-      const userId = userData.id;
-      const dbUser = await storage.getUser(userId);
-      
-      res.json({
-        ...userData,
-        hasSeenTutorial: dbUser?.hasSeenTutorial || 0
-      });
+      res.json(userData);
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });

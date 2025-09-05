@@ -11,8 +11,6 @@ export interface IStorage {
   createLocalUser(user: { email: string; firstName: string; lastName: string; passwordHash: string; authMethod: string }): Promise<User>;
   // Subscription methods for V7.0
   updateUserSubscription(userId: string, data: { stripeCustomerId?: string; stripeSubscriptionId?: string; subscriptionStatus?: string; trialEndsAt?: Date; subscriptionEndsAt?: Date }): Promise<User | undefined>;
-  // V7.1 - Tutorial completion tracking
-  markTutorialComplete(userId: string): Promise<void>;
   
   // Groups
   getGroups(): Promise<Group[]>;
@@ -104,14 +102,6 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, userId))
       .returning();
     return user;
-  }
-
-  // V7.1 - Tutorial completion tracking
-  async markTutorialComplete(userId: string): Promise<void> {
-    await db
-      .update(users)
-      .set({ hasSeenTutorial: 1, updatedAt: new Date() })
-      .where(eq(users.id, userId));
   }
   
   // Clean up old data on startup (older than 7 days)

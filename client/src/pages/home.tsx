@@ -14,7 +14,6 @@ import { Plus, Users, Gamepad2, BookOpen, ChevronRight, Edit, Layers, Trophy, Ar
 import { CreateGroupModal } from "@/components/create-group-modal";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { Tutorial } from "@/components/tutorial";
-import { OnboardingTutorial } from "@/components/onboarding-tutorial";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useGameState } from "@/hooks/use-game-state";
@@ -198,14 +197,6 @@ function CardGamePayouts({ selectedGroup, gameState, payoutData, selectedPointsG
 
 export default function Home() {
   const { user } = useAuth();
-  
-  // Check if user should see onboarding tutorial (first time login)
-  useEffect(() => {
-    if (user && (user as any).hasSeenTutorial === 0) {
-      // Small delay to ensure DOM is ready
-      setTimeout(() => setShowOnboardingTutorial(true), 500);
-    }
-  }, [user]);
   
   // Track payout data readiness for the restoration logic
   const [payoutDataReady, setPayoutDataReady] = useState(true);
@@ -601,7 +592,6 @@ export default function Home() {
   const [joinCode, setJoinCode] = useState("");
   const [showCreateCardDialog, setShowCreateCardDialog] = useState(false);
   const [showCreateGameDialog, setShowCreateGameDialog] = useState(false);
-  const [showOnboardingTutorial, setShowOnboardingTutorial] = useState(false);
   const [newGameName, setNewGameName] = useState("");
   const [customCardName, setCustomCardName] = useState("");
   const [customCardEmoji, setCustomCardEmoji] = useState("");
@@ -1444,7 +1434,6 @@ export default function Home() {
                   onClick={() => setCreateGroupOpen(true)}
                   variant="outline"
                   size="sm"
-                  data-testid="button-create-group"
                   className="border-emerald-500 text-emerald-600 hover:bg-emerald-50"
                 >
                   <Plus className="mr-2 h-4 w-4" />
@@ -4096,14 +4085,6 @@ export default function Home() {
           </div>
         </DialogContent>
       </Dialog>
-      
-      {/* V7.1 - First-time user onboarding tutorial */}
-      {showOnboardingTutorial && (
-        <OnboardingTutorial
-          onComplete={() => setShowOnboardingTutorial(false)}
-          onSkip={() => setShowOnboardingTutorial(false)}
-        />
-      )}
     </div>
   );
 }

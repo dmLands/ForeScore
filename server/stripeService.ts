@@ -94,19 +94,16 @@ export class StripeService {
     const trialEnd = new Date();
     trialEnd.setDate(trialEnd.getDate() + plan.trialDays);
     
-    // Create subscription with proper trial and tax settings
+    // Create subscription with trial - let Stripe product handle tax settings
     const subscription = await stripe.subscriptions.create({
       customer: customerId,
       items: [{
         price: plan.priceId,
       }],
-      trial_end: Math.floor(trialEnd.getTime() / 1000), // Restore 7-day trial on invoice
+      trial_end: Math.floor(trialEnd.getTime() / 1000), // 7-day trial on invoice
       payment_behavior: 'default_incomplete', // Require payment method setup
       payment_settings: {
         save_default_payment_method: 'on_subscription',
-      },
-      automatic_tax: {
-        enabled: true, // Restore automatic tax calculation
       },
       expand: ['latest_invoice.payment_intent'],
       metadata: {

@@ -23,6 +23,12 @@ export const users = pgTable("users", {
   profileImageUrl: varchar("profile_image_url"),
   passwordHash: varchar("password_hash"), // For local authentication
   authMethod: varchar("auth_method").notNull().default("local"), // "replit" or "local"
+  // Stripe subscription fields for V7.0
+  stripeCustomerId: varchar("stripe_customer_id"),
+  stripeSubscriptionId: varchar("stripe_subscription_id"),
+  subscriptionStatus: varchar("subscription_status").$type<'trialing' | 'active' | 'canceled' | 'incomplete' | 'past_due' | null>(),
+  trialEndsAt: timestamp("trial_ends_at"),
+  subscriptionEndsAt: timestamp("subscription_ends_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

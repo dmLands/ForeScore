@@ -9,6 +9,8 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   createLocalUser(user: { email: string; firstName: string; lastName: string; passwordHash: string; authMethod: string }): Promise<User>;
+  // Subscription methods for V7.0
+  updateUserSubscription(userId: string, data: { stripeCustomerId?: string; stripeSubscriptionId?: string; subscriptionStatus?: string; trialEndsAt?: Date; subscriptionEndsAt?: Date }): Promise<User | undefined>;
   
   // Groups
   getGroups(): Promise<Group[]>;
@@ -88,6 +90,16 @@ export class DatabaseStorage implements IStorage {
         passwordHash: userData.passwordHash,
         authMethod: userData.authMethod,
       })
+      .returning();
+    return user;
+  }
+
+  // Subscription methods for V7.0
+  async updateUserSubscription(userId: string, data: { stripeCustomerId?: string; stripeSubscriptionId?: string; subscriptionStatus?: string; trialEndsAt?: Date; subscriptionEndsAt?: Date }): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(users.id, userId))
       .returning();
     return user;
   }

@@ -1,11 +1,13 @@
 import Stripe from 'stripe';
 import { storage } from './storage';
 
-if (!process.env.STRIPE_SECRET_KEY) {
+// Use the correct Stripe key, fallback to override if environment is cached
+const stripeKey = process.env.VITE_STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY;
+if (!stripeKey) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
 }
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+const stripe = new Stripe(stripeKey, {
   apiVersion: '2025-08-27.basil',
 });
 

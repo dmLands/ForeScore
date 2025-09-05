@@ -20,14 +20,14 @@ export interface SubscriptionPlan {
 // Define your subscription plans here - these use your real Stripe price IDs
 export const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
   monthly: {
-    priceId: 'price_1S3rb2HJqsKToAJKiIXbFRI1',
+    priceId: 'price_1S3oKVHAdVMtY5a3kfj02ucN',
     name: 'ForeScore Monthly',
     amount: 199, // $1.99
     interval: 'month',
     trialDays: 7,
   },
   annual: {
-    priceId: 'price_1S3rb2HJqsKToAJKVnLsmII0',
+    priceId: 'price_1S3oKVHAdVMtY5a3mNsjA7qE',
     name: 'ForeScore Annual',
     amount: 1699, // $16.99
     interval: 'year',

@@ -332,8 +332,48 @@ export default function Subscribe() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Features Section */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        {/* CTA Button - Now first */}
+        <div className="text-center mb-8">
+          <Button
+            onClick={handlePlanSelect}
+            disabled={createSubscriptionMutation.isPending}
+            className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-8 py-3 text-lg w-full max-w-md"
+            data-testid="button-select-plan"
+          >
+            {createSubscriptionMutation.isPending 
+              ? "Setting up trial..." 
+              : "Start 7-Day Free Trial"
+            }
+          </Button>
+          
+          <p className="mt-3 text-sm text-gray-500">
+            No commitment • Cancel anytime • Secure payment by Stripe
+          </p>
+        </div>
+
+        {/* Pricing Plans - Stacked vertically for mobile */}
+        <div className="space-y-4 max-w-md mx-auto mb-8">
+          {plans && (
+            <>
+              <PlanCard
+                planKey="monthly"
+                plan={plans.monthly}
+                isSelected={selectedPlan === 'monthly'}
+                onSelect={setSelectedPlan}
+              />
+              <PlanCard
+                planKey="annual"
+                plan={plans.annual}
+                isSelected={selectedPlan === 'annual'}
+                onSelect={setSelectedPlan}
+                isPopular={true}
+              />
+            </>
+          )}
+        </div>
+
+        {/* Features Section - Now last */}
+        <div className="grid md:grid-cols-3 gap-6">
           <div className="text-center">
             <div className="mx-auto w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-3">
               <Users className="w-6 h-6 text-green-600" />
@@ -357,46 +397,6 @@ export default function Subscribe() {
             <h3 className="font-semibold text-gray-900">Live Tracking</h3>
             <p className="text-sm text-gray-600">Real-time score tracking and leaderboards for competitive play</p>
           </div>
-        </div>
-
-        {/* Pricing Plans */}
-        <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto mb-8">
-          {plans && (
-            <>
-              <PlanCard
-                planKey="monthly"
-                plan={plans.monthly}
-                isSelected={selectedPlan === 'monthly'}
-                onSelect={setSelectedPlan}
-              />
-              <PlanCard
-                planKey="annual"
-                plan={plans.annual}
-                isSelected={selectedPlan === 'annual'}
-                onSelect={setSelectedPlan}
-                isPopular={true}
-              />
-            </>
-          )}
-        </div>
-
-        {/* CTA Button */}
-        <div className="text-center">
-          <Button
-            onClick={handlePlanSelect}
-            disabled={createSubscriptionMutation.isPending}
-            className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-8 py-3 text-lg"
-            data-testid="button-select-plan"
-          >
-            {createSubscriptionMutation.isPending 
-              ? "Setting up trial..." 
-              : "Start 7-Day Free Trial"
-            }
-          </Button>
-          
-          <p className="mt-3 text-sm text-gray-500">
-            No commitment • Cancel anytime • Secure payment by Stripe
-          </p>
         </div>
       </div>
     </div>

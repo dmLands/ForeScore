@@ -90,17 +90,12 @@ export class StripeService {
       `${user.firstName} ${user.lastName}`
     );
     
-    // Calculate trial end date (7 days from now)
-    const trialEnd = new Date();
-    trialEnd.setDate(trialEnd.getDate() + plan.trialDays);
-    
-    // Create subscription with trial that requires payment method upfront
+    // Create subscription WITHOUT trial first - trial starts after payment confirmation
     const subscription = await stripe.subscriptions.create({
       customer: customerId,
       items: [{
         price: plan.priceId,
       }],
-      trial_end: Math.floor(trialEnd.getTime() / 1000), // Stripe expects Unix timestamp
       payment_behavior: 'default_incomplete', // Require payment method setup
       payment_settings: {
         save_default_payment_method: 'on_subscription', // Save payment method for future use
@@ -109,14 +104,15 @@ export class StripeService {
       metadata: {
         userId,
         planKey,
+        trialDays: plan.trialDays.toString(), // Store trial days for later use
       },
     });
     
-    // Update user record - don't mark as trialing until payment is confirmed
+    // Update user record - subscription will be 'incomplete' until payment confirmed
     await storage.updateUserSubscription(userId, {
       stripeSubscriptionId: subscription.id,
       subscriptionStatus: subscription.status as any, // Will be 'incomplete' until payment confirmed
-      trialEndsAt: trialEnd,
+      trialEndsAt: null, // Trial starts after payment confirmation via webhook
     });
     
     // Get payment intent for setup
@@ -173,20 +169,57 @@ export class StripeService {
    */
   async handleWebhook(event: Stripe.Event): Promise<void> {
     switch (event.type) {
+      case 'invoice.payment_succeeded':
+        // When first payment succeeds on incomplete subscription, start trial
+        const invoice = event.data.object as Stripe.Invoice;
+        if (invoice.subscription) {
+          await this.startTrialAfterPayment(invoice.subscription as string);
+        }
+        break;
+        
       case 'customer.subscription.updated':
       case 'customer.subscription.deleted':
         const subscription = event.data.object as Stripe.Subscription;
         await this.updateSubscriptionStatus(subscription);
         break;
         
-      case 'invoice.payment_succeeded':
       case 'invoice.payment_failed':
-        const invoice = event.data.object as Stripe.Invoice;
-        if ((invoice as any).subscription) {
-          const sub = await stripe.subscriptions.retrieve((invoice as any).subscription as string);
+        const failedInvoice = event.data.object as Stripe.Invoice;
+        if (failedInvoice.subscription) {
+          const sub = await stripe.subscriptions.retrieve(failedInvoice.subscription as string);
           await this.updateSubscriptionStatus(sub);
         }
         break;
+    }
+  }
+
+  /**
+   * Start trial period after successful payment confirmation
+   */
+  private async startTrialAfterPayment(subscriptionId: string): Promise<void> {
+    try {
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+      const userId = subscription.metadata.userId;
+      const trialDays = parseInt(subscription.metadata.trialDays || '7');
+      
+      if (userId && subscription.status === 'active') {
+        // Calculate trial end date
+        const trialEnd = new Date();
+        trialEnd.setDate(trialEnd.getDate() + trialDays);
+        
+        // Update subscription to add trial period
+        await stripe.subscriptions.update(subscriptionId, {
+          trial_end: Math.floor(trialEnd.getTime() / 1000),
+        });
+        
+        // Update user record to trialing status
+        await storage.updateUserSubscription(userId, {
+          subscriptionStatus: 'trialing',
+          trialEndsAt: trialEnd,
+        });
+      }
+    } catch (error) {
+      console.error('Error starting trial after payment:', error);
     }
   }
   

@@ -17,17 +17,17 @@ export interface SubscriptionPlan {
   trialDays: number;
 }
 
-// Define your subscription plans here - you'll need to create these in your Stripe dashboard
+// Define your subscription plans here - these use your real Stripe price IDs
 export const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
   monthly: {
-    priceId: 'price_MONTHLY_PLAN_ID', // Replace with your actual Stripe price ID
+    priceId: 'price_1S3rb2HJqsKToAJKiIXbFRI1',
     name: 'ForeScore Monthly',
     amount: 199, // $1.99
     interval: 'month',
     trialDays: 7,
   },
   annual: {
-    priceId: 'price_ANNUAL_PLAN_ID', // Replace with your actual Stripe price ID  
+    priceId: 'price_1S3rb2HJqsKToAJKVnLsmII0',
     name: 'ForeScore Annual',
     amount: 1699, // $16.99
     interval: 'year',

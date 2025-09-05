@@ -101,17 +101,7 @@ export function CreateGroupModal({ open, onOpenChange, onSuccess }: CreateGroupM
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-xl font-semibold text-gray-800">Create New Group</DialogTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onOpenChange(false)}
-              className="p-2 hover:bg-gray-100 rounded-full"
-            >
-              <X className="h-4 w-4 text-gray-600" />
-            </Button>
-          </div>
+          <DialogTitle className="text-xl font-semibold text-gray-800">Create New Group</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">

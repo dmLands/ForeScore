@@ -1454,7 +1454,7 @@ export default function Home() {
                 <Card>
                   <CardContent className="p-6 text-center">
                     <Users className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-gray-500">No groups yet. Create your first group to get started!</p>
+                    <p className="text-gray-500">No groups yet. Create your game group to get started!</p>
                   </CardContent>
                 </Card>
               ) : (

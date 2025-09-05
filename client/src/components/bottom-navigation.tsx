@@ -23,6 +23,7 @@ export function BottomNavigation({ currentTab, onTabChange }: BottomNavigationPr
             key={id}
             variant="ghost"
             onClick={() => onTabChange(id)}
+            data-testid={`tab-${id}`}
             className={`flex flex-col items-center py-2 px-4 h-auto tab-interactive btn-interactive transition-all duration-200 ease-out ${
               currentTab === id 
                 ? 'text-emerald-600 scale-110' 

@@ -29,6 +29,7 @@ export const users = pgTable("users", {
   subscriptionStatus: varchar("subscription_status").$type<'trialing' | 'active' | 'canceled' | 'incomplete' | 'past_due' | null>(),
   trialEndsAt: timestamp("trial_ends_at"),
   subscriptionEndsAt: timestamp("subscription_ends_at"),
+  hasSeenTutorial: integer("has_seen_tutorial").$type<0 | 1>().default(0),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

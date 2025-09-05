@@ -1,9 +1,19 @@
-# ForeScore V7.0 - Complete Stripe Subscription Integration
+# ForeScore V7.1 - First-Time User Onboarding Tutorial
 
 ## Overview
-ForeScore V7.0 is a secure, full-stack application designed as a companion for the golf penalty game "Animal." It provides enterprise-grade local authentication with complete password recovery functionality, server-side security validation, enhanced payout visualization, and now features a complete Stripe subscription system with "invisible trial" strategy. The application supports complete group management, card game mechanics utilizing a Proportional Share Algorithm, isolated 2/9/16 points games per session, and multiple payout calculation views. All game calculations are performed server-side to prevent tampering, ensuring secure user authentication, session management, and subscription access control. The project's vision is to offer a robust, reliable, and secure platform for managing golf penalty games, with ambitions to become the leading digital tool in this niche.
+ForeScore V7.1 is a secure, full-stack application designed as a companion for the golf penalty game "Animal." It provides enterprise-grade local authentication with complete password recovery functionality, server-side security validation, enhanced payout visualization, complete Stripe subscription system with "invisible trial" strategy, and now features a first-time user onboarding tutorial system. The application supports complete group management, card game mechanics utilizing a Proportional Share Algorithm, isolated 2/9/16 points games per session, and multiple payout calculation views. All game calculations are performed server-side to prevent tampering, ensuring secure user authentication, session management, and subscription access control. The project's vision is to offer a robust, reliable, and secure platform for managing golf penalty games, with ambitions to become the leading digital tool in this niche.
 
 ## Recent Changes
+### V7.1 (COMPLETED) - September 2025
+- **First-Time User Onboarding Tutorial**:
+  - **Interactive Tutorial Overlay**: Click-to-advance tutorial with dark overlay and spotlight highlighting of key UI elements
+  - **Four-Step Walkthrough**: (1) Welcome + Create New Game button, (2) Active games tabs (2/9/16 & Cards), (3) Payouts tab, (4) Rules tab
+  - **Smart Triggering**: Tutorial automatically appears immediately after first successful login for new users (hasSeenTutorial = 0)
+  - **Dismissible & User-Controlled**: Users can skip tutorial or close at any time with proper database tracking
+  - **Professional UI**: Emerald-themed tooltips with step counter, matching app design language
+  - **Database Integration**: Added hasSeenTutorial field to users table with proper API endpoint for completion tracking
+  - **TypeScript Support**: Full type safety with proper error handling and user experience flow
+
 ### V7.0 (COMPLETED) - September 2025
 - **Complete Stripe Subscription Integration**:
   - **Invisible Trial Strategy**: Implemented 7-day free trial with upfront payment collection but no expiration warnings or countdown timers to users

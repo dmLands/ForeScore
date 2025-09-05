@@ -94,7 +94,7 @@ export class StripeService {
     const trialEnd = new Date();
     trialEnd.setDate(trialEnd.getDate() + plan.trialDays);
     
-    // Create subscription with trial and proper tax collection
+    // Create subscription without tax collection initially (no address yet)
     const subscription = await stripe.subscriptions.create({
       customer: customerId,
       items: [{
@@ -105,9 +105,7 @@ export class StripeService {
       payment_settings: {
         save_default_payment_method: 'on_subscription',
       },
-      automatic_tax: {
-        enabled: true, // Enable tax calculation with address collection
-      },
+      // Note: automatic_tax will be enabled after payment method setup with address
       expand: ['latest_invoice.payment_intent'],
       metadata: {
         userId,

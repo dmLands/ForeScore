@@ -1,0 +1,364 @@
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useLocation } from "wouter";
+import { useStripe, Elements, PaymentElement, useElements } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
+import { CheckCircle, Clock, CreditCard, Users, Calculator, Trophy } from "lucide-react";
+
+// Load Stripe
+if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
+  throw new Error('Missing required Stripe key: VITE_STRIPE_PUBLIC_KEY');
+}
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+
+interface SubscriptionPlan {
+  priceId: string;
+  name: string;
+  amount: number;
+  interval: 'month' | 'year';
+  trialDays: number;
+}
+
+interface SubscriptionPlans {
+  monthly: SubscriptionPlan;
+  annual: SubscriptionPlan;
+}
+
+const SubscribeForm = ({ selectedPlan, onSubscriptionComplete }: { 
+  selectedPlan: string; 
+  onSubscriptionComplete: () => void;
+}) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!stripe || !elements) {
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const { error } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: `${window.location.origin}/`,
+        },
+      });
+
+      if (error) {
+        toast({
+          title: "Payment Setup Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Trial Started!",
+          description: "Your 7-day free trial has begun. Enjoy ForeScore!",
+        });
+        onSubscriptionComplete();
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-gray-900">Payment Information</h3>
+        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+          <div className="flex items-center space-x-2">
+            <Clock className="h-5 w-5 text-blue-600" />
+            <p className="text-sm text-blue-800">
+              <strong>Your 7-day free trial starts now!</strong> No charge today.
+            </p>
+          </div>
+          <p className="text-xs text-blue-600 mt-1">
+            You can cancel anytime during your trial with no charge.
+          </p>
+        </div>
+        <PaymentElement />
+      </div>
+      
+      <Button
+        type="submit"
+        className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+        disabled={!stripe || isLoading}
+        data-testid="button-start-trial"
+      >
+        {isLoading ? "Starting Trial..." : "Start 7-Day Free Trial"}
+      </Button>
+    </form>
+  );
+};
+
+const PlanCard = ({ 
+  planKey, 
+  plan, 
+  isSelected, 
+  onSelect, 
+  isPopular = false 
+}: { 
+  planKey: string; 
+  plan: SubscriptionPlan; 
+  isSelected: boolean; 
+  onSelect: (planKey: string) => void;
+  isPopular?: boolean;
+}) => {
+  const monthlyPrice = plan.amount / 100;
+  const savings = planKey === 'annual' ? Math.round(((1.99 * 12) - monthlyPrice) * 100) / 100 : 0;
+
+  return (
+    <Card 
+      className={`relative cursor-pointer transition-all ${
+        isSelected 
+          ? 'ring-2 ring-green-500 border-green-500' 
+          : 'hover:border-green-300'
+      }`}
+      onClick={() => onSelect(planKey)}
+    >
+      {isPopular && (
+        <Badge className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-green-600">
+          Most Popular
+        </Badge>
+      )}
+      
+      <CardHeader className="text-center">
+        <CardTitle className="text-xl">
+          {plan.interval === 'month' ? 'Monthly' : 'Annual'}
+        </CardTitle>
+        <CardDescription>
+          <span className="text-3xl font-bold text-gray-900">
+            ${monthlyPrice.toFixed(2)}
+          </span>
+          <span className="text-gray-600">
+            /{plan.interval === 'month' ? 'month' : 'year'}
+          </span>
+        </CardDescription>
+        {savings > 0 && (
+          <Badge variant="secondary" className="mt-2">
+            Save ${savings} per year
+          </Badge>
+        )}
+      </CardHeader>
+      
+      <CardContent>
+        <div className="space-y-3">
+          <div className="flex items-center space-x-2">
+            <CheckCircle className="h-4 w-4 text-green-600" />
+            <span className="text-sm">Unlimited golf groups</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <CheckCircle className="h-4 w-4 text-green-600" />
+            <span className="text-sm">Advanced payout calculations</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <CheckCircle className="h-4 w-4 text-green-600" />
+            <span className="text-sm">Custom penalty cards</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <CheckCircle className="h-4 w-4 text-green-600" />
+            <span className="text-sm">Real-time score tracking</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Clock className="h-4 w-4 text-blue-600" />
+            <span className="text-sm font-medium text-blue-600">7-day free trial</span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default function Subscribe() {
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const [selectedPlan, setSelectedPlan] = useState<string>('annual');
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [subscriptionCreated, setSubscriptionCreated] = useState(false);
+
+  // Fetch subscription plans
+  const { data: plans } = useQuery<SubscriptionPlans>({
+    queryKey: ['/api/subscription/plans'],
+  });
+
+  // Create subscription mutation
+  const createSubscriptionMutation = useMutation({
+    mutationFn: async (planKey: string) => {
+      const response = await apiRequest('POST', '/api/subscription/create', { planKey });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.clientSecret) {
+        setClientSecret(data.clientSecret);
+        setSubscriptionCreated(true);
+      } else {
+        toast({
+          title: "Trial Started!",
+          description: "Your free trial has begun. Welcome to ForeScore!",
+        });
+        setLocation('/');
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Subscription Error",
+        description: error.message || "Failed to start subscription. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handlePlanSelect = async () => {
+    if (!selectedPlan) return;
+    createSubscriptionMutation.mutate(selectedPlan);
+  };
+
+  const handleSubscriptionComplete = () => {
+    queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+    setLocation('/');
+  };
+
+  if (subscriptionCreated && clientSecret) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="max-w-md w-full">
+          <Card>
+            <CardHeader className="text-center">
+              <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                <CreditCard className="w-8 h-8 text-green-600" />
+              </div>
+              <CardTitle className="text-2xl">Complete Your Setup</CardTitle>
+              <CardDescription>
+                Add your payment method to activate your 7-day free trial
+              </CardDescription>
+            </CardHeader>
+            
+            <CardContent>
+              <Elements 
+                stripe={stripePromise} 
+                options={{ 
+                  clientSecret,
+                  appearance: {
+                    theme: 'stripe',
+                    variables: {
+                      colorPrimary: '#059669',
+                    },
+                  },
+                }}
+              >
+                <SubscribeForm 
+                  selectedPlan={selectedPlan} 
+                  onSubscriptionComplete={handleSubscriptionComplete}
+                />
+              </Elements>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm">
+        <div className="max-w-4xl mx-auto px-4 py-6">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-gray-900">🏌️ Upgrade to ForeScore Pro</h1>
+            <p className="mt-2 text-lg text-gray-600">
+              Take your golf penalty games to the next level
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        {/* Features Section */}
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <div className="text-center">
+            <div className="mx-auto w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-3">
+              <Users className="w-6 h-6 text-green-600" />
+            </div>
+            <h3 className="font-semibold text-gray-900">Unlimited Groups</h3>
+            <p className="text-sm text-gray-600">Create and manage as many golf groups as you want</p>
+          </div>
+          
+          <div className="text-center">
+            <div className="mx-auto w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-3">
+              <Calculator className="w-6 h-6 text-green-600" />
+            </div>
+            <h3 className="font-semibold text-gray-900">Smart Calculations</h3>
+            <p className="text-sm text-gray-600">Advanced payout algorithms with optimal transaction minimization</p>
+          </div>
+          
+          <div className="text-center">
+            <div className="mx-auto w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-3">
+              <Trophy className="w-6 h-6 text-green-600" />
+            </div>
+            <h3 className="font-semibold text-gray-900">Live Tracking</h3>
+            <p className="text-sm text-gray-600">Real-time score tracking and leaderboards for competitive play</p>
+          </div>
+        </div>
+
+        {/* Pricing Plans */}
+        <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto mb-8">
+          {plans && (
+            <>
+              <PlanCard
+                planKey="monthly"
+                plan={plans.monthly}
+                isSelected={selectedPlan === 'monthly'}
+                onSelect={setSelectedPlan}
+              />
+              <PlanCard
+                planKey="annual"
+                plan={plans.annual}
+                isSelected={selectedPlan === 'annual'}
+                onSelect={setSelectedPlan}
+                isPopular={true}
+              />
+            </>
+          )}
+        </div>
+
+        {/* CTA Button */}
+        <div className="text-center">
+          <Button
+            onClick={handlePlanSelect}
+            disabled={createSubscriptionMutation.isPending}
+            className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-8 py-3 text-lg"
+            data-testid="button-select-plan"
+          >
+            {createSubscriptionMutation.isPending 
+              ? "Setting up trial..." 
+              : "Start 7-Day Free Trial"
+            }
+          </Button>
+          
+          <p className="mt-3 text-sm text-gray-500">
+            No commitment • Cancel anytime • Secure payment by Stripe
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}

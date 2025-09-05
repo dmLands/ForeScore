@@ -10,6 +10,7 @@ import { insertGroupSchema, insertGameStateSchema, insertPointsGameSchema, cardV
 import { db } from "./db.js";
 import { sql, eq, and, gt } from "drizzle-orm";
 import { sendForgotPasswordEmail } from "./emailService.js";
+import { stripeService, SUBSCRIPTION_PLANS } from "./stripeService.js";
 import { randomBytes } from "crypto";
 import bcrypt from "bcryptjs";
 
@@ -98,6 +99,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json({ message: "Logged out successfully" });
       });
     });
+  });
+
+  // Subscription routes for V7.0
+  app.get('/api/subscription/plans', (req, res) => {
+    res.json(SUBSCRIPTION_PLANS);
+  });
+
+  app.post('/api/subscription/create', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { planKey } = req.body;
+      
+      if (!planKey || !SUBSCRIPTION_PLANS[planKey]) {
+        return res.status(400).json({ message: 'Invalid plan selected' });
+      }
+      
+      const subscription = await stripeService.createSubscription(userId, planKey);
+      res.json(subscription);
+    } catch (error) {
+      console.error('Subscription creation error:', error);
+      res.status(500).json({ 
+        message: 'Failed to create subscription',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  app.get('/api/subscription/status', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const access = await stripeService.hasAccess(userId);
+      res.json(access);
+    } catch (error) {
+      console.error('Subscription status error:', error);
+      res.status(500).json({ message: 'Failed to check subscription status' });
+    }
+  });
+
+  app.post('/api/subscription/cancel', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      await stripeService.cancelSubscription(userId);
+      res.json({ message: 'Subscription canceled successfully' });
+    } catch (error) {
+      console.error('Subscription cancellation error:', error);
+      res.status(500).json({ 
+        message: 'Failed to cancel subscription',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
   });
 
   // V6.8: Password Reset Routes

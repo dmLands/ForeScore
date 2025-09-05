@@ -6,7 +6,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
 }
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2023-10-16',
+  apiVersion: '2025-08-27.basil',
 });
 
 export interface SubscriptionPlan {
@@ -117,7 +117,7 @@ export class StripeService {
     
     // Get payment intent for setup
     const invoice = subscription.latest_invoice as Stripe.Invoice;
-    const paymentIntent = invoice?.payment_intent as Stripe.PaymentIntent;
+    const paymentIntent = (invoice as any)?.payment_intent as Stripe.PaymentIntent;
     
     return {
       subscriptionId: subscription.id,
@@ -173,8 +173,8 @@ export class StripeService {
       case 'invoice.payment_succeeded':
       case 'invoice.payment_failed':
         const invoice = event.data.object as Stripe.Invoice;
-        if (invoice.subscription) {
-          const sub = await stripe.subscriptions.retrieve(invoice.subscription as string);
+        if ((invoice as any).subscription) {
+          const sub = await stripe.subscriptions.retrieve((invoice as any).subscription as string);
           await this.updateSubscriptionStatus(sub);
         }
         break;

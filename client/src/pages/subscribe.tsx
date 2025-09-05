@@ -51,11 +51,9 @@ const SubscribeForm = ({ selectedPlan, onSubscriptionComplete }: {
       console.log('Attempting to confirm setup with Stripe...');
       
       // For trial subscriptions, we use SetupIntent for payment method collection
+      // Don't use return_url in Replit environment to avoid SecurityError
       const result = await stripe.confirmSetup({
         elements,
-        confirmParams: {
-          return_url: `${window.location.origin}/`,
-        },
       });
       
       console.log('Stripe confirmSetup result:', result);

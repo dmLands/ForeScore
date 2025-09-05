@@ -48,31 +48,19 @@ const SubscribeForm = ({ selectedPlan, onSubscriptionComplete }: {
     setIsLoading(true);
 
     try {
-      console.log('Attempting to confirm setup with Stripe...');
-      
       // For trial subscriptions, we use SetupIntent for payment method collection
       const result = await stripe.confirmSetup({
         elements,
         redirect: 'if_required', // Avoids SecurityError in Replit iframe
       });
-      
-      console.log('Stripe confirmSetup result:', result);
 
       if (result.error) {
-        console.error('Stripe setup error details:', {
-          type: result.error.type,
-          code: result.error.code,
-          message: result.error.message,
-          decline_code: result.error.decline_code,
-          param: result.error.param
-        });
         toast({
           title: "Payment Setup Failed",
-          description: `${result.error.message || "Payment setup failed"}${result.error.code ? ` (${result.error.code})` : ""}`,
+          description: result.error.message || "Payment setup failed. Please try again.",
           variant: "destructive",
         });
       } else {
-        console.log('Setup successful, trial starting...');
         toast({
           title: "Trial Started!",
           description: "Your 7-day free trial has begun. Enjoy ForeScore!",
@@ -80,18 +68,9 @@ const SubscribeForm = ({ selectedPlan, onSubscriptionComplete }: {
         onSubscriptionComplete();
       }
     } catch (error) {
-      console.error('Stripe confirmSetup exception:', error);
-      console.error('Error type:', typeof error);
-      console.error('Error keys:', Object.keys(error || {}));
-      console.error('Error string:', String(error));
-      
       let errorMessage = "An unexpected error occurred";
       if (error instanceof Error) {
         errorMessage = error.message;
-      } else if (typeof error === 'string') {
-        errorMessage = error;
-      } else if (error && typeof error === 'object') {
-        errorMessage = JSON.stringify(error);
       }
       
       toast({
@@ -269,9 +248,19 @@ export default function Subscribe() {
   };
 
   const handleSubscriptionComplete = () => {
-    queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
-    queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-    setLocation('/');
+    console.log('🎉 Subscription completed, redirecting in 2 seconds...');
+    
+    // Give server time to process webhook and update user status
+    setTimeout(() => {
+      queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      
+      // Add another small delay before redirect to let queries complete
+      setTimeout(() => {
+        console.log('🏠 Redirecting to home...');
+        setLocation('/');
+      }, 500);
+    }, 2000);
   };
 
   if (subscriptionCreated && clientSecret) {

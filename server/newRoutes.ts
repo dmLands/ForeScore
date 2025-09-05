@@ -1,4 +1,5 @@
 import type { Express } from "express";
+import express from "express";
 import { createServer, type Server } from "http";
 import { z } from "zod";
 import { storage } from "./storage.js";
@@ -10,7 +11,7 @@ import { insertGroupSchema, insertGameStateSchema, insertPointsGameSchema, cardV
 import { db } from "./db.js";
 import { sql, eq, and, gt } from "drizzle-orm";
 import { sendForgotPasswordEmail } from "./emailService.js";
-import { stripeService, SUBSCRIPTION_PLANS } from "./stripeService.js";
+import { stripeService, SUBSCRIPTION_PLANS, stripe } from "./stripeService.js";
 import { requireSubscriptionAccess, isPublicRoute } from "./subscriptionMiddleware.js";
 import { randomBytes } from "crypto";
 import bcrypt from "bcryptjs";
@@ -170,6 +171,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Subscription cancellation error:', error);
       res.status(500).json({ 
         message: 'Failed to cancel subscription',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // MISSING WEBHOOK ENDPOINT - This was the bug!
+  app.post('/api/webhooks/stripe', express.raw({type: 'application/json'}), async (req, res) => {
+    try {
+      const sig = req.headers['stripe-signature'];
+      const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+      
+      if (!endpointSecret) {
+        console.warn('No webhook secret configured - accepting all webhook events');
+        const event = req.body;
+        await stripeService.handleWebhook(event);
+        return res.status(200).json({ received: true });
+      }
+      
+      const event = stripe.webhooks.constructEvent(req.body, sig!, endpointSecret);
+      await stripeService.handleWebhook(event);
+      res.status(200).json({ received: true });
+    } catch (error) {
+      console.error('Webhook error:', error);
+      res.status(400).json({ error: 'Webhook signature verification failed' });
+    }
+  });
+
+  // Create subscription after payment setup (called by frontend)
+  app.post('/api/subscription/create-after-setup', isAuthenticated, async (req: any, res) => {
+    try {
+      const { setupIntentId } = req.body;
+      
+      if (!setupIntentId) {
+        return res.status(400).json({ message: 'SetupIntent ID required' });
+      }
+      
+      const result = await stripeService.createSubscriptionAfterPayment(setupIntentId);
+      res.json({ message: 'Subscription created successfully', result });
+    } catch (error) {
+      console.error('Subscription creation after setup error:', error);
+      res.status(500).json({ 
+        message: 'Failed to create subscription',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Manual completion endpoint to fix current user
+  app.post('/api/subscription/complete-setup', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      console.log('🔧 Manual completion for user:', userId);
+      
+      const user = await storage.getUser(userId);
+      console.log('👤 User found:', user ? { 
+        id: user.id, 
+        email: user.email, 
+        stripeCustomerId: user.stripeCustomerId 
+      } : 'null');
+      
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      if (!user.stripeCustomerId) {
+        return res.status(400).json({ message: 'No Stripe customer ID found' });
+      }
+      
+      // Find the most recent SetupIntent for this user
+      console.log('🔍 Looking for SetupIntents for customer:', user.stripeCustomerId);
+      const setupIntents = await stripe.setupIntents.list({
+        customer: user.stripeCustomerId,
+        limit: 10,
+      });
+      
+      console.log('📋 Found SetupIntents:', setupIntents.data.map(si => ({
+        id: si.id,
+        status: si.status,
+        metadata: si.metadata
+      })));
+      
+      if (setupIntents.data.length === 0) {
+        return res.status(400).json({ message: 'No SetupIntent found' });
+      }
+      
+      const setupIntent = setupIntents.data[0];
+      console.log('✅ Using SetupIntent:', setupIntent.id, 'Status:', setupIntent.status);
+      
+      if (setupIntent.status === 'succeeded') {
+        console.log('🎯 Creating subscription after payment...');
+        const result = await stripeService.createSubscriptionAfterPayment(setupIntent.id);
+        console.log('🎉 Subscription creation result:', result);
+        res.json({ message: 'Subscription created successfully', result });
+      } else {
+        res.status(400).json({ message: `SetupIntent not completed. Status: ${setupIntent.status}` });
+      }
+    } catch (error) {
+      console.error('Manual completion error:', error);
+      res.status(500).json({ 
+        message: 'Failed to complete subscription',
         error: error instanceof Error ? error.message : 'Unknown error'
       });
     }

@@ -61,11 +61,28 @@ const SubscribeForm = ({ selectedPlan, onSubscriptionComplete }: {
           variant: "destructive",
         });
       } else {
-        toast({
-          title: "Trial Started!",
-          description: "Your 7-day free trial has begun. Enjoy ForeScore!",
-        });
-        onSubscriptionComplete();
+        // Payment method setup succeeded - create subscription immediately
+        try {
+          const setupIntentId = result.setupIntent?.id;
+          if (setupIntentId) {
+            await apiRequest('POST', '/api/subscription/create-after-setup', {
+              setupIntentId
+            });
+          }
+          
+          toast({
+            title: "Trial Started!",
+            description: "Your 7-day free trial has begun. Enjoy ForeScore!",
+          });
+          onSubscriptionComplete();
+        } catch (error) {
+          console.error('Subscription creation error after payment:', error);
+          toast({
+            title: "Setup Complete",
+            description: "Payment method saved. Your trial will be activated shortly.",
+          });
+          onSubscriptionComplete();
+        }
       }
     } catch (error) {
       let errorMessage = "An unexpected error occurred";

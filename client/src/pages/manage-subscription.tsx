@@ -123,14 +123,14 @@ export default function ManageSubscription() {
     switch (statusInfo.status) {
       case 'trial':
         return {
-          title: 'Subscription Active',
-          description: 'Your ForeScore subscription is active and ready to use',
-          badge: <Badge className="bg-blue-100 text-blue-800">Active</Badge>
+          title: 'Free Trial Active',
+          description: `Your 7-day free trial is active until ${formatDate(accessInfo.trialEndsAt)}`,
+          badge: <Badge className="bg-blue-100 text-blue-800">Free Trial</Badge>
         };
       case 'active':
         return {
           title: 'Subscription Active',
-          description: 'Your ForeScore Pro subscription is active and ready to use',
+          description: 'Your ForeScore subscription is active and ready to use',
           badge: <Badge className="bg-green-100 text-green-800">Active</Badge>
         };
       case 'expired':
@@ -167,7 +167,7 @@ export default function ManageSubscription() {
               </Button>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Subscription Management</h1>
-                <p className="text-sm text-gray-600">Manage your ForeScore Pro subscription</p>
+                <p className="text-sm text-gray-600">Manage your ForeScore subscription</p>
               </div>
             </div>
           </div>
@@ -212,7 +212,7 @@ export default function ManageSubscription() {
                   data-testid="button-upgrade-subscription"
                 >
                   <CreditCard className="w-4 h-4 mr-2" />
-                  {statusInfo.status === 'trial' ? 'Upgrade Now' : 'Start Free Trial'}
+                  {statusInfo.status === 'trial' ? 'Upgrade to Paid Plan' : 'Start Free Trial'}
                 </Button>
                 
                 {plans && (
@@ -250,7 +250,7 @@ export default function ManageSubscription() {
                         <span>Cancel Subscription?</span>
                       </AlertDialogTitle>
                       <AlertDialogDescription>
-                        Are you sure you want to cancel your ForeScore Pro subscription? 
+                        Are you sure you want to cancel your ForeScore subscription? 
                         You'll continue to have access until the end of your current billing period, 
                         but won't be charged again.
                       </AlertDialogDescription>
@@ -277,7 +277,7 @@ export default function ManageSubscription() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <DollarSign className="w-5 h-5 text-green-600" />
-              <span>ForeScore Pro Features</span>
+              <span>ForeScore Features</span>
             </CardTitle>
           </CardHeader>
           <CardContent>

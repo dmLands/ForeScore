@@ -90,29 +90,36 @@ export class StripeService {
       `${user.firstName} ${user.lastName}`
     );
     
-    // Create subscription WITHOUT trial first - trial starts after payment confirmation
+    // Calculate trial end date (7 days from now)
+    const trialEnd = new Date();
+    trialEnd.setDate(trialEnd.getDate() + plan.trialDays);
+    
+    // Create subscription with proper trial and tax settings
     const subscription = await stripe.subscriptions.create({
       customer: customerId,
       items: [{
         price: plan.priceId,
       }],
+      trial_end: Math.floor(trialEnd.getTime() / 1000), // Restore 7-day trial on invoice
       payment_behavior: 'default_incomplete', // Require payment method setup
       payment_settings: {
-        save_default_payment_method: 'on_subscription', // Save payment method for future use
+        save_default_payment_method: 'on_subscription',
+      },
+      automatic_tax: {
+        enabled: true, // Restore automatic tax calculation
       },
       expand: ['latest_invoice.payment_intent'],
       metadata: {
         userId,
         planKey,
-        trialDays: plan.trialDays.toString(), // Store trial days for later use
       },
     });
     
-    // Update user record - subscription will be 'incomplete' until payment confirmed
+    // Update user record with trial information
     await storage.updateUserSubscription(userId, {
       stripeSubscriptionId: subscription.id,
       subscriptionStatus: subscription.status as any, // Will be 'incomplete' until payment confirmed
-      trialEndsAt: undefined, // Trial starts after payment confirmation via webhook
+      trialEndsAt: trialEnd, // Trial end date properly set
     });
     
     // For incomplete subscriptions, we need to create a SetupIntent to collect payment method

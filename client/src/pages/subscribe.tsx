@@ -77,9 +77,22 @@ const SubscribeForm = ({ selectedPlan, onSubscriptionComplete }: {
       }
     } catch (error) {
       console.error('Stripe confirmSetup exception:', error);
+      console.error('Error type:', typeof error);
+      console.error('Error keys:', Object.keys(error || {}));
+      console.error('Error string:', String(error));
+      
+      let errorMessage = "An unexpected error occurred";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      } else if (error && typeof error === 'object') {
+        errorMessage = JSON.stringify(error);
+      }
+      
       toast({
         title: "Error",
-        description: `Setup failed: ${error instanceof Error ? error.message : "An unexpected error occurred"}`,
+        description: `Setup failed: ${errorMessage}`,
         variant: "destructive",
       });
     } finally {

@@ -154,7 +154,7 @@ const PlanCard = ({
         </CardDescription>
         {savings > 0 && (
           <Badge variant="secondary" className="mt-2">
-            Save ${savings} per year
+30% annual savings
           </Badge>
         )}
       </CardHeader>
@@ -283,9 +283,9 @@ export default function Subscribe() {
       <div className="bg-white shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900">🏌️ Upgrade to ForeScore Pro</h1>
+            <h1 className="text-3xl font-bold text-gray-900">🏌️ Join Forescore</h1>
             <p className="mt-2 text-lg text-gray-600">
-              Take your golf penalty games to the next level
+              You hit the shots, we do the math
             </p>
           </div>
         </div>
@@ -298,8 +298,8 @@ export default function Subscribe() {
             <div className="mx-auto w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-3">
               <Users className="w-6 h-6 text-green-600" />
             </div>
-            <h3 className="font-semibold text-gray-900">Unlimited Groups</h3>
-            <p className="text-sm text-gray-600">Create and manage as many golf groups as you want</p>
+            <h3 className="font-semibold text-gray-900">Group Activation</h3>
+            <p className="text-sm text-gray-600">Create your regular golf groups and save them for later</p>
           </div>
           
           <div className="text-center">

@@ -115,13 +115,34 @@ export class StripeService {
       trialEndsAt: null, // Trial starts after payment confirmation via webhook
     });
     
-    // Get payment intent for setup
-    const invoice = subscription.latest_invoice as Stripe.Invoice;
-    const paymentIntent = (invoice as any)?.payment_intent as Stripe.PaymentIntent;
+    // For incomplete subscriptions, we need to create a SetupIntent to collect payment method
+    let clientSecret: string | null = null;
+    
+    if (subscription.status === 'incomplete') {
+      // Check if there's a payment intent from the invoice first
+      const invoice = subscription.latest_invoice as Stripe.Invoice;
+      const paymentIntent = (invoice as any)?.payment_intent as Stripe.PaymentIntent;
+      
+      if (paymentIntent?.client_secret) {
+        clientSecret = paymentIntent.client_secret;
+      } else {
+        // Create a SetupIntent for payment method collection
+        const setupIntent = await stripe.setupIntents.create({
+          customer: customerId,
+          payment_method_types: ['card'],
+          usage: 'off_session',
+          metadata: {
+            subscriptionId: subscription.id,
+            userId,
+          },
+        });
+        clientSecret = setupIntent.client_secret;
+      }
+    }
     
     return {
       subscriptionId: subscription.id,
-      clientSecret: paymentIntent?.client_secret || null,
+      clientSecret,
       status: subscription.status,
     };
   }
@@ -169,6 +190,14 @@ export class StripeService {
    */
   async handleWebhook(event: Stripe.Event): Promise<void> {
     switch (event.type) {
+      case 'setup_intent.succeeded':
+        // When payment method setup succeeds, start trial
+        const setupIntent = event.data.object as Stripe.SetupIntent;
+        if (setupIntent.metadata.subscriptionId) {
+          await this.startTrialAfterPayment(setupIntent.metadata.subscriptionId);
+        }
+        break;
+        
       case 'invoice.payment_succeeded':
         // When first payment succeeds on incomplete subscription, start trial
         const invoice = event.data.object as Stripe.Invoice;

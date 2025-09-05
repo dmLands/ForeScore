@@ -167,7 +167,7 @@ const PlanCard = ({
       onClick={() => onSelect(planKey)}
     >
       {isPopular && (
-        <Badge className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-green-600 px-4 py-1 text-center whitespace-nowrap">
+        <Badge className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-green-600 px-3 py-1 text-center whitespace-nowrap min-w-max">
           Most Popular
         </Badge>
       )}
@@ -185,9 +185,11 @@ const PlanCard = ({
           </span>
         </CardDescription>
         {savings > 0 && (
-          <Badge variant="secondary" className="mt-1 text-xs text-center">
-            Save 30%
-          </Badge>
+          <div className="flex justify-center mt-1">
+            <Badge variant="secondary" className="text-xs px-2 py-1 min-w-max">
+              Save 30%
+            </Badge>
+          </div>
         )}
       </CardHeader>
       

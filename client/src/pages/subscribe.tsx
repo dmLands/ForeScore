@@ -48,7 +48,8 @@ const SubscribeForm = ({ selectedPlan, onSubscriptionComplete }: {
     setIsLoading(true);
 
     try {
-      const { error } = await stripe.confirmPayment({
+      // For trial subscriptions, we use SetupIntent for payment method collection
+      const { error } = await stripe.confirmSetup({
         elements,
         confirmParams: {
           return_url: `${window.location.origin}/`,

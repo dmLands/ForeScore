@@ -113,7 +113,18 @@ const SubscribeForm = ({ selectedPlan, onSubscriptionComplete }: {
             Full access to all features included.
           </p>
         </div>
-        <PaymentElement />
+        <PaymentElement 
+          options={{
+            fields: {
+              billingDetails: {
+                address: {
+                  country: 'auto',
+                  postalCode: 'auto',
+                },
+              },
+            },
+          }}
+        />
       </div>
       
       <Button

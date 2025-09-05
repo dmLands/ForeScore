@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/useAuth";
 import { 
   CheckCircle, 
   Clock, 
@@ -45,11 +46,22 @@ export default function ManageSubscription() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { hasActiveSubscription, isLoading: authLoading, subscriptionAccess } = useAuth();
 
-  // Fetch subscription status
+  // Redirect users without active subscriptions to subscribe page
+  useEffect(() => {
+    if (!authLoading && !hasActiveSubscription) {
+      setLocation('/subscribe');
+    }
+  }, [authLoading, hasActiveSubscription, setLocation]);
+
+  // Fetch subscription status (using data from auth hook for consistency)
   const { data: accessInfo, isLoading: statusLoading } = useQuery<SubscriptionAccess>({
     queryKey: ['/api/subscription/status'],
   });
+
+  // Use subscription access from auth hook if available, fallback to direct query
+  const currentAccessInfo = subscriptionAccess || accessInfo;
 
   // Fetch subscription plans for pricing info
   const { data: plans } = useQuery<SubscriptionPlans>({
@@ -79,7 +91,7 @@ export default function ManageSubscription() {
     },
   });
 
-  if (statusLoading) {
+  if (authLoading || statusLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -91,16 +103,16 @@ export default function ManageSubscription() {
   }
 
   const getStatusInfo = () => {
-    if (!accessInfo) return { status: 'unknown', color: 'gray', icon: XCircle };
+    if (!currentAccessInfo) return { status: 'unknown', color: 'gray', icon: XCircle };
     
-    if (accessInfo.hasAccess) {
-      if (accessInfo.trialEndsAt) {
+    if (currentAccessInfo.hasAccess) {
+      if (currentAccessInfo.trialEndsAt) {
         return { status: 'trial', color: 'blue', icon: Clock };
       }
       return { status: 'active', color: 'green', icon: CheckCircle };
     }
     
-    if (accessInfo.reason === 'Trial expired') {
+    if (currentAccessInfo.reason === 'Trial expired') {
       return { status: 'expired', color: 'red', icon: XCircle };
     }
     
@@ -124,7 +136,7 @@ export default function ManageSubscription() {
       case 'trial':
         return {
           title: 'Free Trial Active',
-          description: `Your 7-day free trial is active until ${formatDate(accessInfo.trialEndsAt)}`,
+          description: `Your 7-day free trial is active until ${formatDate(currentAccessInfo?.trialEndsAt)}`,
           badge: <Badge className="bg-blue-100 text-blue-800">Free Trial</Badge>
         };
       case 'active':
@@ -180,8 +192,18 @@ export default function ManageSubscription() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className={`p-2 rounded-full bg-${statusInfo.color}-100`}>
-                  <StatusIcon className={`w-6 h-6 text-${statusInfo.color}-600`} />
+                <div className={`p-2 rounded-full ${
+                  statusInfo.color === 'blue' ? 'bg-blue-100' :
+                  statusInfo.color === 'green' ? 'bg-green-100' :
+                  statusInfo.color === 'red' ? 'bg-red-100' :
+                  'bg-gray-100'
+                }`}>
+                  <StatusIcon className={`w-6 h-6 ${
+                    statusInfo.color === 'blue' ? 'text-blue-600' :
+                    statusInfo.color === 'green' ? 'text-green-600' :
+                    statusInfo.color === 'red' ? 'text-red-600' :
+                    'text-gray-600'
+                  }`} />
                 </div>
                 <div>
                   <CardTitle className="text-xl">{statusDisplay.title}</CardTitle>
@@ -204,7 +226,7 @@ export default function ManageSubscription() {
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Upgrade/Subscribe Actions */}
-            {(!accessInfo?.hasAccess || statusInfo.status === 'trial') && (
+            {(!currentAccessInfo?.hasAccess || statusInfo.status === 'trial') && (
               <div className="space-y-3">
                 <Button
                   onClick={() => setLocation('/subscribe')}
@@ -234,7 +256,7 @@ export default function ManageSubscription() {
             )}
 
             {/* Cancel Subscription */}
-            {accessInfo?.hasAccess && statusInfo.status === 'active' && (
+            {currentAccessInfo?.hasAccess && statusInfo.status === 'active' && (
               <div className="border-t pt-4">
                 <AlertDialog>
                   <AlertDialogTrigger asChild>

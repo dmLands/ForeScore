@@ -14,8 +14,9 @@ import Subscribe from "@/pages/subscribe";
 import ManageSubscription from "@/pages/manage-subscription";
 import NotFound from "@/pages/not-found";
 
-function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
+// Guard component that wraps Home to check subscription access
+function ProtectedHome() {
+  const { isAuthenticated, hasActiveSubscription, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -28,27 +29,27 @@ function Router() {
     );
   }
 
+  if (!isAuthenticated) {
+    return <Landing />;
+  }
+
+  if (!hasActiveSubscription) {
+    return <Subscribe />;
+  }
+
+  return <Home />;
+}
+
+function Router() {
   return (
     <Switch>
-      {isAuthenticated ? (
-        <>
-          <Route path="/" component={Home} />
-          <Route path="/subscribe" component={Subscribe} />
-          <Route path="/manage-subscription" component={ManageSubscription} />
-          <Route path="/forgot-password" component={ForgotPassword} />
-          <Route path="/reset-password" component={ResetPassword} />
-        </>
-      ) : (
-        <>
-          <Route path="/" component={Landing} />
-          <Route path="/login" component={Login} />
-          <Route path="/register" component={Register} />
-          <Route path="/subscribe" component={Subscribe} />
-          <Route path="/manage-subscription" component={ManageSubscription} />
-          <Route path="/forgot-password" component={ForgotPassword} />
-          <Route path="/reset-password" component={ResetPassword} />
-        </>
-      )}
+      <Route path="/" component={ProtectedHome} />
+      <Route path="/login" component={Login} />
+      <Route path="/register" component={Register} />
+      <Route path="/subscribe" component={Subscribe} />
+      <Route path="/manage-subscription" component={ManageSubscription} />
+      <Route path="/forgot-password" component={ForgotPassword} />
+      <Route path="/reset-password" component={ResetPassword} />
       <Route component={NotFound} />
     </Switch>
   );

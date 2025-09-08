@@ -960,13 +960,18 @@ export default function Home() {
       return response.json();
     },
     onSuccess: (updatedGroup: Group) => {
-      changeGroup(updatedGroup);
+      // Close dialog and reset form first
       setShowCreateCardDialog(false);
       setCustomCardName("");
       setCustomCardEmoji("");
       setCustomCardValue("15");
+      
+      // Invalidate queries to update the UI with new custom card
       queryClient.invalidateQueries({ queryKey: ['/api/groups'] });
       queryClient.invalidateQueries({ queryKey: ['/api/groups', updatedGroup.id, 'games'] });
+      
+      // DO NOT call changeGroup - this clears selectedGame and causes layout issues
+      // The query invalidation will refresh the group data automatically
     },
     onError: () => {
       toast({

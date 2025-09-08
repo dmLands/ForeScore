@@ -359,6 +359,19 @@ export default function Subscribe() {
           <p className="mt-3 text-sm text-gray-500">
             No commitment • Cancel anytime • Secure payment by Stripe
           </p>
+          
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <p className="text-sm text-gray-600">
+              Already have an account?{" "}
+              <button
+                onClick={() => setLocation('/login')}
+                className="text-green-600 hover:text-green-700 font-medium underline"
+                data-testid="link-existing-login"
+              >
+                Sign in here
+              </button>
+            </p>
+          </div>
         </div>
 
         {/* Features Section - Now last */}

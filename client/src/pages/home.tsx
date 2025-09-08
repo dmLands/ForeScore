@@ -966,12 +966,17 @@ export default function Home() {
       setCustomCardEmoji("");
       setCustomCardValue("15");
       
-      // Invalidate queries to update the UI with new custom card
+      // Update the selected group data with the new custom card WITHOUT affecting selectedGame
+      if (selectedGroup && selectedGroup.id === updatedGroup.id) {
+        // Create a new group object with updated custom cards
+        const updatedSelectedGroup = { ...selectedGroup, customCards: updatedGroup.customCards };
+        // Force update the group data in the queryClient cache
+        queryClient.setQueryData(['/api/groups', updatedGroup.id], updatedSelectedGroup);
+      }
+      
+      // Invalidate queries to ensure consistency
       queryClient.invalidateQueries({ queryKey: ['/api/groups'] });
       queryClient.invalidateQueries({ queryKey: ['/api/groups', updatedGroup.id, 'games'] });
-      
-      // DO NOT call changeGroup - this clears selectedGame and causes layout issues
-      // The query invalidation will refresh the group data automatically
     },
     onError: () => {
       toast({

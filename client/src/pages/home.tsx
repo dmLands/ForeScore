@@ -960,21 +960,21 @@ export default function Home() {
       return response.json();
     },
     onSuccess: (updatedGroup: Group) => {
-      // Close dialog and reset form first
+      // Temporarily store the selected game to restore it after changeGroup
+      const currentSelectedGame = selectedGame;
+      
+      // Update the group data (this will clear selectedGame)
+      changeGroup(updatedGroup);
+      
+      // Restore the selected game
+      if (currentSelectedGame) {
+        changeGame(currentSelectedGame);
+      }
+      
       setShowCreateCardDialog(false);
       setCustomCardName("");
       setCustomCardEmoji("");
       setCustomCardValue("15");
-      
-      // Update the selected group data with the new custom card WITHOUT affecting selectedGame
-      if (selectedGroup && selectedGroup.id === updatedGroup.id) {
-        // Create a new group object with updated custom cards
-        const updatedSelectedGroup = { ...selectedGroup, customCards: updatedGroup.customCards };
-        // Force update the group data in the queryClient cache
-        queryClient.setQueryData(['/api/groups', updatedGroup.id], updatedSelectedGroup);
-      }
-      
-      // Invalidate queries to ensure consistency
       queryClient.invalidateQueries({ queryKey: ['/api/groups'] });
       queryClient.invalidateQueries({ queryKey: ['/api/groups', updatedGroup.id, 'games'] });
     },

@@ -2198,12 +2198,12 @@ export default function Home() {
                                 )}
                                 {multiSelectGames.includes('points') && (
                                   <div className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium fade-in stagger-1">
-                                    🎯 Points
+                                    🎯 2/9/16 Points
                                   </div>
                                 )}
                                 {multiSelectGames.includes('fbt') && (
                                   <div className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium fade-in stagger-2">
-                                    ⛳ FBT
+                                    ⛳ 2/9/16 FBT
                                   </div>
                                 )}
                               </div>

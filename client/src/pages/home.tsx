@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Users, Gamepad2, BookOpen, ChevronRight, Edit, Layers, Trophy, ArrowLeft, Info, HelpCircle, LogOut, Menu, Loader2, User, FileText, Mail, Crown, Clock, CreditCard, AlertTriangle, Hash, Flag, Zap } from "lucide-react";
+import { Plus, Users, Gamepad2, BookOpen, ChevronRight, Edit, Layers, Trophy, ArrowLeft, Info, HelpCircle, LogOut, Menu, Loader2, User, FileText, Mail, Crown, Clock, CreditCard, AlertTriangle, Hash, Flag, Zap, Target } from "lucide-react";
 import { CreateGroupModal } from "@/components/create-group-modal";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { Tutorial } from "@/components/tutorial";
@@ -4139,7 +4139,7 @@ export default function Home() {
                   <Layers className="h-5 w-5 text-gray-600" />
                   <div>
                     <div className="font-medium text-gray-900">Cards</div>
-                    <div className="text-sm text-gray-500">Classic penalty cards game</div>
+                    <div className="text-sm text-gray-500">Don't be an animal!</div>
                   </div>
                 </button>
                 
@@ -4155,7 +4155,7 @@ export default function Home() {
                   <Hash className="h-5 w-5 text-gray-600" />
                   <div>
                     <div className="font-medium text-gray-900">2/9/16</div>
-                    <div className="text-sm text-gray-500">Points-based scoring game</div>
+                    <div className="text-sm text-gray-500">Points-based scoring</div>
                   </div>
                 </button>
                 
@@ -4168,10 +4168,10 @@ export default function Home() {
                     setShowGamesOverlay(false);
                   }}
                 >
-                  <Zap className="h-5 w-5 text-gray-600" />
+                  <Target className="h-5 w-5 text-gray-600" />
                   <div>
                     <div className="font-medium text-gray-900">BBB</div>
-                    <div className="text-sm text-gray-500">Bingo Bango Bongo game</div>
+                    <div className="text-sm text-gray-500">Bingo Bango Bongo</div>
                   </div>
                 </button>
               </div>

@@ -4128,7 +4128,7 @@ export default function Home() {
           />
           
           {/* Dropdown Menu */}
-          <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 w-72 bg-white rounded-lg shadow-lg border border-gray-200 animate-in slide-in-from-bottom-2">
+          <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 w-72 bg-white rounded-lg shadow-lg border border-gray-200 animate-in slide-in-from-bottom-4 duration-200">
             <div className="p-3">
               <div className="space-y-1">
                 <button

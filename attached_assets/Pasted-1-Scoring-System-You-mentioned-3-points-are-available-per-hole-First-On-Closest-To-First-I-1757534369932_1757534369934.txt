@@ -1,0 +1,17 @@
+1.	Scoring System: You mentioned 3 points are available per hole ("First On", "Closest To", "First In"). Should each category be worth 1 point, or do they have different point values? Yes, all 1 point.
+2.	Player Selection: For the dropdown selectors on each row (First On, Closest To, First In) - should players be able to win multiple categories on the same hole, or is it one category per player? Yes, a player can win all, some, or none of the 3 points per hole.
+3.	Payout Calculation: You mentioned it's "similar to 2/9/16 but simpler" - should BBB use the same payout modes (Points only, FBT only, or Both), or does it have its own payout system? Use the same payout modes.
+4.	Integration with Combined Payouts: Should BBB integrate with the existing combined payout system (Cards + 2/9/16 + BBB), or remain separate? Similar to how we’ve implemented Cards + 2/9/16, users will be able to play BBB alone or in tandem with any combination of the other games. This means that we will also need to update tiles in the Payouts tab.
+5.	Hole Range: Should BBB use the same 18-hole format as the 2/9/16 game? Yes, but each game is played independently.
+Technical Clarifications:
+6.	Tab Navigation: For the new "Games" submenu - should this be a slide-up modal, dropdown, or expand/collapse interface? Expand/collapse interface
+7.	Data Storage: Should BBB follow the same data model pattern as the existing 2/9/16 games (tied to groups and game states)? Yes
+Additional Clarifying Questions:
+6.	Combined Payouts Integration: Should the new BBB game integrate with the existing combined payout system? Currently we have "Who Owes Who - Combined" that merges Cards + 2/9/16. Should this become Cards + 2/9/16 + BBB? Yes
+7.	Games Submenu Style: For the new "Games" tab submenu, would you prefer:
+•	A slide-up modal overlay?
+•	A dropdown menu that appears below the tab?
+•	An expand/collapse section within the tab area?
+8.	Multiple Winners: Can the same player win multiple categories on the same hole? (e.g., can Jack win both "First On" AND "Closest To" on hole 1?) Yes
+9.	Validation Rules: Should there be any validation (like requiring all 3 categories to have winners before moving to the next hole), or can users skip categories/holes? No validation at this time.
+10.	BBB Game Creation: Should BBB games be automatically created when a group is created (like 2/9/16), or should users manually create them? Automatically created.

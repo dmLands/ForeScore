@@ -943,7 +943,6 @@ export default function Home() {
       changeGroup(group);
       changeTab('games');
       setSelectedSubGame('2916');
-      setGamesSubmenuExpanded(true);
       setShowJoinDialog(false);
       setJoinCode("");
       queryClient.invalidateQueries({ queryKey: ['/api/groups'] });
@@ -1027,7 +1026,6 @@ export default function Home() {
       setNewGameName("");
       changeTab('games');
       setSelectedSubGame('2916');
-      setGamesSubmenuExpanded(true);
       queryClient.invalidateQueries({ queryKey: ['/api/groups', selectedGroup?.id, 'games'] });
       queryClient.invalidateQueries({ queryKey: ['/api/game-state', selectedGroup?.id] });
       queryClient.refetchQueries({ queryKey: ['/api/groups', selectedGroup?.id, 'games'] });
@@ -1079,7 +1077,6 @@ export default function Home() {
       setNewGameName("");
       changeTab('games');
       setSelectedSubGame('2916');
-      setGamesSubmenuExpanded(true);
       queryClient.invalidateQueries({ queryKey: ['/api/groups'] });
       queryClient.invalidateQueries({ queryKey: ['/api/groups', group.id, 'games'] });
       queryClient.invalidateQueries({ queryKey: ['/api/game-state', group.id] });
@@ -1430,8 +1427,7 @@ export default function Home() {
                                 onClick={() => {
                                   changeGame(game);
                                   changeTab('games');
-      setSelectedSubGame('2916');
-      setGamesSubmenuExpanded(true);
+                                  setSelectedSubGame('2916');
                                 }}
                                 size="sm"
                                 variant="outline"
@@ -4128,7 +4124,7 @@ export default function Home() {
           />
           
           {/* Dropdown Menu */}
-          <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 w-72 bg-white rounded-lg shadow-lg border border-gray-200 animate-in slide-in-from-bottom-4 duration-200">
+          <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 w-72 bg-white rounded-lg shadow-lg border border-gray-200" style={{ animation: 'slideUpFromBottom 0.2s ease-out' }}>
             <div className="p-3">
               <div className="space-y-1">
                 <button

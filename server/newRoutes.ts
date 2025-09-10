@@ -7,7 +7,7 @@ import { setupAuth, isAuthenticated, generateRoomToken } from "./replitAuth.js";
 import { calculateCardGameDetails, calculate2916Points, validateCardAssignment, calculateCardsGame, calculatePointsGame, calculateFbtGame, buildFbtNetsFromPointsGame, combineGames, settleWhoOwesWho, combineTotals, generateSettlement } from "./secureGameLogic.js";
 import { SecureWebSocketManager } from "./secureWebSocket.js";
 import { registerUser, authenticateUser, registerSchema, loginSchema } from "./localAuth.js";
-import { insertGroupSchema, insertGameStateSchema, insertPointsGameSchema, cardValuesSchema, pointsGameSettingsSchema, gameStates, roomStates, userPreferences, insertUserPreferencesSchema, passwordResetTokens, insertPasswordResetTokenSchema, users, type Card, type CardAssignment } from "@shared/schema";
+import { insertGroupSchema, insertGameStateSchema, insertPointsGameSchema, insertBbbGameSchema, cardValuesSchema, pointsGameSettingsSchema, gameStates, roomStates, userPreferences, insertUserPreferencesSchema, passwordResetTokens, insertPasswordResetTokenSchema, users, type Card, type CardAssignment } from "@shared/schema";
 import { db } from "./db.js";
 import { sql, eq, and, gt } from "drizzle-orm";
 import { sendForgotPasswordEmail } from "./emailService.js";
@@ -1994,6 +1994,219 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: 'Failed to cleanup old games',
         error: error instanceof Error ? error.message : 'Unknown error'
       });
+    }
+  });
+
+  // BBB Games endpoints
+  app.get("/api/bbb-games/:groupId", isAuthenticated, subscriptionProtected, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      console.log(`Fetching BBB games for group ${req.params.groupId} by user ${userId}`);
+      const bbbGames = await storage.getBbbGames(req.params.groupId);
+      
+      if (!bbbGames || bbbGames.length === 0) {
+        console.log(`No BBB games found for group: ${req.params.groupId}`);
+      } else {
+        console.log(`Found ${bbbGames.length} BBB games for group`);
+      }
+      
+      res.json(bbbGames || []);
+    } catch (error) {
+      console.error("Error fetching BBB games:", error);
+      res.status(500).json({ message: "Failed to fetch BBB games" });
+    }
+  });
+
+  app.get("/api/bbb-games/game/:id", isAuthenticated, async (req, res) => {
+    try {
+      const bbbGame = await storage.getBbbGame(req.params.id);
+      if (!bbbGame) {
+        return res.status(404).json({ message: "BBB game not found" });
+      }
+      res.json(bbbGame);
+    } catch (error) {
+      console.error("Error fetching BBB game:", error);
+      res.status(500).json({ message: "Failed to fetch BBB game" });
+    }
+  });
+
+  app.post('/api/bbb-games', isAuthenticated, subscriptionProtected, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const validatedData = insertBbbGameSchema.omit({ id: true, createdAt: true, updatedAt: true }).parse(req.body);
+      
+      // Check if group exists and user has access
+      const group = await storage.getGroup(validatedData.groupId);
+      if (!group) {
+        return res.status(404).json({ message: 'Group not found' });
+      }
+      
+      const bbbGame = await storage.createBbbGame(validatedData);
+      
+      res.status(201).json(bbbGame);
+    } catch (error) {
+      console.error('Error creating BBB game:', error);
+      res.status(500).json({ message: 'Failed to create BBB game' });
+    }
+  });
+
+  app.put('/api/bbb-games/:id', isAuthenticated, subscriptionProtected, async (req, res) => {
+    try {
+      const { name, settings } = req.body;
+      const updates: any = {};
+      
+      if (name) updates.name = name;
+      if (settings) updates.settings = settings;
+      
+      const bbbGame = await storage.updateBbbGame(req.params.id, updates);
+      if (!bbbGame) {
+        return res.status(404).json({ message: 'BBB game not found' });
+      }
+      
+      res.json(bbbGame);
+    } catch (error) {
+      console.error('Error updating BBB game:', error);
+      res.status(500).json({ message: 'Failed to update BBB game' });
+    }
+  });
+
+  app.put('/api/bbb-games/:id/hole/:hole', isAuthenticated, subscriptionProtected, async (req, res) => {
+    try {
+      const { id, hole } = req.params;
+      const { points } = req.body; // points: { firstOn: playerId, closestTo: playerId, firstIn: playerId }
+      
+      if (!points) {
+        return res.status(400).json({ message: 'Points object is required' });
+      }
+      
+      const bbbGame = await storage.updateBbbHolePoints(id, parseInt(hole), points);
+      if (!bbbGame) {
+        return res.status(404).json({ message: 'BBB game not found' });
+      }
+      
+      res.json(bbbGame);
+    } catch (error) {
+      console.error('Error updating BBB hole points:', error);
+      res.status(500).json({ message: 'Failed to update BBB hole points' });
+    }
+  });
+
+  app.get('/api/bbb-games/:gameId/who-owes-who', isAuthenticated, subscriptionProtected, async (req, res) => {
+    try {
+      const { gameId } = req.params;
+      const { pointValue, payoutMode, fbtValue } = req.query;
+
+      const game = await storage.getBbbGame(gameId);
+      if (!game) {
+        return res.status(404).json({ message: 'BBB game not found' });
+      }
+
+      const group = await storage.getGroup(game.groupId);
+      if (!group) {
+        return res.status(404).json({ message: 'Group not found' });
+      }
+
+      // Calculate BBB payouts based on the mode
+      const players = group.players;
+      let payouts: Record<string, number> = {};
+
+      // Initialize payouts to 0 for all players
+      players.forEach(player => {
+        payouts[player.id] = 0;
+      });
+
+      if (payoutMode === 'points' && pointValue) {
+        // Points-based BBB payouts - Each point is worth the point value
+        const pointValueNum = parseFloat(pointValue as string) || 0;
+        
+        // Count total points per player across all holes and categories
+        Object.entries(game.points || {}).forEach(([hole, holePoints]: [string, any]) => {
+          const categories = ['firstOn', 'closestTo', 'firstIn'];
+          categories.forEach(category => {
+            const winner = holePoints[category];
+            if (winner && payouts[winner] !== undefined) {
+              payouts[winner] += pointValueNum; // Each BBB point is worth the point value
+            }
+          });
+        });
+        
+      } else if (payoutMode === 'fbt' && fbtValue) {
+        // FBT-based BBB payouts - Fixed payout per segment
+        const fbtValueNum = parseFloat(fbtValue as string) || 0;
+        
+        // Calculate points for front 9, back 9, and total 18
+        const front9Points: Record<string, number> = {};
+        const back9Points: Record<string, number> = {};
+        const totalPoints: Record<string, number> = {};
+        
+        players.forEach(player => {
+          front9Points[player.id] = 0;
+          back9Points[player.id] = 0;
+          totalPoints[player.id] = 0;
+        });
+        
+        // Count points for each segment
+        Object.entries(game.points || {}).forEach(([hole, holePoints]: [string, any]) => {
+          const holeNum = parseInt(hole);
+          const categories = ['firstOn', 'closestTo', 'firstIn'];
+          
+          categories.forEach(category => {
+            const winner = holePoints[category];
+            if (winner && totalPoints[winner] !== undefined) {
+              totalPoints[winner]++;
+              if (holeNum <= 9) {
+                front9Points[winner]++;
+              } else {
+                back9Points[winner]++;
+              }
+            }
+          });
+        });
+
+        // FBT Algorithm: Each segment is a separate fixed pot game
+        const segments = [front9Points, back9Points, totalPoints];
+        
+        segments.forEach(segment => {
+          const segmentPlayers = Object.keys(segment);
+          if (segmentPlayers.length === 0) return;
+          
+          // Find max score (winner)
+          const maxScore = Math.max(...Object.values(segment));
+          const winners = segmentPlayers.filter(p => segment[p] === maxScore);
+          const losers = segmentPlayers.filter(p => !winners.includes(p));
+          
+          // If all tied, skip (no payouts)
+          if (winners.length === segmentPlayers.length) {
+            return;
+          }
+          
+          // Winner and loser shares
+          const winShare = fbtValueNum / winners.length;
+          const loseShare = fbtValueNum / losers.length;
+          
+          winners.forEach(winner => {
+            payouts[winner] += winShare;
+          });
+          
+          losers.forEach(loser => {
+            payouts[loser] -= loseShare;
+          });
+        });
+      }
+
+      // Calculate Who Owes Who using canonical settlement logic
+      const whoOwesWho = settleWhoOwesWho(payouts).map(tx => ({
+        fromPlayerId: tx.from,
+        toPlayerId: tx.to,
+        amount: tx.amount,
+        fromPlayerName: players.find(p => p.id === tx.from)?.name || 'Unknown',
+        toPlayerName: players.find(p => p.id === tx.to)?.name || 'Unknown'
+      }));
+
+      res.json({ whoOwesWho, payouts });
+    } catch (error) {
+      console.error('Error calculating BBB who owes who:', error);
+      res.status(500).json({ message: 'Failed to calculate who owes who' });
     }
   });
 

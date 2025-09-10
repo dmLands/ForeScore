@@ -225,6 +225,9 @@ export default function Home() {
   const [combinedPayoutMode, setCombinedPayoutMode] = useState<'points' | 'fbt' | 'both'>('points');
   const [showTermsOfService, setShowTermsOfService] = useState(false);
   const [showAboutForescore, setShowAboutForescore] = useState(false);
+  
+  // Game submenu state for new navigation structure
+  const [gameSubmenuOpen, setGameSubmenuOpen] = useState(false);
 
   // V6.5: Save point/FBT values to server
   const savePointFbtValues = async () => {
@@ -3416,13 +3419,22 @@ export default function Home() {
         )}
       </main>
 
-      <BottomNavigation currentTab={currentTab} onTabChange={(tab) => {
-        changeTab(tab);
-        // Scroll to top when switching to Payouts tab
-        if (tab === 'scoreboard') {
-          window.scrollTo(0, 0);
-        }
-      }} />
+      <BottomNavigation 
+        currentTab={currentTab} 
+        onTabChange={(tab) => {
+          changeTab(tab);
+          // Scroll to top when switching to Payouts tab
+          if (tab === 'scoreboard') {
+            window.scrollTo(0, 0);
+          }
+          // Close submenu when changing tabs
+          if (gameSubmenuOpen) {
+            setGameSubmenuOpen(false);
+          }
+        }}
+        gameSubmenuOpen={gameSubmenuOpen}
+        onGameSubmenuToggle={() => setGameSubmenuOpen(!gameSubmenuOpen)}
+      />
       <CreateGroupModal 
         open={showCreateGroupModal}
         onOpenChange={setShowCreateGroupModal}

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Users, Layers, Trophy, BookOpen, Hash, Flag } from "lucide-react";
+import { Users, Layers, Trophy, BookOpen, Hash, Flag, MoreHorizontal } from "lucide-react";
 import { useState } from "react";
 
 interface BottomNavigationProps {
@@ -20,7 +20,7 @@ export function BottomNavigation({ currentTab, onTabChange, gameSubmenuOpen = fa
   const gameSubmenuItems = [
     { id: 'deck' as const, label: 'Cards', icon: Layers },
     { id: 'points' as const, label: '2/9/16', icon: Hash },
-    { id: 'bbb' as const, label: 'BBB', icon: Trophy },
+    { id: 'bbb' as const, label: 'BBB', icon: MoreHorizontal },
   ];
 
   const isGameSubmenuActive = ['deck', 'points', 'bbb'].includes(currentTab);

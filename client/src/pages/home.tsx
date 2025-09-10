@@ -1409,6 +1409,87 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="pb-20">
+        {/* Groups Tab - Group creation and selection */}
+        {currentTab === 'groups' && (
+          <div className="p-4">
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-lg font-semibold text-gray-800">Recent Groups</h2>
+                <Button 
+                  onClick={() => setCreateGroupOpen(true)}
+                  variant="outline"
+                  size="sm"
+                  className="border-emerald-500 text-emerald-600 hover:bg-emerald-50"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Group
+                </Button>
+              </div>
+              
+              {groupsLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="bg-gray-100 rounded-xl p-4 animate-pulse">
+                      <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                  ))}
+                </div>
+              ) : groups.length === 0 ? (
+                <Card>
+                  <CardContent className="p-6 text-center">
+                    <Users className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-gray-500">No groups yet. Create your first group to get started!</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-3">
+                  {groups.map((group) => (
+                    <Card 
+                      key={group.id} 
+                      className="card-interactive hover-lift cursor-pointer fade-in"
+                      onClick={() => handleGroupSelect(group)}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            {group.groupPhoto ? (
+                              <img
+                                src={group.groupPhoto}
+                                alt="Group photo"
+                                className="w-12 h-12 rounded-full object-cover border-2 border-gray-300"
+                              />
+                            ) : (
+                              <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
+                                <Users className="h-6 w-6 text-emerald-600" />
+                              </div>
+                            )}
+                            <div>
+                              <h3 className="font-semibold text-gray-800">{group.name}</h3>
+                              <p className="text-sm text-gray-500">
+                                {group.lastPlayed 
+                                  ? `Last played ${new Date(group.lastPlayed).toLocaleDateString()}`
+                                  : 'Never played'
+                                }
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary">
+                              {group.players.length} player{group.players.length !== 1 ? 's' : ''}
+                            </Badge>
+                            <ChevronRight className="h-4 w-4 text-gray-400" />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Games Tab - Primary workflow entry point */}
         {currentTab === 'games' && (
           <div className="p-4">
@@ -1488,81 +1569,15 @@ export default function Home() {
               </div>
             )}
 
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-lg font-semibold text-gray-800">Recent Groups</h2>
-                <Button 
-                  onClick={() => setCreateGroupOpen(true)}
-                  variant="outline"
-                  size="sm"
-                  className="border-emerald-500 text-emerald-600 hover:bg-emerald-50"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create Group
-                </Button>
-              </div>
-              
-              {groupsLoading ? (
-                <div className="space-y-3">
-                  {[1, 2, 3].map(i => (
-                    <div key={i} className="bg-gray-100 rounded-xl p-4 animate-pulse">
-                      <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                    </div>
-                  ))}
-                </div>
-              ) : groups.length === 0 ? (
-                <Card>
-                  <CardContent className="p-6 text-center">
-                    <Users className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-gray-500">No groups yet. Create your first game to get started!</p>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="space-y-3">
-                  {groups.map((group) => (
-                    <Card 
-                      key={group.id} 
-                      className="card-interactive hover-lift cursor-pointer fade-in"
-                      onClick={() => handleGroupSelect(group)}
-                    >
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            {group.groupPhoto ? (
-                              <img
-                                src={group.groupPhoto}
-                                alt="Group photo"
-                                className="w-12 h-12 rounded-full object-cover border-2 border-gray-300"
-                              />
-                            ) : (
-                              <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
-                                <Users className="h-6 w-6 text-emerald-600" />
-                              </div>
-                            )}
-                            <div>
-                              <h3 className="font-semibold text-gray-800">{group.name}</h3>
-                              <p className="text-sm text-gray-500">
-                                {group.lastPlayed 
-                                  ? `Last played ${new Date(group.lastPlayed).toLocaleDateString()}`
-                                  : 'Never played'
-                                }
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="secondary">
-                              {group.players.length} player{group.players.length !== 1 ? 's' : ''}
-                            </Badge>
-                            <ChevronRight className="h-4 w-4 text-gray-400" />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </div>
+            {/* Message when no group is selected */}
+            {!selectedGroup && (
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <Flag className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-gray-500">Select a group from the Groups tab to create and manage games</p>
+                </CardContent>
+              </Card>
+            )}
           </div>
         )}
 

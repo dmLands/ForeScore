@@ -1490,94 +1490,40 @@ export default function Home() {
           </div>
         )}
 
-        {/* Games Tab - Primary workflow entry point */}
-        {(['deck', 'points', 'bbb'].includes(currentTab) || currentTab === 'games') && (
+        {/* Games Tab - Game playing interface only */}
+        {(['deck', 'points', 'bbb'].includes(currentTab) || currentTab === 'games') && selectedGroup && (
           <div className="p-4">
-            <div className="mb-6 space-y-3">
-              <Button 
-                onClick={() => setShowCreateGameDialog(true)}
-                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white p-4 h-auto text-lg font-semibold shadow-lg"
-              >
-                <Plus className="mr-2 h-5 w-5" />
-                Create New Game
-              </Button>
-              
-            </div>
-
-            {/* Selected Group Games */}
-            {selectedGroup && (
-              <div className="mb-6">
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="mb-3">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Button
-                          onClick={() => changeGroup(null)}
-                          variant="ghost"
-                          size="sm"
-                          className="text-gray-600 hover:text-gray-800 p-1"
-                        >
-                          <ArrowLeft className="h-4 w-4" />
-                        </Button>
-                        <h3 className="text-lg font-semibold text-gray-800">{selectedGroup.name} Games</h3>
-                      </div>
-                      <div className="flex justify-center">
-                        <Button
-                          onClick={() => setShowCreateGameDialog(true)}
-                          size="sm"
-                          className="bg-emerald-500 hover:bg-emerald-600 text-white btn-interactive btn-bouncy"
-                        >
-                          <Plus className="h-4 w-4 mr-1" />
-                          New Game
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      {groupGames.length === 0 ? (
-                        <p className="text-gray-500 text-center py-4">No games yet. Create your first game!</p>
-                      ) : (
-                        groupGames.slice(0, 5).map((game) => (
-                          <div key={game.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 hover-lift color-transition">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <h4 className="font-medium text-gray-800">{game.name}</h4>
-                              </div>
-                              <p className="text-sm text-gray-500">
-                                Created {new Date(game.createdAt).toLocaleDateString()}
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Button
-                                onClick={() => {
-                                  changeGame(game);
-                                  changeTab('points');
-                                }}
-                                size="sm"
-                                variant="outline"
-                                className="btn-interactive btn-bouncy border-emerald-500 text-emerald-600 hover:bg-emerald-50"
-                              >
-                                Play
-                              </Button>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-
-            {/* Message when no group is selected */}
-            {!selectedGroup && (
+            {/* Selected Group Header */}
+            <div className="mb-4">
               <Card>
-                <CardContent className="p-6 text-center">
-                  <Flag className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-500">Select a group from the Groups tab to create and manage games</p>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Button
+                      onClick={() => changeGroup(null)}
+                      variant="ghost"
+                      size="sm"
+                      className="text-gray-600 hover:text-gray-800 p-1"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                    </Button>
+                    <h3 className="text-lg font-semibold text-gray-800">{selectedGroup.name}</h3>
+                  </div>
+                  <p className="text-sm text-gray-500">Use the tabs below to play different game types</p>
                 </CardContent>
               </Card>
-            )}
+            </div>
+          </div>
+        )}
+
+        {/* Message when no group is selected in Games tab */}
+        {(['deck', 'points', 'bbb'].includes(currentTab) || currentTab === 'games') && !selectedGroup && (
+          <div className="p-4">
+            <Card>
+              <CardContent className="p-6 text-center">
+                <Flag className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-gray-500">Select a group from the Groups tab to play games</p>
+              </CardContent>
+            </Card>
           </div>
         )}
 
@@ -1616,13 +1562,7 @@ export default function Home() {
                               ))}
                             </div>
                           )}
-                          <Button 
-                            onClick={() => setShowCreateGameDialog(true)}
-                            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white p-4 h-auto text-lg font-semibold"
-                          >
-                            <Plus className="mr-2 h-5 w-5" />
-                            Create New Game
-                          </Button>
+                          <p className="text-gray-500 mt-4">No game selected. Go to Groups tab to create or select a game.</p>
                         </div>
                       </div>
                     </CardContent>

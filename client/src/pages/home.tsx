@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Users, Gamepad2, BookOpen, ChevronRight, Edit, Layers, Trophy, ArrowLeft, Info, HelpCircle, LogOut, Menu, Loader2, User, FileText, Mail, Crown, Clock, CreditCard, AlertTriangle, Hash, Flag, Zap } from "lucide-react";
@@ -226,9 +227,10 @@ export default function Home() {
   const [showTermsOfService, setShowTermsOfService] = useState(false);
   const [showAboutForescore, setShowAboutForescore] = useState(false);
   
-  // Games tab submenu state
+  // Games tab submenu state  
   const [gamesSubmenuExpanded, setGamesSubmenuExpanded] = useState(false);
   const [selectedSubGame, setSelectedSubGame] = useState<'cards' | '2916' | 'bbb'>('cards');
+  const [showGamesOverlay, setShowGamesOverlay] = useState(false);
 
   // V6.5: Save point/FBT values to server
   const savePointFbtValues = async () => {
@@ -3485,6 +3487,11 @@ export default function Home() {
       </main>
 
       <BottomNavigation currentTab={currentTab} onTabChange={(tab) => {
+        // Intercept Games tab click to show overlay instead of changing content
+        if (tab === 'games') {
+          setShowGamesOverlay(true);
+          return;
+        }
         changeTab(tab);
         // Scroll to top when switching to Payouts tab
         if (tab === 'scoreboard') {
@@ -4163,6 +4170,74 @@ export default function Home() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Games Overlay - Slides up from bottom */}
+      <Drawer open={showGamesOverlay} onOpenChange={setShowGamesOverlay}>
+        <DrawerContent className="max-w-md mx-auto">
+          <div className="p-4 pb-8">
+            {/* Drag handle */}
+            <div className="mb-4 h-1 w-12 bg-gray-300 rounded-full mx-auto" />
+            
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 text-center">Choose a Game</h3>
+            
+            <div className="space-y-2">
+              <Button
+                data-testid="button-game-cards"
+                variant="ghost"
+                className="w-full justify-start p-4 h-auto text-left hover:bg-gray-50"
+                onClick={() => {
+                  changeTab('games');
+                  setSelectedSubGame('cards');
+                  setGamesSubmenuExpanded(true);
+                  setShowGamesOverlay(false);
+                }}
+              >
+                <Layers className="h-5 w-5 mr-3" />
+                <div>
+                  <div className="font-medium">Cards</div>
+                  <div className="text-sm text-gray-500">Classic penalty cards game</div>
+                </div>
+              </Button>
+              
+              <Button
+                data-testid="button-game-2916"
+                variant="ghost"
+                className="w-full justify-start p-4 h-auto text-left hover:bg-gray-50"
+                onClick={() => {
+                  changeTab('games');
+                  setSelectedSubGame('2916');
+                  setGamesSubmenuExpanded(true);
+                  setShowGamesOverlay(false);
+                }}
+              >
+                <Hash className="h-5 w-5 mr-3" />
+                <div>
+                  <div className="font-medium">2/9/16</div>
+                  <div className="text-sm text-gray-500">Points-based scoring game</div>
+                </div>
+              </Button>
+              
+              <Button
+                data-testid="button-game-bbb"
+                variant="ghost"
+                className="w-full justify-start p-4 h-auto text-left hover:bg-gray-50"
+                onClick={() => {
+                  changeTab('games');
+                  setSelectedSubGame('bbb');
+                  setGamesSubmenuExpanded(true);
+                  setShowGamesOverlay(false);
+                }}
+              >
+                <Zap className="h-5 w-5 mr-3" />
+                <div>
+                  <div className="font-medium">BBB</div>
+                  <div className="text-sm text-gray-500">Bingo Bango Bongo game</div>
+                </div>
+              </Button>
+            </div>
+          </div>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 }

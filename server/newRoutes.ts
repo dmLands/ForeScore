@@ -502,7 +502,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Validate currentTab value
       if (currentTab) {
-        const validTabs = ['groups', 'deck', 'scoreboard', 'rules', 'points'];
+        const validTabs = ['groups', 'games', 'scoreboard', 'rules'];
         if (!validTabs.includes(currentTab)) {
           return res.status(400).json({ message: 'Invalid tab value' });
         }

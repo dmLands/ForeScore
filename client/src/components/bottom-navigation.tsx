@@ -1,16 +1,15 @@
 import { Button } from "@/components/ui/button";
-import { Users, Layers, Trophy, BookOpen, Hash } from "lucide-react";
+import { Users, Flag, Trophy, BookOpen } from "lucide-react";
 
 interface BottomNavigationProps {
-  currentTab: 'groups' | 'deck' | 'scoreboard' | 'rules' | 'points';
-  onTabChange: (tab: 'groups' | 'deck' | 'scoreboard' | 'rules' | 'points') => void;
+  currentTab: 'groups' | 'games' | 'scoreboard' | 'rules';
+  onTabChange: (tab: 'groups' | 'games' | 'scoreboard' | 'rules') => void;
 }
 
 export function BottomNavigation({ currentTab, onTabChange }: BottomNavigationProps) {
   const tabs = [
     { id: 'groups' as const, label: 'Groups', icon: Users },
-    { id: 'points' as const, label: '2/9/16', icon: Hash },
-    { id: 'deck' as const, label: 'Cards', icon: Layers },
+    { id: 'games' as const, label: 'Games', icon: Flag },
     { id: 'scoreboard' as const, label: 'Payouts', icon: Trophy },
     { id: 'rules' as const, label: 'Rules', icon: BookOpen },
   ];

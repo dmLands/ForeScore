@@ -37,7 +37,7 @@ export const users = pgTable("users", {
 export const userPreferences = pgTable("user_preferences", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  currentTab: varchar("current_tab").$type<'groups' | 'deck' | 'scoreboard' | 'rules' | 'points'>().default('groups'),
+  currentTab: varchar("current_tab").$type<'groups' | 'games' | 'scoreboard' | 'rules'>().default('groups'),
   selectedGroupId: varchar("selected_group_id"), // Persist selected group
   selectedGameId: varchar("selected_game_id"),   // Persist selected game
   createdAt: timestamp("created_at").defaultNow(),

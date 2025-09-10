@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from './useAuth';
 import type { Group, GameState } from '@shared/schema';
 
-type TabType = 'groups' | 'deck' | 'scoreboard' | 'rules' | 'points';
+type TabType = 'groups' | 'games' | 'scoreboard' | 'rules';
 
 // top-level localStorage cache
 const LS_KEY = "fs.prefs.v1";

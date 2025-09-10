@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Users, Gamepad2, BookOpen, ChevronRight, Edit, Layers, Trophy, ArrowLeft, Info, HelpCircle, LogOut, Menu, Loader2, User, FileText, Mail, Crown, Clock, CreditCard, AlertTriangle } from "lucide-react";
+import { Plus, Users, Gamepad2, BookOpen, ChevronRight, Edit, Layers, Trophy, ArrowLeft, Info, HelpCircle, LogOut, Menu, Loader2, User, FileText, Mail, Crown, Clock, CreditCard, AlertTriangle, Hash, Flag, Zap } from "lucide-react";
 import { CreateGroupModal } from "@/components/create-group-modal";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { Tutorial } from "@/components/tutorial";
@@ -225,6 +225,10 @@ export default function Home() {
   const [combinedPayoutMode, setCombinedPayoutMode] = useState<'points' | 'fbt' | 'both'>('points');
   const [showTermsOfService, setShowTermsOfService] = useState(false);
   const [showAboutForescore, setShowAboutForescore] = useState(false);
+  
+  // Games tab submenu state
+  const [gamesSubmenuExpanded, setGamesSubmenuExpanded] = useState(false);
+  const [selectedSubGame, setSelectedSubGame] = useState<'cards' | '2916' | 'bbb'>('cards');
 
   // V6.5: Save point/FBT values to server
   const savePointFbtValues = async () => {
@@ -706,10 +710,10 @@ export default function Home() {
     }
   }, [selectedGroup, selectedGame, pointsGames, selectedPointsGame]);
 
-  // V6.6: Refetch points games data when switching to 2/9/16 tab to ensure saved scores are visible
+  // V6.6: Refetch points games data when switching to Games->2/9/16 to ensure saved scores are visible
   useEffect(() => {
-    if (currentTab === 'points' && selectedGroup?.id) {
-      console.log('Switching to 2/9/16 tab - refetching points games data to ensure saved scores are visible');
+    if (currentTab === 'games' && selectedSubGame === '2916' && selectedGroup?.id) {
+      console.log('Switching to Games->2/9/16 - refetching points games data to ensure saved scores are visible');
       queryClient.invalidateQueries({ queryKey: ['/api/points-games', selectedGroup.id] });
       // Force refetch to get latest hole strokes and point data
       queryClient.refetchQueries({ queryKey: ['/api/points-games', selectedGroup.id, selectedGame?.id] });
@@ -937,7 +941,9 @@ export default function Home() {
     },
     onSuccess: (group: Group) => {
       changeGroup(group);
-      changeTab('points');
+      changeTab('games');
+      setSelectedSubGame('2916');
+      setGamesSubmenuExpanded(true);
       setShowJoinDialog(false);
       setJoinCode("");
       queryClient.invalidateQueries({ queryKey: ['/api/groups'] });
@@ -1019,7 +1025,9 @@ export default function Home() {
       changeGame(newGame);
       setShowCreateGameDialog(false);
       setNewGameName("");
-      changeTab('points');
+      changeTab('games');
+      setSelectedSubGame('2916');
+      setGamesSubmenuExpanded(true);
       queryClient.invalidateQueries({ queryKey: ['/api/groups', selectedGroup?.id, 'games'] });
       queryClient.invalidateQueries({ queryKey: ['/api/game-state', selectedGroup?.id] });
       queryClient.refetchQueries({ queryKey: ['/api/groups', selectedGroup?.id, 'games'] });
@@ -1069,7 +1077,9 @@ export default function Home() {
       changeGame(game);
       setShowCreateGameDialog(false);
       setNewGameName("");
-      changeTab('points');
+      changeTab('games');
+      setSelectedSubGame('2916');
+      setGamesSubmenuExpanded(true);
       queryClient.invalidateQueries({ queryKey: ['/api/groups'] });
       queryClient.invalidateQueries({ queryKey: ['/api/groups', group.id, 'games'] });
       queryClient.invalidateQueries({ queryKey: ['/api/game-state', group.id] });
@@ -1419,7 +1429,9 @@ export default function Home() {
                               <Button
                                 onClick={() => {
                                   changeGame(game);
-                                  changeTab('points');
+                                  changeTab('games');
+      setSelectedSubGame('2916');
+      setGamesSubmenuExpanded(true);
                                 }}
                                 size="sm"
                                 variant="outline"
@@ -1515,9 +1527,61 @@ export default function Home() {
           </div>
         )}
 
-        {/* Deck Tab */}
-        {currentTab === 'deck' && (
-          <div className="p-4">
+        {/* Games Tab - Submenu Structure */}
+        {currentTab === 'games' && (
+          <div className="p-4 space-y-4">
+            {/* Games Submenu */}
+            <Card>
+              <CardContent className="p-0">
+                {/* Main Games Header - Always visible, clickable to toggle submenu */}
+                <Button
+                  variant="ghost"
+                  onClick={() => setGamesSubmenuExpanded(!gamesSubmenuExpanded)}
+                  className="w-full justify-start p-4 h-auto rounded-none"
+                  data-testid="button-games-submenu-toggle"
+                >
+                  <Flag className="h-5 w-5 mr-3" />
+                  <span className="font-semibold text-gray-800">Games</span>
+                </Button>
+                
+                {/* Submenu Items - Collapsible */}
+                {gamesSubmenuExpanded && (
+                  <div className="border-t border-gray-200">
+                    <Button
+                      variant={selectedSubGame === 'cards' ? 'secondary' : 'ghost'}
+                      onClick={() => setSelectedSubGame('cards')}
+                      className="w-full justify-start p-4 rounded-none border-b border-gray-100"
+                      data-testid="button-select-cards-game"
+                    >
+                      <Layers className="h-4 w-4 mr-3" />
+                      <span>Cards</span>
+                    </Button>
+                    
+                    <Button
+                      variant={selectedSubGame === '2916' ? 'secondary' : 'ghost'}
+                      onClick={() => setSelectedSubGame('2916')}
+                      className="w-full justify-start p-4 rounded-none border-b border-gray-100"
+                      data-testid="button-select-2916-game"
+                    >
+                      <Hash className="h-4 w-4 mr-3" />
+                      <span>2/9/16</span>
+                    </Button>
+                    
+                    <Button
+                      variant={selectedSubGame === 'bbb' ? 'secondary' : 'ghost'}
+                      onClick={() => setSelectedSubGame('bbb')}
+                      className="w-full justify-start p-4 rounded-none"
+                      data-testid="button-select-bbb-game"
+                    >
+                      <Zap className="h-4 w-4 mr-3" />
+                      <span>BBB</span>
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            
+            {/* Game Content based on selected submenu item */}
             {!selectedGroup ? (
               <Card>
                 <CardContent className="p-6 text-center">
@@ -1527,9 +1591,11 @@ export default function Home() {
               </Card>
             ) : (
               <>
-
-                {/* Game Selection or Start */}
-                {!selectedGame ? (
+                {/* Cards Game Content */}
+                {selectedSubGame === 'cards' && (
+                  <>
+                    {/* Game Selection or Start */}
+                    {!selectedGame ? (
                   <Card className="mb-4">
                     <CardContent className="p-4">
                       <div className="text-center">
@@ -2114,6 +2180,8 @@ export default function Home() {
                 )}
               </>
             )}
+                  </>
+                )}
           </div>
         )}
 
@@ -2627,13 +2695,13 @@ export default function Home() {
 
               </>
             )}
-            </>
-          )}
-        </div>
+              </>
+            )}
+          </div>
         )}
 
-        {/* Points Tab */}
-        {currentTab === 'points' && (
+        {/* Games Tab Content (Conditional based on submenu) */}
+        {currentTab === 'games' && selectedSubGame === '2916' && (
           <div className="p-4 space-y-4">
             {selectedGroup ? (
               <>

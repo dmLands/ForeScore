@@ -1358,8 +1358,8 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="pb-20">
-        {/* Games Tab - Primary workflow entry point */}
-        {currentTab === 'games' && (
+        {/* Groups Tab - Primary workflow entry point */}
+        {currentTab === 'groups' && (
           <div className="p-4">
             <div className="mb-6 space-y-3">
               <Button 

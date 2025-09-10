@@ -3883,7 +3883,7 @@ export default function Home() {
                   <div className="flex items-center gap-3 w-full">
                     <span className="text-lg">🎯</span>
                     <div className="text-left">
-                      <div className="font-medium">Points Game</div>
+                      <div className="font-medium">2/9/16 Points Game</div>
                       <div className={`text-sm ${tempSelectedGames.includes('points') ? 'text-amber-600' : 'text-gray-600'}`}>
                         ${pointValue} per point
                       </div>
@@ -3912,7 +3912,7 @@ export default function Home() {
                   <div className="flex items-center gap-3 w-full">
                     <span className="text-lg">⛳</span>
                     <div className="text-left">
-                      <div className="font-medium">FBT Game</div>
+                      <div className="font-medium">2/9/16 FBT Game</div>
                       <div className={`text-sm ${tempSelectedGames.includes('fbt') ? 'text-amber-600' : 'text-gray-600'}`}>
                         ${fbtValue} per victory
                       </div>

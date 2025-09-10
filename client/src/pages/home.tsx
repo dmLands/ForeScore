@@ -1491,14 +1491,11 @@ export default function Home() {
         )}
 
         {/* Games Tab - Primary workflow entry point */}
-        {currentTab === 'games' && (
+        {(['deck', 'points', 'bbb'].includes(currentTab) || currentTab === 'games') && (
           <div className="p-4">
             <div className="mb-6 space-y-3">
               <Button 
-                onClick={() => {
-                  console.log('Create Game button clicked, opening dialog');
-                  setShowCreateGameDialog(true);
-                }}
+                onClick={() => setShowCreateGameDialog(true)}
                 className="w-full bg-emerald-500 hover:bg-emerald-600 text-white p-4 h-auto text-lg font-semibold shadow-lg"
               >
                 <Plus className="mr-2 h-5 w-5" />

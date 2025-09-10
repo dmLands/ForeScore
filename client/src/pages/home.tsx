@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Users, Gamepad2, BookOpen, ChevronRight, Edit, Layers, Trophy, ArrowLeft, Info, HelpCircle, LogOut, Menu, Loader2, User, FileText, Mail, Crown, Clock, CreditCard, AlertTriangle } from "lucide-react";
+import { Plus, Users, Gamepad2, BookOpen, ChevronRight, Edit, Layers, Trophy, ArrowLeft, Info, HelpCircle, LogOut, Menu, Loader2, User, FileText, Mail, Crown, Clock, CreditCard, AlertTriangle, Target } from "lucide-react";
 import { CreateGroupModal } from "@/components/create-group-modal";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { Tutorial } from "@/components/tutorial";
@@ -2116,6 +2116,53 @@ export default function Home() {
                   </Card>
                 )}
               </>
+            )}
+          </div>
+        )}
+
+        {/* BBB Game Tab */}
+        {currentTab === 'bbb' && (
+          <div className="p-4 space-y-4">
+            {selectedGroup ? (
+              <>
+                {/* BBB Game Selection or Creation */}
+                <Card>
+                  <CardContent className="p-6">
+                    <h2 className="text-lg font-bold text-gray-800 mb-4">Bingo Bango Bongo</h2>
+                    
+                    <div className="text-center space-y-4">
+                      <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+                        <h3 className="text-lg font-semibold text-emerald-800 mb-2">
+                          BBB Game Ready
+                        </h3>
+                        <p className="text-sm text-emerald-600">
+                          BBB game components coming soon! Navigation structure complete.
+                        </p>
+                      </div>
+                      
+                      {/* BBB Game Description */}
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
+                        <h4 className="font-semibold text-blue-800 mb-2">How Bingo Bango Bongo Works:</h4>
+                        <ul className="text-sm text-blue-600 space-y-1">
+                          <li>• <strong>Bingo:</strong> First player on the green (1 point)</li>
+                          <li>• <strong>Bango:</strong> Closest to the pin (1 point)</li>
+                          <li>• <strong>Bongo:</strong> First player to hole out (1 point)</li>
+                          <li>• Each hole awards 3 total points (1 per category)</li>
+                          <li>• Players can win multiple categories per hole</li>
+                          <li>• Same payout modes as 2/9/16 (Points/FBT)</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            ) : (
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <Target className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-gray-500">Select a group from the Groups tab to start playing BBB</p>
+                </CardContent>
+              </Card>
             )}
           </div>
         )}

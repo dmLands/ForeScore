@@ -603,6 +603,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createdBy: userId
       });
       
+      // Auto-create a 2/9/16 points game and BBB game for the group
+      try {
+        await storage.createPointsGame({
+          groupId: group.id,
+          name: `${group.name} - 2/9/16`,
+        });
+        
+        await storage.createBbbGame({
+          groupId: group.id,
+          name: `${group.name} - BBB`,
+        });
+      } catch (gameCreationError) {
+        console.error('Error auto-creating games for group:', gameCreationError);
+        // Continue even if game creation fails
+      }
+      
       res.status(201).json(group);
     } catch (error) {
       if (error instanceof z.ZodError) {

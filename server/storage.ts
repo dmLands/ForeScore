@@ -1,4 +1,4 @@
-import { users, groups, gameStates, pointsGames, roomStates, combinedPayoutResults, type User, type UpsertUser, type Group, type InsertGroup, type GameState, type InsertGameState, type Player, type Card, type CustomCard, type CardAssignment, type CardValues, type PointsGame, type InsertPointsGame, type RoomState, type InsertRoomState, type CombinedPayoutResult, type InsertCombinedPayoutResult } from "@shared/schema";
+import { users, groups, gameStates, pointsGames, bbbGames, roomStates, combinedPayoutResults, type User, type UpsertUser, type Group, type InsertGroup, type GameState, type InsertGameState, type Player, type Card, type CustomCard, type CardAssignment, type CardValues, type PointsGame, type InsertPointsGame, type BbbGame, type InsertBbbGame, type RoomState, type InsertRoomState, type CombinedPayoutResult, type InsertCombinedPayoutResult } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, lt, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -37,6 +37,14 @@ export interface IStorage {
   updatePointsGame(id: string, updates: Partial<PointsGame>): Promise<PointsGame | undefined>;
   updateHoleScores(gameId: string, hole: number, strokes: Record<string, number>, points: Record<string, number>): Promise<PointsGame | undefined>;
   deletePointsGame(id: string): Promise<boolean>;
+  
+  // BBB Games
+  getBbbGames(groupId: string): Promise<BbbGame[]>;
+  getBbbGame(id: string): Promise<BbbGame | undefined>;
+  createBbbGame(bbbGame: InsertBbbGame): Promise<BbbGame>;
+  updateBbbGame(id: string, updates: Partial<BbbGame>): Promise<BbbGame | undefined>;
+  updateBbbHolePoints(gameId: string, hole: number, points: Record<'firstOn' | 'closestTo' | 'firstIn', string | null>): Promise<BbbGame | undefined>;
+  deleteBbbGame(id: string): Promise<boolean>;
   
   // Room States (for scalability)
   getRoomState(roomId: string): Promise<RoomState | undefined>;
@@ -419,6 +427,52 @@ export class DatabaseStorage implements IStorage {
     } catch {
       return false;
     }
+  }
+  
+  // BBB Games methods
+  async getBbbGames(groupId: string): Promise<BbbGame[]> {
+    const games = await db.select().from(bbbGames).where(eq(bbbGames.groupId, groupId));
+    return games;
+  }
+
+  async getBbbGame(id: string): Promise<BbbGame | undefined> {
+    const [game] = await db.select().from(bbbGames).where(eq(bbbGames.id, id));
+    return game;
+  }
+
+  async createBbbGame(insertBbbGame: InsertBbbGame): Promise<BbbGame> {
+    const [game] = await db.insert(bbbGames).values({
+      ...insertBbbGame,
+      points: insertBbbGame.points as any,
+      settings: insertBbbGame.settings as any
+    }).returning();
+    return game;
+  }
+
+  async updateBbbGame(id: string, updates: Partial<BbbGame>): Promise<BbbGame | undefined> {
+    const [updatedGame] = await db.update(bbbGames)
+      .set({ 
+        ...updates, 
+        points: updates.points as any,
+        settings: updates.settings as any,
+        updatedAt: new Date()
+      })
+      .where(eq(bbbGames.id, id))
+      .returning();
+    return updatedGame;
+  }
+
+  async updateBbbHolePoints(gameId: string, hole: number, points: Record<'firstOn' | 'closestTo' | 'firstIn', string | null>): Promise<BbbGame | undefined> {
+    const game = await this.getBbbGame(gameId);
+    if (!game) return undefined;
+    
+    const updatedPoints = { ...game.points, [hole]: points };
+    return this.updateBbbGame(gameId, { points: updatedPoints });
+  }
+
+  async deleteBbbGame(id: string): Promise<boolean> {
+    const result = await db.delete(bbbGames).where(eq(bbbGames.id, id));
+    return result.rowCount > 0;
   }
 
 }

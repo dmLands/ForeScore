@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Users, Gamepad2, BookOpen, ChevronRight, Edit, Layers, Trophy, ArrowLeft, Info, HelpCircle, LogOut, Menu, Loader2, User, FileText, Mail, Crown, Clock, CreditCard, AlertTriangle, Hash, Flag, Zap } from "lucide-react";
@@ -227,8 +226,7 @@ export default function Home() {
   const [showTermsOfService, setShowTermsOfService] = useState(false);
   const [showAboutForescore, setShowAboutForescore] = useState(false);
   
-  // Games tab submenu state  
-  const [gamesSubmenuExpanded, setGamesSubmenuExpanded] = useState(false);
+  // Games tab submenu state
   const [selectedSubGame, setSelectedSubGame] = useState<'cards' | '2916' | 'bbb'>('cards');
   const [showGamesOverlay, setShowGamesOverlay] = useState(false);
 
@@ -1532,58 +1530,7 @@ export default function Home() {
         {/* Games Tab - Submenu Structure */}
         {currentTab === 'games' && (
           <div className="p-4 space-y-4">
-            {/* Games Submenu */}
-            <Card>
-              <CardContent className="p-0">
-                {/* Main Games Header - Always visible, clickable to toggle submenu */}
-                <Button
-                  variant="ghost"
-                  onClick={() => setGamesSubmenuExpanded(!gamesSubmenuExpanded)}
-                  className="w-full justify-start p-4 h-auto rounded-none"
-                  data-testid="button-games-submenu-toggle"
-                >
-                  <Flag className="h-5 w-5 mr-3" />
-                  <span className="font-semibold text-gray-800">Games</span>
-                </Button>
-                
-                {/* Submenu Items - Collapsible */}
-                {gamesSubmenuExpanded && (
-                  <div className="border-t border-gray-200">
-                    <Button
-                      variant={selectedSubGame === 'cards' ? 'secondary' : 'ghost'}
-                      onClick={() => setSelectedSubGame('cards')}
-                      className="w-full justify-start p-4 rounded-none border-b border-gray-100"
-                      data-testid="button-select-cards-game"
-                    >
-                      <Layers className="h-4 w-4 mr-3" />
-                      <span>Cards</span>
-                    </Button>
-                    
-                    <Button
-                      variant={selectedSubGame === '2916' ? 'secondary' : 'ghost'}
-                      onClick={() => setSelectedSubGame('2916')}
-                      className="w-full justify-start p-4 rounded-none border-b border-gray-100"
-                      data-testid="button-select-2916-game"
-                    >
-                      <Hash className="h-4 w-4 mr-3" />
-                      <span>2/9/16</span>
-                    </Button>
-                    
-                    <Button
-                      variant={selectedSubGame === 'bbb' ? 'secondary' : 'ghost'}
-                      onClick={() => setSelectedSubGame('bbb')}
-                      className="w-full justify-start p-4 rounded-none"
-                      data-testid="button-select-bbb-game"
-                    >
-                      <Zap className="h-4 w-4 mr-3" />
-                      <span>BBB</span>
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-            
-            {/* Game Content based on selected submenu item */}
+            {/* Game Content - Direct rendering based on selectedSubGame */}
             {!selectedGroup ? (
               <Card>
                 <CardContent className="p-6 text-center">
@@ -4171,73 +4118,71 @@ export default function Home() {
         </DialogContent>
       </Dialog>
 
-      {/* Games Overlay - Slides up from bottom */}
-      <Drawer open={showGamesOverlay} onOpenChange={setShowGamesOverlay}>
-        <DrawerContent className="max-w-md mx-auto">
-          <div className="p-4 pb-8">
-            {/* Drag handle */}
-            <div className="mb-4 h-1 w-12 bg-gray-300 rounded-full mx-auto" />
-            
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 text-center">Choose a Game</h3>
-            
-            <div className="space-y-2">
-              <Button
-                data-testid="button-game-cards"
-                variant="ghost"
-                className="w-full justify-start p-4 h-auto text-left hover:bg-gray-50"
-                onClick={() => {
-                  changeTab('games');
-                  setSelectedSubGame('cards');
-                  setGamesSubmenuExpanded(true);
-                  setShowGamesOverlay(false);
-                }}
-              >
-                <Layers className="h-5 w-5 mr-3" />
-                <div>
-                  <div className="font-medium">Cards</div>
-                  <div className="text-sm text-gray-500">Classic penalty cards game</div>
-                </div>
-              </Button>
-              
-              <Button
-                data-testid="button-game-2916"
-                variant="ghost"
-                className="w-full justify-start p-4 h-auto text-left hover:bg-gray-50"
-                onClick={() => {
-                  changeTab('games');
-                  setSelectedSubGame('2916');
-                  setGamesSubmenuExpanded(true);
-                  setShowGamesOverlay(false);
-                }}
-              >
-                <Hash className="h-5 w-5 mr-3" />
-                <div>
-                  <div className="font-medium">2/9/16</div>
-                  <div className="text-sm text-gray-500">Points-based scoring game</div>
-                </div>
-              </Button>
-              
-              <Button
-                data-testid="button-game-bbb"
-                variant="ghost"
-                className="w-full justify-start p-4 h-auto text-left hover:bg-gray-50"
-                onClick={() => {
-                  changeTab('games');
-                  setSelectedSubGame('bbb');
-                  setGamesSubmenuExpanded(true);
-                  setShowGamesOverlay(false);
-                }}
-              >
-                <Zap className="h-5 w-5 mr-3" />
-                <div>
-                  <div className="font-medium">BBB</div>
-                  <div className="text-sm text-gray-500">Bingo Bango Bongo game</div>
-                </div>
-              </Button>
+      {/* Games Dropdown - Sweeps up from Games tab */}
+      {showGamesOverlay && (
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 z-40"
+            onClick={() => setShowGamesOverlay(false)}
+          />
+          
+          {/* Dropdown Menu */}
+          <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 w-72 bg-white rounded-lg shadow-lg border border-gray-200 animate-in slide-in-from-bottom-2">
+            <div className="p-3">
+              <div className="space-y-1">
+                <button
+                  data-testid="button-game-cards"
+                  className="w-full flex items-center gap-3 p-3 rounded-md hover:bg-gray-50 transition-colors text-left"
+                  onClick={() => {
+                    changeTab('games');
+                    setSelectedSubGame('cards');
+                    setShowGamesOverlay(false);
+                  }}
+                >
+                  <Layers className="h-5 w-5 text-gray-600" />
+                  <div>
+                    <div className="font-medium text-gray-900">Cards</div>
+                    <div className="text-sm text-gray-500">Classic penalty cards game</div>
+                  </div>
+                </button>
+                
+                <button
+                  data-testid="button-game-2916"
+                  className="w-full flex items-center gap-3 p-3 rounded-md hover:bg-gray-50 transition-colors text-left"
+                  onClick={() => {
+                    changeTab('games');
+                    setSelectedSubGame('2916');
+                    setShowGamesOverlay(false);
+                  }}
+                >
+                  <Hash className="h-5 w-5 text-gray-600" />
+                  <div>
+                    <div className="font-medium text-gray-900">2/9/16</div>
+                    <div className="text-sm text-gray-500">Points-based scoring game</div>
+                  </div>
+                </button>
+                
+                <button
+                  data-testid="button-game-bbb"
+                  className="w-full flex items-center gap-3 p-3 rounded-md hover:bg-gray-50 transition-colors text-left"
+                  onClick={() => {
+                    changeTab('games');
+                    setSelectedSubGame('bbb');
+                    setShowGamesOverlay(false);
+                  }}
+                >
+                  <Zap className="h-5 w-5 text-gray-600" />
+                  <div>
+                    <div className="font-medium text-gray-900">BBB</div>
+                    <div className="text-sm text-gray-500">Bingo Bango Bongo game</div>
+                  </div>
+                </button>
+              </div>
             </div>
           </div>
-        </DrawerContent>
-      </Drawer>
+        </>
+      )}
     </div>
   );
 }

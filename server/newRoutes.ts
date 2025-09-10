@@ -502,7 +502,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Validate currentTab value
       if (currentTab) {
-        const validTabs = ['groups', 'games', 'cards', 'points', 'bbb', 'scoreboard', 'rules'];
+        const validTabs = ['groups', 'games', 'deck', 'cards', 'points', 'bbb', 'scoreboard', 'rules'];
         if (!validTabs.includes(currentTab)) {
           return res.status(400).json({ message: 'Invalid tab value' });
         }
@@ -547,6 +547,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error saving user preferences:', error);
       res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Idempotent game context creation/restoration
+  app.post('/api/groups/:groupId/ensure-game-context', isAuthenticated, subscriptionProtected, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      const { groupId } = req.params;
+      
+      // Verify user has access to this group
+      const group = await storage.getGroup(groupId, userId);
+      if (!group) {
+        return res.status(404).json({ message: 'Group not found' });
+      }
+      
+      // Find existing games for this group
+      const groupGames = await storage.getGameStates(groupId);
+      let gameState = groupGames.length > 0 ? groupGames[0] : null;
+      
+      if (!gameState) {
+        // Create new game state with group's settings
+        const gameStateData = {
+          groupId,
+          name: `${group.name} - Round ${Date.now()}`,
+          players: group.players,
+          cardValues: group.cardValues || {
+            camel: 2, fish: 2, roadrunner: 2, ghost: 2, 
+            skunk: 2, snake: 2, yeti: 2
+          },
+          customCards: group.customCards || [],
+          playerCards: {},
+          gameLog: [],
+          createdBy: userId
+        };
+        
+        gameState = await storage.createGameState(gameStateData);
+      }
+      
+      // Ensure 2/9/16 points game exists
+      let pointsGames = await storage.getPointsGames(groupId);
+      let pointsGame = pointsGames.find(pg => pg.gameStateId === gameState.id);
+      
+      if (!pointsGame) {
+        const pointsGameData = {
+          groupId,
+          gameStateId: gameState.id,
+          name: `${group.name} - 2/9/16`,
+          settings: { pointValue: 1, fbtValue: 10 },
+          holes: {},
+          createdBy: userId
+        };
+        pointsGame = await storage.createPointsGame(pointsGameData);
+      }
+      
+      // Ensure BBB game exists  
+      let bbbGames = await storage.getBbbGames(groupId);
+      let bbbGame = bbbGames.find(bg => bg.gameStateId === gameState.id);
+      
+      if (!bbbGame) {
+        const bbbGameData = {
+          groupId,
+          gameStateId: gameState.id,
+          name: `${group.name} - BBB`,
+          settings: { pointValue: 1, fbtValue: 10 },
+          holes: {},
+          createdBy: userId
+        };
+        bbbGame = await storage.createBbbGame(bbbGameData);
+      }
+      
+      res.json({
+        gameState,
+        pointsGameId: pointsGame.id,
+        bbbGameId: bbbGame.id
+      });
+      
+    } catch (error) {
+      console.error('Error ensuring game context:', error);
+      res.status(500).json({ message: 'Failed to ensure game context' });
     }
   });
 

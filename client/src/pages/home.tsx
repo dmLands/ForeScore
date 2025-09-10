@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Users, Gamepad2, BookOpen, ChevronRight, Edit, Layers, Trophy, ArrowLeft, Info, HelpCircle, LogOut, Menu, Loader2, User, FileText, Mail, Crown, Clock, CreditCard, AlertTriangle, Target } from "lucide-react";
+import { Plus, Users, Gamepad2, BookOpen, ChevronRight, Edit, Layers, Trophy, ArrowLeft, Info, HelpCircle, LogOut, Menu, Loader2, User, FileText, Mail, Crown, Clock, CreditCard, AlertTriangle, Target, Flag } from "lucide-react";
 import { CreateGroupModal } from "@/components/create-group-modal";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { Tutorial } from "@/components/tutorial";
@@ -1084,6 +1084,31 @@ export default function Home() {
     },
   });
 
+  // Mutation for ensure-game-context (auto-creation)
+  const ensureGameContextMutation = useMutation({
+    mutationFn: async (groupId: string) => {
+      const response = await apiRequest('POST', `/api/groups/${groupId}/ensure-game-context`);
+      return response.json();
+    },
+    onSuccess: (result: { gameState: GameState; pointsGameId: string; bbbGameId: string }) => {
+      changeGame(result.gameState);
+      toast({
+        title: "Game Ready",
+        description: "Your game is ready to play!",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/groups', selectedGroup?.id, 'games'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/points-games', selectedGroup?.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/bbb-games', selectedGroup?.id] });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Could not prepare game. Try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Mutation to create group and then immediately create a game with it
   const createGroupAndGameMutation = useMutation({
     mutationFn: async (data: { 
@@ -1229,6 +1254,9 @@ export default function Home() {
     changeGame(null); // Reset game selection when switching groups
     // DON'T reset selectedPointsGame - preserve it for reaccess
     // Stay on groups tab to show game selection
+    
+    // Auto-ensure game context when group is selected
+    ensureGameContextMutation.mutate(group.id);
   };
 
   // REMOVED LEGACY FUNCTIONS - now using localCardValues with onChange/onBlur pattern
@@ -1415,15 +1443,34 @@ export default function Home() {
             <div className="mb-4">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-lg font-semibold text-gray-800">Recent Groups</h2>
-                <Button 
-                  onClick={() => setCreateGroupOpen(true)}
-                  variant="outline"
-                  size="sm"
-                  className="border-emerald-500 text-emerald-600 hover:bg-emerald-50"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create Group
-                </Button>
+                <div className="flex gap-2">
+                  {selectedGroup && (
+                    <Button 
+                      onClick={() => ensureGameContextMutation.mutate(selectedGroup.id)}
+                      variant="outline"
+                      size="sm"
+                      className="border-blue-500 text-blue-600 hover:bg-blue-50"
+                      disabled={ensureGameContextMutation.isPending}
+                      data-testid="button-create-game"
+                    >
+                      {ensureGameContextMutation.isPending ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Play className="mr-2 h-4 w-4" />
+                      )}
+                      Start Game
+                    </Button>
+                  )}
+                  <Button 
+                    onClick={() => setCreateGroupOpen(true)}
+                    variant="outline"
+                    size="sm"
+                    className="border-emerald-500 text-emerald-600 hover:bg-emerald-50"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Create Group
+                  </Button>
+                </div>
               </div>
               
               {groupsLoading ? (

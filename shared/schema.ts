@@ -247,28 +247,6 @@ export const insertCombinedPayoutResultSchema = createInsertSchema(combinedPayou
 export type CombinedPayoutResult = typeof combinedPayoutResults.$inferSelect;
 export type InsertCombinedPayoutResult = z.infer<typeof insertCombinedPayoutResultSchema>;
 
-// BBB (Bingo Bango Bongo) Game Tables - V9.0 Feature
-export const bbbGames = pgTable("bbb_games", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  groupId: varchar("group_id").notNull().references(() => groups.id, { onDelete: "cascade" }),
-  gameStateId: varchar("game_state_id").references(() => gameStates.id, { onDelete: "cascade" }), // Link to specific card game session
-  name: varchar("name").notNull(),
-  // Store BBB points: hole -> category -> playerId (who won that category)
-  points: jsonb("points").$type<Record<number, Record<'firstOn' | 'closestTo' | 'firstIn', string | null>>>().default({}),
-  settings: jsonb("settings").$type<{ pointValue?: number; fbtValue?: number }>().default({ pointValue: 1, fbtValue: 10 }), // Point and FBT values
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-export const insertBbbGameSchema = createInsertSchema(bbbGames).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export type BbbGame = typeof bbbGames.$inferSelect;
-export type InsertBbbGame = z.infer<typeof insertBbbGameSchema>;
-
 // User Preferences Schema
 export const insertUserPreferencesSchema = createInsertSchema(userPreferences).omit({
   id: true,

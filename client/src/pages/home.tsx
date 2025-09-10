@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Users, Gamepad2, BookOpen, ChevronRight, Edit, Layers, Trophy, ArrowLeft, Info, HelpCircle, LogOut, Menu, Loader2, User, FileText, Mail, Crown, Clock, CreditCard, AlertTriangle, Target, Flag } from "lucide-react";
+import { Plus, Users, Gamepad2, BookOpen, ChevronRight, Edit, Layers, Trophy, ArrowLeft, Info, HelpCircle, LogOut, Menu, Loader2, User, FileText, Mail, Crown, Clock, CreditCard, AlertTriangle } from "lucide-react";
 import { CreateGroupModal } from "@/components/create-group-modal";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { Tutorial } from "@/components/tutorial";
@@ -22,7 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAutosaveObject } from "@/hooks/useAutosave";
 import { useTabPersistence } from "@/hooks/useTabPersistence";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import type { Group, GameState, Card as GameCard, PointsGame, BbbGame } from "@shared/schema";
+import type { Group, GameState, Card as GameCard, PointsGame } from "@shared/schema";
 
 // Hook for server-side payouts calculation
 function useGamePayouts(gameStateId: string | undefined, cardValuesKey?: string) {
@@ -220,22 +220,11 @@ export default function Home() {
   const [holeStrokes, setHoleStrokes] = useState<Record<string, string>>({});
   const [pointValue, setPointValue] = useState<string>("1.00");
   const [fbtValue, setFbtValue] = useState<string>("10.00");
-  
-  // BBB Game State
-  const [selectedBbbGame, setSelectedBbbGame] = useState<BbbGame | null>(null);
-  const [selectedBbbHole, setSelectedBbbHole] = useState<number>(1);
-  const [bbbPointValue, setBbbPointValue] = useState<string>("1.00");
-  const [bbbFbtValue, setBbbFbtValue] = useState<string>("10.00");
-  const [bbbHoleData, setBbbHoleData] = useState<Record<string, {bingo: boolean, bango: boolean, bongo: boolean}>>({});
-  const [bbbSaveStatus, setBbbSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [payoutMode, setPayoutMode] = useState<'points' | 'fbt'>('points');
   const [combinedPayoutMode, setCombinedPayoutMode] = useState<'points' | 'fbt' | 'both'>('points');
   const [showTermsOfService, setShowTermsOfService] = useState(false);
   const [showAboutForescore, setShowAboutForescore] = useState(false);
-  
-  // Game submenu state for new navigation structure
-  const [gameSubmenuOpen, setGameSubmenuOpen] = useState(false);
 
   // V6.5: Save point/FBT values to server
   const savePointFbtValues = async () => {
@@ -675,21 +664,6 @@ export default function Home() {
     enabled: !!selectedGroup?.id,
   });
 
-  // BBB Games Query
-  const { data: bbbGames = [], isLoading: bbbGamesLoading } = useQuery<BbbGame[]>({
-    queryKey: ['/api/bbb-games', selectedGroup?.id, selectedGame?.id],
-    queryFn: async () => {
-      if (!selectedGroup?.id) throw new Error('No group selected');
-      const url = selectedGame?.id 
-        ? `/api/bbb-games/${selectedGroup.id}?gameStateId=${selectedGame.id}`
-        : `/api/bbb-games/${selectedGroup.id}`;
-      const response = await fetch(url, { credentials: 'include' });
-      if (!response.ok) throw new Error('Failed to fetch BBB games');
-      return response.json();
-    },
-    enabled: !!selectedGroup?.id,
-  });
-
   // Clear selectedPointsGame and invalidate all caches when selectedGame changes
   useEffect(() => {
     setSelectedPointsGame(null);
@@ -731,31 +705,6 @@ export default function Home() {
       }
     }
   }, [selectedGroup, selectedGame, pointsGames, selectedPointsGame]);
-
-  // Auto-select BBB game for current game session - GAME SESSION ISOLATION FIX
-  useEffect(() => {
-    if (selectedGroup && selectedGame && bbbGames.length > 0) {
-      // If we have a selectedBbbGame but it's not in the current game session's games, clear it
-      if (selectedBbbGame && !bbbGames.find(game => game.id === selectedBbbGame.id)) {
-        setSelectedBbbGame(null);
-      }
-      // Auto-select the single BBB game for this game session
-      if (!selectedBbbGame) {
-        const existingGame = bbbGames[0]; // Only one game per game session allowed
-        if (existingGame) {
-          setSelectedBbbGame(existingGame);
-          console.log(`Auto-selected BBB game: ${existingGame.name} for game session: ${selectedGame.id}`);
-        }
-      }
-    }
-    // Also ensure the selected BBB game persists even when bbbGames array is updated
-    if (selectedBbbGame && bbbGames.length > 0) {
-      const updatedGame = bbbGames.find(game => game.id === selectedBbbGame.id);
-      if (updatedGame) {
-        setSelectedBbbGame(updatedGame); // Update with latest data
-      }
-    }
-  }, [selectedGroup, selectedGame, bbbGames, selectedBbbGame]);
 
   // V6.6: Refetch points games data when switching to 2/9/16 tab to ensure saved scores are visible
   useEffect(() => {
@@ -1084,31 +1033,6 @@ export default function Home() {
     },
   });
 
-  // Mutation for ensure-game-context (auto-creation)
-  const ensureGameContextMutation = useMutation({
-    mutationFn: async (groupId: string) => {
-      const response = await apiRequest('POST', `/api/groups/${groupId}/ensure-game-context`);
-      return response.json();
-    },
-    onSuccess: (result: { gameState: GameState; pointsGameId: string; bbbGameId: string }) => {
-      changeGame(result.gameState);
-      toast({
-        title: "Game Ready",
-        description: "Your game is ready to play!",
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/groups', selectedGroup?.id, 'games'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/points-games', selectedGroup?.id] });
-      queryClient.invalidateQueries({ queryKey: ['/api/bbb-games', selectedGroup?.id] });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Could not prepare game. Try again.",
-        variant: "destructive",
-      });
-    },
-  });
-
   // Mutation to create group and then immediately create a game with it
   const createGroupAndGameMutation = useMutation({
     mutationFn: async (data: { 
@@ -1254,9 +1178,6 @@ export default function Home() {
     changeGame(null); // Reset game selection when switching groups
     // DON'T reset selectedPointsGame - preserve it for reaccess
     // Stay on groups tab to show game selection
-    
-    // Auto-ensure game context when group is selected
-    ensureGameContextMutation.mutate(group.id);
   };
 
   // REMOVED LEGACY FUNCTIONS - now using localCardValues with onChange/onBlur pattern
@@ -1437,40 +1358,97 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="pb-20">
-        {/* Groups Tab - Group creation and selection */}
-        {currentTab === 'groups' && (
+        {/* Games Tab - Primary workflow entry point */}
+        {currentTab === 'games' && (
           <div className="p-4">
+            <div className="mb-6 space-y-3">
+              <Button 
+                onClick={() => setShowCreateGameDialog(true)}
+                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white p-4 h-auto text-lg font-semibold shadow-lg"
+              >
+                <Plus className="mr-2 h-5 w-5" />
+                Create New Game
+              </Button>
+              
+            </div>
+
+            {/* Selected Group Games */}
+            {selectedGroup && (
+              <div className="mb-6">
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="mb-3">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Button
+                          onClick={() => changeGroup(null)}
+                          variant="ghost"
+                          size="sm"
+                          className="text-gray-600 hover:text-gray-800 p-1"
+                        >
+                          <ArrowLeft className="h-4 w-4" />
+                        </Button>
+                        <h3 className="text-lg font-semibold text-gray-800">{selectedGroup.name} Games</h3>
+                      </div>
+                      <div className="flex justify-center">
+                        <Button
+                          onClick={() => setShowCreateGameDialog(true)}
+                          size="sm"
+                          className="bg-emerald-500 hover:bg-emerald-600 text-white btn-interactive btn-bouncy"
+                        >
+                          <Plus className="h-4 w-4 mr-1" />
+                          New Game
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      {groupGames.length === 0 ? (
+                        <p className="text-gray-500 text-center py-4">No games yet. Create your first game!</p>
+                      ) : (
+                        groupGames.slice(0, 5).map((game) => (
+                          <div key={game.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 hover-lift color-transition">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-medium text-gray-800">{game.name}</h4>
+                              </div>
+                              <p className="text-sm text-gray-500">
+                                Created {new Date(game.createdAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                onClick={() => {
+                                  changeGame(game);
+                                  changeTab('points');
+                                }}
+                                size="sm"
+                                variant="outline"
+                                className="btn-interactive btn-bouncy border-emerald-500 text-emerald-600 hover:bg-emerald-50"
+                              >
+                                Play
+                              </Button>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
             <div className="mb-4">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-lg font-semibold text-gray-800">Recent Groups</h2>
-                <div className="flex gap-2">
-                  {selectedGroup && (
-                    <Button 
-                      onClick={() => ensureGameContextMutation.mutate(selectedGroup.id)}
-                      variant="outline"
-                      size="sm"
-                      className="border-blue-500 text-blue-600 hover:bg-blue-50"
-                      disabled={ensureGameContextMutation.isPending}
-                      data-testid="button-create-game"
-                    >
-                      {ensureGameContextMutation.isPending ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <Play className="mr-2 h-4 w-4" />
-                      )}
-                      Start Game
-                    </Button>
-                  )}
-                  <Button 
-                    onClick={() => setCreateGroupOpen(true)}
-                    variant="outline"
-                    size="sm"
-                    className="border-emerald-500 text-emerald-600 hover:bg-emerald-50"
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Create Group
-                  </Button>
-                </div>
+                <Button 
+                  onClick={() => setCreateGroupOpen(true)}
+                  variant="outline"
+                  size="sm"
+                  className="border-emerald-500 text-emerald-600 hover:bg-emerald-50"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Group
+                </Button>
               </div>
               
               {groupsLoading ? (
@@ -1486,7 +1464,7 @@ export default function Home() {
                 <Card>
                   <CardContent className="p-6 text-center">
                     <Users className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-gray-500">No groups yet. Create your first group to get started!</p>
+                    <p className="text-gray-500">No groups yet. Create your first game to get started!</p>
                   </CardContent>
                 </Card>
               ) : (
@@ -1537,43 +1515,6 @@ export default function Home() {
           </div>
         )}
 
-        {/* Games Tab - Game playing interface only */}
-        {(['deck', 'points', 'bbb'].includes(currentTab) || currentTab === 'games') && selectedGroup && (
-          <div className="p-4">
-            {/* Selected Group Header */}
-            <div className="mb-4">
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Button
-                      onClick={() => changeGroup(null)}
-                      variant="ghost"
-                      size="sm"
-                      className="text-gray-600 hover:text-gray-800 p-1"
-                    >
-                      <ArrowLeft className="h-4 w-4" />
-                    </Button>
-                    <h3 className="text-lg font-semibold text-gray-800">{selectedGroup.name}</h3>
-                  </div>
-                  <p className="text-sm text-gray-500">Use the tabs below to play different game types</p>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        )}
-
-        {/* Message when no group is selected in Games tab */}
-        {(['deck', 'points', 'bbb'].includes(currentTab) || currentTab === 'games') && !selectedGroup && (
-          <div className="p-4">
-            <Card>
-              <CardContent className="p-6 text-center">
-                <Flag className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-gray-500">Select a group from the Groups tab to play games</p>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
         {/* Deck Tab */}
         {currentTab === 'deck' && (
           <div className="p-4">
@@ -1609,7 +1550,13 @@ export default function Home() {
                               ))}
                             </div>
                           )}
-                          <p className="text-gray-500 mt-4">No game selected. Go to Groups tab to create or select a game.</p>
+                          <Button 
+                            onClick={() => setShowCreateGameDialog(true)}
+                            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white p-4 h-auto text-lg font-semibold"
+                          >
+                            <Plus className="mr-2 h-5 w-5" />
+                            Create New Game
+                          </Button>
                         </div>
                       </div>
                     </CardContent>
@@ -2166,214 +2113,6 @@ export default function Home() {
                   </Card>
                 )}
               </>
-            )}
-          </div>
-        )}
-
-        {/* BBB Game Tab */}
-        {currentTab === 'bbb' && (
-          <div className="p-4 space-y-4">
-            {selectedGroup ? (
-              <>
-                {/* BBB Game Selection or Creation */}
-                {!selectedBbbGame ? (
-                  <Card>
-                    <CardContent className="p-6">
-                      <h2 className="text-lg font-bold text-gray-800 mb-4">Bingo Bango Bongo</h2>
-                      
-                      {bbbGamesLoading || (bbbGames.length > 0 && !selectedBbbGame) ? (
-                        <div className="text-center space-y-4">
-                          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
-                            <h3 className="text-lg font-semibold text-emerald-800 mb-2">
-                              {bbbGames.length > 0 ? bbbGames[0].name : "BBB Game"}
-                            </h3>
-                            <p className="text-sm text-emerald-600">
-                              Loading your BBB game...
-                            </p>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="text-center space-y-4">
-                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                            <Target className="h-12 w-12 text-blue-500 mx-auto mb-3" />
-                            <h3 className="text-lg font-semibold text-blue-800 mb-2">No BBB Game Found</h3>
-                            <p className="text-sm text-blue-600 mb-4">
-                              This group doesn't have a BBB game yet. BBB games are automatically created when you create a new group.
-                            </p>
-                            
-                            {/* BBB Game Description */}
-                            <div className="bg-white border border-blue-200 rounded-lg p-4 text-left">
-                              <h4 className="font-semibold text-blue-800 mb-2">How Bingo Bango Bongo Works:</h4>
-                              <ul className="text-sm text-blue-600 space-y-1">
-                                <li>• <strong>Bingo:</strong> First player on the green (1 point)</li>
-                                <li>• <strong>Bango:</strong> Closest to the pin (1 point)</li>
-                                <li>• <strong>Bongo:</strong> First player to hole out (1 point)</li>
-                                <li>• Each hole awards 3 total points (1 per category)</li>
-                                <li>• Players can win multiple categories per hole</li>
-                                <li>• Same payout modes as 2/9/16 (Points/FBT)</li>
-                              </ul>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <>
-                    {/* BBB Game Interface - Similar to Points Game */}
-                    <Card data-testid="card-bbb-game" className="mb-4 card-interactive hover-lift fade-in">
-                      <CardContent className="p-4">
-                        <div className="flex justify-between items-center mb-4">
-                          <h3 className="text-lg font-semibold text-gray-800">🎯 {selectedBbbGame.name}</h3>
-                          <div className="text-sm text-gray-500">
-                            Hole {selectedBbbHole} of 18
-                          </div>
-                        </div>
-                        
-                        {/* Hole Selector */}
-                        <div className="mb-4">
-                          <div className="flex justify-between items-center mb-2">
-                            <label className="text-sm font-medium text-gray-700">Select Hole</label>
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => selectedBbbHole > 1 && setSelectedBbbHole(selectedBbbHole - 1)}
-                                disabled={selectedBbbHole <= 1}
-                                data-testid="button-bbb-hole-prev"
-                              >
-                                ← Prev
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => selectedBbbHole < 18 && setSelectedBbbHole(selectedBbbHole + 1)}
-                                disabled={selectedBbbHole >= 18}
-                                data-testid="button-bbb-hole-next"
-                              >
-                                Next →
-                              </Button>
-                            </div>
-                          </div>
-                          <Select 
-                            value={selectedBbbHole.toString()} 
-                            onValueChange={(value) => setSelectedBbbHole(parseInt(value))}
-                          >
-                            <SelectTrigger data-testid="select-bbb-hole">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {Array.from({ length: 18 }, (_, i) => (
-                                <SelectItem key={i + 1} value={(i + 1).toString()}>
-                                  Hole {i + 1}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        {/* BBB Scoring Grid */}
-                        <div className="space-y-3">
-                          <h4 className="font-medium text-gray-700">Award Points</h4>
-                          <div className="grid grid-cols-1 gap-3">
-                            {selectedGroup.players.map((player) => (
-                              <Card key={player.id} className="p-3 border-l-4" style={{ borderLeftColor: player.color }}>
-                                <div className="space-y-2">
-                                  <div className="flex items-center justify-between">
-                                    <span className="font-medium" style={{ color: player.color }}>
-                                      {player.name}
-                                    </span>
-                                    <div className="text-sm text-gray-500">
-                                      Total: 0 pts {/* TODO: Calculate total points */}
-                                    </div>
-                                  </div>
-                                  <div className="flex gap-2">
-                                    <Button
-                                      size="sm"
-                                      variant={bbbHoleData[player.id]?.bingo ? "default" : "outline"}
-                                      className="flex-1 text-xs"
-                                      data-testid={`button-bingo-${player.id}`}
-                                    >
-                                      🏌️ Bingo
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant={bbbHoleData[player.id]?.bango ? "default" : "outline"}
-                                      className="flex-1 text-xs"
-                                      data-testid={`button-bango-${player.id}`}
-                                    >
-                                      🎯 Bango
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant={bbbHoleData[player.id]?.bongo ? "default" : "outline"}
-                                      className="flex-1 text-xs"
-                                      data-testid={`button-bongo-${player.id}`}
-                                    >
-                                      🕳️ Bongo
-                                    </Button>
-                                  </div>
-                                </div>
-                              </Card>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Point/FBT Value Settings - Similar to Points Game */}
-                        <div className="mt-6 pt-4 border-t">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <label className="text-sm font-medium text-gray-700 mb-1 block">
-                                Point Value ($)
-                              </label>
-                              <Input
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                value={bbbPointValue}
-                                onChange={(e) => setBbbPointValue(e.target.value)}
-                                className="text-center"
-                                data-testid="input-bbb-point-value"
-                              />
-                            </div>
-                            <div>
-                              <label className="text-sm font-medium text-gray-700 mb-1 block">
-                                FBT Value ($)
-                              </label>
-                              <Input
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                value={bbbFbtValue}
-                                onChange={(e) => setBbbFbtValue(e.target.value)}
-                                className="text-center"
-                                data-testid="input-bbb-fbt-value"
-                              />
-                            </div>
-                          </div>
-                          <Button
-                            onClick={() => {}} // TODO: Implement save function
-                            className="w-full mt-3"
-                            disabled={bbbSaveStatus === 'saving'}
-                            data-testid="button-save-bbb-values"
-                          >
-                            {bbbSaveStatus === 'saving' ? 'Saving...' : 
-                             bbbSaveStatus === 'saved' ? 'Saved!' : 
-                             bbbSaveStatus === 'error' ? 'Try Again' : 'Save Point/FBT Values'}
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </>
-                )}
-              </>
-            ) : (
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <Target className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-500">Select a group from the Groups tab to start playing BBB</p>
-                </CardContent>
-              </Card>
             )}
           </div>
         )}
@@ -3677,22 +3416,13 @@ export default function Home() {
         )}
       </main>
 
-      <BottomNavigation 
-        currentTab={currentTab} 
-        onTabChange={(tab) => {
-          changeTab(tab);
-          // Scroll to top when switching to Payouts tab
-          if (tab === 'scoreboard') {
-            window.scrollTo(0, 0);
-          }
-          // Close submenu when changing tabs
-          if (gameSubmenuOpen) {
-            setGameSubmenuOpen(false);
-          }
-        }}
-        gameSubmenuOpen={gameSubmenuOpen}
-        onGameSubmenuToggle={() => setGameSubmenuOpen(!gameSubmenuOpen)}
-      />
+      <BottomNavigation currentTab={currentTab} onTabChange={(tab) => {
+        changeTab(tab);
+        // Scroll to top when switching to Payouts tab
+        if (tab === 'scoreboard') {
+          window.scrollTo(0, 0);
+        }
+      }} />
       <CreateGroupModal 
         open={showCreateGroupModal}
         onOpenChange={setShowCreateGroupModal}
@@ -3937,7 +3667,7 @@ export default function Home() {
 
       {/* Create Game Dialog - New Game>Group architecture */}
       <Dialog open={showCreateGameDialog} onOpenChange={setShowCreateGameDialog}>
-        <DialogContent className="sm:max-w-md z-[60]">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold text-gray-800">Create New Game</DialogTitle>
             <DialogDescription>

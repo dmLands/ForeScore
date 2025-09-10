@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from './useAuth';
 import type { Group, GameState } from '@shared/schema';
 
-type TabType = 'groups' | 'games' | 'deck' | 'scoreboard' | 'rules' | 'points' | 'bbb';
+type TabType = 'games' | 'deck' | 'scoreboard' | 'rules' | 'points';
 
 // top-level localStorage cache
 const LS_KEY = "fs.prefs.v1";
@@ -30,7 +30,7 @@ interface UserPreferences {
 export function useTabPersistence(payoutDataReady?: boolean) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [currentTab, setCurrentTab] = useState<TabType>('groups'); // hidden until initialized
+  const [currentTab, setCurrentTab] = useState<TabType>('games'); // hidden until initialized
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [selectedGame, setSelectedGame] = useState<GameState | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -86,11 +86,7 @@ export function useTabPersistence(payoutDataReady?: boolean) {
 
     const wantGroup = !!preferences.selectedGroupId;
     const wantGame  = !!preferences.selectedGameId;
-    // Handle migration from old 'games' tab to new 'groups' tab
-    let targetTab = preferences.currentTab ?? 'groups';
-    if (targetTab === 'games' && !['deck', 'points', 'bbb'].includes(preferences.currentTab || '')) {
-      targetTab = 'groups'; // Migrate old 'games' tab to new 'groups' tab
-    }
+    const targetTab = preferences.currentTab ?? 'games';
 
     // We only finish init once required data are present
     const groupReady = !wantGroup || !!groupData;

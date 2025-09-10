@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Users, Gamepad2, BookOpen, ChevronRight, Edit, Layers, Trophy, ArrowLeft, Info, HelpCircle, LogOut, Menu, Loader2, User, FileText, Mail, Crown, Clock, CreditCard, AlertTriangle, Hash, Flag, Zap, Target } from "lucide-react";
+import { Plus, Users, Gamepad2, BookOpen, ChevronRight, Edit, Layers, Trophy, ArrowLeft, Info, HelpCircle, LogOut, Menu, Loader2, User, FileText, Mail, Crown, Clock, CreditCard, AlertTriangle, Hash, Flag, Zap, MoreHorizontal } from "lucide-react";
 import { CreateGroupModal } from "@/components/create-group-modal";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { Tutorial } from "@/components/tutorial";
@@ -4128,18 +4128,18 @@ export default function Home() {
             <div className="p-3">
               <div className="space-y-1">
                 <button
-                  data-testid="button-game-cards"
+                  data-testid="button-game-bbb"
                   className="w-full flex items-center gap-3 p-3 rounded-md hover:bg-gray-50 transition-colors text-left"
                   onClick={() => {
                     changeTab('games');
-                    setSelectedSubGame('cards');
+                    setSelectedSubGame('bbb');
                     setShowGamesOverlay(false);
                   }}
                 >
-                  <Layers className="h-5 w-5 text-gray-600" />
+                  <MoreHorizontal className="h-5 w-5 text-gray-600" />
                   <div>
-                    <div className="font-medium text-gray-900">Cards</div>
-                    <div className="text-sm text-gray-500">Don't be an animal!</div>
+                    <div className="font-medium text-gray-900">BBB</div>
+                    <div className="text-sm text-gray-500">Bingo Bango Bongo</div>
                   </div>
                 </button>
                 
@@ -4160,18 +4160,18 @@ export default function Home() {
                 </button>
                 
                 <button
-                  data-testid="button-game-bbb"
+                  data-testid="button-game-cards"
                   className="w-full flex items-center gap-3 p-3 rounded-md hover:bg-gray-50 transition-colors text-left"
                   onClick={() => {
                     changeTab('games');
-                    setSelectedSubGame('bbb');
+                    setSelectedSubGame('cards');
                     setShowGamesOverlay(false);
                   }}
                 >
-                  <Target className="h-5 w-5 text-gray-600" />
+                  <Layers className="h-5 w-5 text-gray-600" />
                   <div>
-                    <div className="font-medium text-gray-900">BBB</div>
-                    <div className="text-sm text-gray-500">Bingo Bango Bongo</div>
+                    <div className="font-medium text-gray-900">Cards</div>
+                    <div className="text-sm text-gray-500">Don't be an animal!</div>
                   </div>
                 </button>
               </div>

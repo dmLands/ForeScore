@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Users, Layers, Trophy, BookOpen, Hash, Target, ChevronDown, ChevronUp } from "lucide-react";
+import { Users, Layers, Trophy, BookOpen, Hash, Flag } from "lucide-react";
 import { useState } from "react";
 
 interface BottomNavigationProps {
@@ -12,7 +12,7 @@ interface BottomNavigationProps {
 export function BottomNavigation({ currentTab, onTabChange, gameSubmenuOpen = false, onGameSubmenuToggle }: BottomNavigationProps) {
   const tabs = [
     { id: 'groups' as const, label: 'Groups', icon: Users },
-    { id: 'games' as const, label: 'Games', icon: Target, hasSubmenu: true },
+    { id: 'games' as const, label: 'Games', icon: Flag, hasSubmenu: true },
     { id: 'scoreboard' as const, label: 'Payouts', icon: Trophy },
     { id: 'rules' as const, label: 'Rules', icon: BookOpen },
   ];
@@ -79,17 +79,7 @@ export function BottomNavigation({ currentTab, onTabChange, gameSubmenuOpen = fa
                     : 'text-gray-400 hover:text-gray-600 hover:scale-105'
                 }`}
               >
-                <div className="relative">
-                  <Icon className={`h-5 w-5 mb-1 transition-all duration-200 ${isActive ? 'scale-110' : ''}`} />
-                  {hasSubmenu && (
-                    <div className="absolute -top-1 -right-1">
-                      {gameSubmenuOpen ? 
-                        <ChevronUp className="h-3 w-3 text-gray-400" /> : 
-                        <ChevronDown className="h-3 w-3 text-gray-400" />
-                      }
-                    </div>
-                  )}
-                </div>
+                <Icon className={`h-5 w-5 mb-1 transition-all duration-200 ${isActive ? 'scale-110' : ''}`} />
                 <span className="text-xs font-medium">{label}</span>
               </Button>
             );

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Users, Layers, Trophy, BookOpen, Hash, Gamepad2, ChevronDown, ChevronUp } from "lucide-react";
+import { Users, Layers, Trophy, BookOpen, Hash, Circle, ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
 
 interface BottomNavigationProps {
@@ -12,7 +12,7 @@ interface BottomNavigationProps {
 export function BottomNavigation({ currentTab, onTabChange, gameSubmenuOpen = false, onGameSubmenuToggle }: BottomNavigationProps) {
   const tabs = [
     { id: 'groups' as const, label: 'Groups', icon: Users },
-    { id: 'games' as const, label: 'Games', icon: Gamepad2, hasSubmenu: true },
+    { id: 'games' as const, label: 'Games', icon: Circle, hasSubmenu: true },
     { id: 'scoreboard' as const, label: 'Payouts', icon: Trophy },
     { id: 'rules' as const, label: 'Rules', icon: BookOpen },
   ];

@@ -484,7 +484,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Return default preferences if none exist
         res.json({ 
           userId,
-          currentTab: 'games',
+          currentTab: 'groups',
           createdAt: new Date(),
           updatedAt: new Date()
         });
@@ -502,7 +502,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Validate currentTab value
       if (currentTab) {
-        const validTabs = ['games', 'deck', 'scoreboard', 'rules', 'points'];
+        const validTabs = ['groups', 'games', 'cards', 'points', 'bbb', 'scoreboard', 'rules'];
         if (!validTabs.includes(currentTab)) {
           return res.status(400).json({ message: 'Invalid tab value' });
         }
@@ -536,7 +536,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .insert(userPreferences)
           .values({
             userId,
-            currentTab: currentTab || 'games',
+            currentTab: currentTab || 'groups',
             selectedGroupId,
             selectedGameId
           })

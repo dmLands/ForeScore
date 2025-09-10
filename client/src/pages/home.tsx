@@ -22,7 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAutosaveObject } from "@/hooks/useAutosave";
 import { useTabPersistence } from "@/hooks/useTabPersistence";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import type { Group, GameState, Card as GameCard, PointsGame } from "@shared/schema";
+import type { Group, GameState, Card as GameCard, PointsGame, BbbGame } from "@shared/schema";
 
 // Hook for server-side payouts calculation
 function useGamePayouts(gameStateId: string | undefined, cardValuesKey?: string) {
@@ -220,6 +220,14 @@ export default function Home() {
   const [holeStrokes, setHoleStrokes] = useState<Record<string, string>>({});
   const [pointValue, setPointValue] = useState<string>("1.00");
   const [fbtValue, setFbtValue] = useState<string>("10.00");
+  
+  // BBB Game State
+  const [selectedBbbGame, setSelectedBbbGame] = useState<BbbGame | null>(null);
+  const [selectedBbbHole, setSelectedBbbHole] = useState<number>(1);
+  const [bbbPointValue, setBbbPointValue] = useState<string>("1.00");
+  const [bbbFbtValue, setBbbFbtValue] = useState<string>("10.00");
+  const [bbbHoleData, setBbbHoleData] = useState<Record<string, {bingo: boolean, bango: boolean, bongo: boolean}>>({});
+  const [bbbSaveStatus, setBbbSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [payoutMode, setPayoutMode] = useState<'points' | 'fbt'>('points');
   const [combinedPayoutMode, setCombinedPayoutMode] = useState<'points' | 'fbt' | 'both'>('points');
@@ -667,6 +675,21 @@ export default function Home() {
     enabled: !!selectedGroup?.id,
   });
 
+  // BBB Games Query
+  const { data: bbbGames = [], isLoading: bbbGamesLoading } = useQuery<BbbGame[]>({
+    queryKey: ['/api/bbb-games', selectedGroup?.id, selectedGame?.id],
+    queryFn: async () => {
+      if (!selectedGroup?.id) throw new Error('No group selected');
+      const url = selectedGame?.id 
+        ? `/api/bbb-games/${selectedGroup.id}?gameStateId=${selectedGame.id}`
+        : `/api/bbb-games/${selectedGroup.id}`;
+      const response = await fetch(url, { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to fetch BBB games');
+      return response.json();
+    },
+    enabled: !!selectedGroup?.id,
+  });
+
   // Clear selectedPointsGame and invalidate all caches when selectedGame changes
   useEffect(() => {
     setSelectedPointsGame(null);
@@ -708,6 +731,31 @@ export default function Home() {
       }
     }
   }, [selectedGroup, selectedGame, pointsGames, selectedPointsGame]);
+
+  // Auto-select BBB game for current game session - GAME SESSION ISOLATION FIX
+  useEffect(() => {
+    if (selectedGroup && selectedGame && bbbGames.length > 0) {
+      // If we have a selectedBbbGame but it's not in the current game session's games, clear it
+      if (selectedBbbGame && !bbbGames.find(game => game.id === selectedBbbGame.id)) {
+        setSelectedBbbGame(null);
+      }
+      // Auto-select the single BBB game for this game session
+      if (!selectedBbbGame) {
+        const existingGame = bbbGames[0]; // Only one game per game session allowed
+        if (existingGame) {
+          setSelectedBbbGame(existingGame);
+          console.log(`Auto-selected BBB game: ${existingGame.name} for game session: ${selectedGame.id}`);
+        }
+      }
+    }
+    // Also ensure the selected BBB game persists even when bbbGames array is updated
+    if (selectedBbbGame && bbbGames.length > 0) {
+      const updatedGame = bbbGames.find(game => game.id === selectedBbbGame.id);
+      if (updatedGame) {
+        setSelectedBbbGame(updatedGame); // Update with latest data
+      }
+    }
+  }, [selectedGroup, selectedGame, bbbGames, selectedBbbGame]);
 
   // V6.6: Refetch points games data when switching to 2/9/16 tab to ensure saved scores are visible
   useEffect(() => {
@@ -2126,35 +2174,196 @@ export default function Home() {
             {selectedGroup ? (
               <>
                 {/* BBB Game Selection or Creation */}
-                <Card>
-                  <CardContent className="p-6">
-                    <h2 className="text-lg font-bold text-gray-800 mb-4">Bingo Bango Bongo</h2>
-                    
-                    <div className="text-center space-y-4">
-                      <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
-                        <h3 className="text-lg font-semibold text-emerald-800 mb-2">
-                          BBB Game Ready
-                        </h3>
-                        <p className="text-sm text-emerald-600">
-                          BBB game components coming soon! Navigation structure complete.
-                        </p>
-                      </div>
+                {!selectedBbbGame ? (
+                  <Card>
+                    <CardContent className="p-6">
+                      <h2 className="text-lg font-bold text-gray-800 mb-4">Bingo Bango Bongo</h2>
                       
-                      {/* BBB Game Description */}
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
-                        <h4 className="font-semibold text-blue-800 mb-2">How Bingo Bango Bongo Works:</h4>
-                        <ul className="text-sm text-blue-600 space-y-1">
-                          <li>• <strong>Bingo:</strong> First player on the green (1 point)</li>
-                          <li>• <strong>Bango:</strong> Closest to the pin (1 point)</li>
-                          <li>• <strong>Bongo:</strong> First player to hole out (1 point)</li>
-                          <li>• Each hole awards 3 total points (1 per category)</li>
-                          <li>• Players can win multiple categories per hole</li>
-                          <li>• Same payout modes as 2/9/16 (Points/FBT)</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                      {bbbGamesLoading || (bbbGames.length > 0 && !selectedBbbGame) ? (
+                        <div className="text-center space-y-4">
+                          <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+                            <h3 className="text-lg font-semibold text-emerald-800 mb-2">
+                              {bbbGames.length > 0 ? bbbGames[0].name : "BBB Game"}
+                            </h3>
+                            <p className="text-sm text-emerald-600">
+                              Loading your BBB game...
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center space-y-4">
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <Target className="h-12 w-12 text-blue-500 mx-auto mb-3" />
+                            <h3 className="text-lg font-semibold text-blue-800 mb-2">No BBB Game Found</h3>
+                            <p className="text-sm text-blue-600 mb-4">
+                              This group doesn't have a BBB game yet. BBB games are automatically created when you create a new group.
+                            </p>
+                            
+                            {/* BBB Game Description */}
+                            <div className="bg-white border border-blue-200 rounded-lg p-4 text-left">
+                              <h4 className="font-semibold text-blue-800 mb-2">How Bingo Bango Bongo Works:</h4>
+                              <ul className="text-sm text-blue-600 space-y-1">
+                                <li>• <strong>Bingo:</strong> First player on the green (1 point)</li>
+                                <li>• <strong>Bango:</strong> Closest to the pin (1 point)</li>
+                                <li>• <strong>Bongo:</strong> First player to hole out (1 point)</li>
+                                <li>• Each hole awards 3 total points (1 per category)</li>
+                                <li>• Players can win multiple categories per hole</li>
+                                <li>• Same payout modes as 2/9/16 (Points/FBT)</li>
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <>
+                    {/* BBB Game Interface - Similar to Points Game */}
+                    <Card data-testid="card-bbb-game" className="mb-4 card-interactive hover-lift fade-in">
+                      <CardContent className="p-4">
+                        <div className="flex justify-between items-center mb-4">
+                          <h3 className="text-lg font-semibold text-gray-800">🎯 {selectedBbbGame.name}</h3>
+                          <div className="text-sm text-gray-500">
+                            Hole {selectedBbbHole} of 18
+                          </div>
+                        </div>
+                        
+                        {/* Hole Selector */}
+                        <div className="mb-4">
+                          <div className="flex justify-between items-center mb-2">
+                            <label className="text-sm font-medium text-gray-700">Select Hole</label>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => selectedBbbHole > 1 && setSelectedBbbHole(selectedBbbHole - 1)}
+                                disabled={selectedBbbHole <= 1}
+                                data-testid="button-bbb-hole-prev"
+                              >
+                                ← Prev
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => selectedBbbHole < 18 && setSelectedBbbHole(selectedBbbHole + 1)}
+                                disabled={selectedBbbHole >= 18}
+                                data-testid="button-bbb-hole-next"
+                              >
+                                Next →
+                              </Button>
+                            </div>
+                          </div>
+                          <Select 
+                            value={selectedBbbHole.toString()} 
+                            onValueChange={(value) => setSelectedBbbHole(parseInt(value))}
+                          >
+                            <SelectTrigger data-testid="select-bbb-hole">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Array.from({ length: 18 }, (_, i) => (
+                                <SelectItem key={i + 1} value={(i + 1).toString()}>
+                                  Hole {i + 1}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* BBB Scoring Grid */}
+                        <div className="space-y-3">
+                          <h4 className="font-medium text-gray-700">Award Points</h4>
+                          <div className="grid grid-cols-1 gap-3">
+                            {selectedGroup.players.map((player) => (
+                              <Card key={player.id} className="p-3 border-l-4" style={{ borderLeftColor: player.color }}>
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <span className="font-medium" style={{ color: player.color }}>
+                                      {player.name}
+                                    </span>
+                                    <div className="text-sm text-gray-500">
+                                      Total: 0 pts {/* TODO: Calculate total points */}
+                                    </div>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      size="sm"
+                                      variant={bbbHoleData[player.id]?.bingo ? "default" : "outline"}
+                                      className="flex-1 text-xs"
+                                      data-testid={`button-bingo-${player.id}`}
+                                    >
+                                      🏌️ Bingo
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant={bbbHoleData[player.id]?.bango ? "default" : "outline"}
+                                      className="flex-1 text-xs"
+                                      data-testid={`button-bango-${player.id}`}
+                                    >
+                                      🎯 Bango
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant={bbbHoleData[player.id]?.bongo ? "default" : "outline"}
+                                      className="flex-1 text-xs"
+                                      data-testid={`button-bongo-${player.id}`}
+                                    >
+                                      🕳️ Bongo
+                                    </Button>
+                                  </div>
+                                </div>
+                              </Card>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Point/FBT Value Settings - Similar to Points Game */}
+                        <div className="mt-6 pt-4 border-t">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="text-sm font-medium text-gray-700 mb-1 block">
+                                Point Value ($)
+                              </label>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={bbbPointValue}
+                                onChange={(e) => setBbbPointValue(e.target.value)}
+                                className="text-center"
+                                data-testid="input-bbb-point-value"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-gray-700 mb-1 block">
+                                FBT Value ($)
+                              </label>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={bbbFbtValue}
+                                onChange={(e) => setBbbFbtValue(e.target.value)}
+                                className="text-center"
+                                data-testid="input-bbb-fbt-value"
+                              />
+                            </div>
+                          </div>
+                          <Button
+                            onClick={() => {}} // TODO: Implement save function
+                            className="w-full mt-3"
+                            disabled={bbbSaveStatus === 'saving'}
+                            data-testid="button-save-bbb-values"
+                          >
+                            {bbbSaveStatus === 'saving' ? 'Saving...' : 
+                             bbbSaveStatus === 'saved' ? 'Saved!' : 
+                             bbbSaveStatus === 'error' ? 'Try Again' : 'Save Point/FBT Values'}
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </>
+                )}
               </>
             ) : (
               <Card>

@@ -1495,7 +1495,10 @@ export default function Home() {
           <div className="p-4">
             <div className="mb-6 space-y-3">
               <Button 
-                onClick={() => setShowCreateGameDialog(true)}
+                onClick={() => {
+                  console.log('Create Game button clicked, opening dialog');
+                  setShowCreateGameDialog(true);
+                }}
                 className="w-full bg-emerald-500 hover:bg-emerald-600 text-white p-4 h-auto text-lg font-semibold shadow-lg"
               >
                 <Plus className="mr-2 h-5 w-5" />
@@ -3950,7 +3953,7 @@ export default function Home() {
 
       {/* Create Game Dialog - New Game>Group architecture */}
       <Dialog open={showCreateGameDialog} onOpenChange={setShowCreateGameDialog}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md z-[60]">
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold text-gray-800">Create New Game</DialogTitle>
             <DialogDescription>

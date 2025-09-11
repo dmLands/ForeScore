@@ -4,7 +4,7 @@ import { createServer, type Server } from "http";
 import { z } from "zod";
 import { storage } from "./storage.js";
 import { setupAuth, isAuthenticated, generateRoomToken } from "./replitAuth.js";
-import { calculateCardGameDetails, calculate2916Points, validateCardAssignment, calculateCardsGame, calculatePointsGame, calculateFbtGame, buildFbtNetsFromPointsGame, combineGames, settleWhoOwesWho, combineTotals, generateSettlement } from "./secureGameLogic.js";
+import { calculateCardGameDetails, calculate2916Points, validateCardAssignment, calculateCardsGame, calculatePointsGame, calculateFbtGame, buildFbtNetsFromPointsGame, combineGames, settleWhoOwesWho, combineTotals, generateSettlement, calculateBBBPointsGame, calculateBBBFbtGame } from "./secureGameLogic.js";
 import { SecureWebSocketManager } from "./secureWebSocket.js";
 import { registerUser, authenticateUser, registerSchema, loginSchema } from "./localAuth.js";
 import { insertGroupSchema, insertGameStateSchema, insertPointsGameSchema, cardValuesSchema, pointsGameSettingsSchema, gameStates, roomStates, userPreferences, insertUserPreferencesSchema, passwordResetTokens, insertPasswordResetTokenSchema, users, type Card, type CardAssignment } from "@shared/schema";
@@ -1962,6 +1962,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
         nets.push(buildFbtNetsFromPointsGame(group.players, pointsGameForFBT, parseFloat(fbtValue)));
         activeGames.push('fbt');
+      }
+
+      // BBB POINTS
+      if (selectedGames.includes('bbb-points') && pointsGame && pointsGame.gameType === 'bbb' && parseFloat(pointValue) > 0) {
+        const playerIds = group.players.map(p => p.id);
+        const bbbHoleData = pointsGame.holes || {};
+        nets.push(calculateBBBPointsGame(bbbHoleData, playerIds, parseFloat(pointValue)));
+        activeGames.push('bbb-points');
+      }
+
+      // BBB FBT
+      if (selectedGames.includes('bbb-fbt') && pointsGame && pointsGame.gameType === 'bbb' && parseFloat(fbtValue) > 0) {
+        const playerIds = group.players.map(p => p.id);
+        const bbbHoleData = pointsGame.holes || {};
+        nets.push(calculateBBBFbtGame(bbbHoleData, playerIds, parseFloat(fbtValue)));
+        activeGames.push('bbb-fbt');
       }
 
       // Step 2: Combine nets by player KEY (canonical 3-step pipeline)

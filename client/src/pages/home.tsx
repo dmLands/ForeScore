@@ -221,6 +221,7 @@ export default function Home() {
   const [pointValue, setPointValue] = useState<string>("1.00");
   const [fbtValue, setFbtValue] = useState<string>("10.00");
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [bbbSaveStatus, setBBBSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
   // BBB game state variables
   const [selectedBBBGame, setSelectedBBBGame] = useState<PointsGame | null>(null);
@@ -276,6 +277,44 @@ export default function Home() {
       setSaveStatus('error');
       toast({ title: "Error", description: "Failed to save point and FBT values", variant: "destructive" });
       setTimeout(() => setSaveStatus('idle'), 3000);
+    }
+  };
+
+  // Save BBB point/FBT values to database (similar to 2/9/16 pattern)
+  const saveBBBPointsFbtValues = async () => {
+    if (!selectedBBBGame) {
+      console.warn('No BBB game selected');
+      return;
+    }
+
+    setBBBSaveStatus('saving');
+    try {
+      const response = await apiRequest('PUT', `/api/points-games/${selectedBBBGame.id}/settings`, {
+        pointValue: parseFloat(bbbPointValue),
+        fbtValue: parseFloat(bbbFbtValue)
+      });
+      
+      const result = await response.json();
+      console.log('BBB Point/FBT values saved:', result);
+      
+      // Update local BBB game state with saved values
+      const updatedBBBGame = { ...selectedBBBGame, settings: result.settings };
+      setSelectedBBBGame(updatedBBBGame);
+      
+      // Invalidate queries to refresh BBB calculations
+      queryClient.invalidateQueries({ queryKey: ['/api/points-games'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/calculate-combined-games'] });
+      
+      setBBBSaveStatus('saved');
+      
+      setTimeout(() => {
+        setBBBSaveStatus('idle');
+      }, 2000);
+    } catch (error) {
+      console.error('Error saving BBB point/FBT values:', error);
+      setBBBSaveStatus('error');
+      toast({ title: "Error", description: "Failed to save BBB point and FBT values", variant: "destructive" });
+      setTimeout(() => setBBBSaveStatus('idle'), 3000);
     }
   };
   
@@ -931,6 +970,23 @@ export default function Home() {
       console.log('Loaded saved point/FBT values:', { savedPointValue, savedFbtValue });
     }
   }, [selectedPointsGame]);
+
+  // Load saved BBB point/FBT values when BBB game is selected
+  useEffect(() => {
+    if (selectedBBBGame?.settings) {
+      const savedBBBPointValue = selectedBBBGame.settings.pointValue;
+      const savedBBBFbtValue = selectedBBBGame.settings.fbtValue;
+      
+      if (savedBBBPointValue !== undefined) {
+        setBBBPointValue(savedBBBPointValue.toFixed(2));
+      }
+      if (savedBBBFbtValue !== undefined) {
+        setBBBFbtValue(savedBBBFbtValue.toFixed(2));
+      }
+      
+      console.log('Loaded saved BBB point/FBT values:', { savedBBBPointValue, savedBBBFbtValue });
+    }
+  }, [selectedBBBGame]);
 
   // V6.5: Load saved combined results and restore selection
   useEffect(() => {
@@ -3984,15 +4040,14 @@ export default function Home() {
 
                         {/* Update Values Button */}
                         <Button
-                          onClick={() => {
-                            // Force cache invalidation and refresh BBB payout calculations
-                            queryClient.invalidateQueries({ queryKey: ['/api/calculate-combined-games'] });
-                            // Values updated - no toast needed
-                          }}
-                          className="w-full bg-emerald-500 hover:bg-emerald-600 text-white"
+                          onClick={() => saveBBBPointsFbtValues()}
+                          disabled={bbbSaveStatus === 'saving'}
+                          className="w-full bg-emerald-500 hover:bg-emerald-600 text-white disabled:opacity-50"
                           data-testid="button-update-bbb-values"
                         >
-                          Update Values
+                          {bbbSaveStatus === 'saving' ? 'Saving...' : 
+                           bbbSaveStatus === 'saved' ? 'Values Saved!' : 
+                           'Update Values'}
                         </Button>
 
                         {/* Dynamic BBB Scores and Payout Display */}

@@ -720,13 +720,16 @@ export default function Home() {
   // Auto-select 2/9/16 game for current game session - GAME SESSION ISOLATION FIX
   useEffect(() => {
     if (selectedGroup && selectedGame && pointsGames.length > 0) {
-      // If we have a selectedPointsGame but it's not in the current game session's games, clear it
-      if (selectedPointsGame && !pointsGames.find(game => game.id === selectedPointsGame.id)) {
+      // FIX: Filter for only 2/9/16 games (not BBB)
+      const pointsOnly2916Games = pointsGames.filter(game => game.gameType === '2916');
+      
+      // If we have a selectedPointsGame but it's not in the current game session's 2/9/16 games, clear it
+      if (selectedPointsGame && !pointsOnly2916Games.find(game => game.id === selectedPointsGame.id)) {
         setSelectedPointsGame(null);
       }
-      // Auto-select the single 2/9/16 game for this game session
-      if (!selectedPointsGame) {
-        const existingGame = pointsGames[0]; // Only one game per game session allowed
+      // Auto-select the 2/9/16 game for this game session (not BBB)
+      if (!selectedPointsGame && pointsOnly2916Games.length > 0) {
+        const existingGame = pointsOnly2916Games[0]; // Get the 2/9/16 game specifically
         if (existingGame) {
           setSelectedPointsGame(existingGame);
           console.log(`Auto-selected 2/9/16 game: ${existingGame.name} for game session: ${selectedGame.id}`);
@@ -744,28 +747,31 @@ export default function Home() {
 
   // Auto-select BBB game for current game session - GAME SESSION ISOLATION FIX
   useEffect(() => {
-    if (selectedGroup && selectedGame && bbbGames.length > 0) {
-      // If we have a selectedBBBGame but it's not in the current game session's games, clear it
-      if (selectedBBBGame && !bbbGames.find(game => game.id === selectedBBBGame.id)) {
+    if (selectedGroup && selectedGame && pointsGames.length > 0) {
+      // FIX: Filter for only BBB games (not 2/9/16)
+      const bbbOnlyGames = pointsGames.filter(game => game.gameType === 'bbb');
+      
+      // If we have a selectedBBBGame but it's not in the current game session's BBB games, clear it
+      if (selectedBBBGame && !bbbOnlyGames.find(game => game.id === selectedBBBGame.id)) {
         setSelectedBBBGame(null);
       }
-      // Auto-select the single BBB game for this game session
-      if (!selectedBBBGame) {
-        const existingGame = bbbGames[0]; // Only one game per game session allowed
+      // Auto-select the BBB game for this game session (not 2/9/16)
+      if (!selectedBBBGame && bbbOnlyGames.length > 0) {
+        const existingGame = bbbOnlyGames[0]; // Get the BBB game specifically
         if (existingGame) {
           setSelectedBBBGame(existingGame);
           console.log(`Auto-selected BBB game: ${existingGame.name} for game session: ${selectedGame.id}`);
         }
       }
     }
-    // Also ensure the selected game persists even when bbbGames array is updated
-    if (selectedBBBGame && bbbGames.length > 0) {
-      const updatedGame = bbbGames.find(game => game.id === selectedBBBGame.id);
+    // Also ensure the selected game persists even when pointsGames array is updated
+    if (selectedBBBGame && pointsGames.length > 0) {
+      const updatedGame = pointsGames.find(game => game.id === selectedBBBGame.id);
       if (updatedGame) {
         setSelectedBBBGame(updatedGame); // Update with latest data
       }
     }
-  }, [selectedGroup, selectedGame, bbbGames, selectedBBBGame]);
+  }, [selectedGroup, selectedGame, pointsGames, selectedBBBGame]);
 
   // V6.6: Refetch points games data when switching to Games->2/9/16 to ensure saved scores are visible
   useEffect(() => {

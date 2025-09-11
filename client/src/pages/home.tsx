@@ -3365,14 +3365,14 @@ export default function Home() {
                         <div className="space-y-4">
                           {/* First On (Bingo) - Player Buttons with Checkbox */}
                           <div className="space-y-2">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center justify-between">
                               <label className="text-sm font-medium text-gray-700">
-                                🥇 First On (Bingo) - First to reach the green
+                                🥇 First On
                               </label>
                               <div className="flex items-center gap-1">
                                 <input
                                   type="checkbox"
-                                  checked={bbbHoleData.firstOn === 'none' || !bbbHoleData.firstOn}
+                                  checked={bbbHoleData.firstOn === 'none'}
                                   onChange={(e) => {
                                     if (e.target.checked) {
                                       setBBBHoleData(prev => ({ ...prev, firstOn: 'none' }));
@@ -3408,14 +3408,14 @@ export default function Home() {
 
                           {/* Closest To (Bango) - Player Buttons with Checkbox */}
                           <div className="space-y-2">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center justify-between">
                               <label className="text-sm font-medium text-gray-700">
-                                🎯 Closest To (Bango) - Closest to pin after all on green
+                                🎯 Closest To
                               </label>
                               <div className="flex items-center gap-1">
                                 <input
                                   type="checkbox"
-                                  checked={bbbHoleData.closestTo === 'none' || !bbbHoleData.closestTo}
+                                  checked={bbbHoleData.closestTo === 'none'}
                                   onChange={(e) => {
                                     if (e.target.checked) {
                                       setBBBHoleData(prev => ({ ...prev, closestTo: 'none' }));
@@ -3451,14 +3451,14 @@ export default function Home() {
 
                           {/* First In (Bongo) - Player Buttons with Checkbox */}
                           <div className="space-y-2">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center justify-between">
                               <label className="text-sm font-medium text-gray-700">
-                                ⛳ First In (Bongo) - First to hole out
+                                ⛳ First In
                               </label>
                               <div className="flex items-center gap-1">
                                 <input
                                   type="checkbox"
-                                  checked={bbbHoleData.firstIn === 'none' || !bbbHoleData.firstIn}
+                                  checked={bbbHoleData.firstIn === 'none'}
                                   onChange={(e) => {
                                     if (e.target.checked) {
                                       setBBBHoleData(prev => ({ ...prev, firstIn: 'none' }));

@@ -232,7 +232,7 @@ export default function Home() {
   }>({});
   const [bbbPointValue, setBBBPointValue] = useState<string>("1.00");
   const [bbbFbtValue, setBBBFbtValue] = useState<string>("10.00");
-  const [bbbPayoutMode, setBBBPayoutMode] = useState<'points' | 'fbt'>('points');
+  const [bbbPayoutMode, setBBBPayoutMode] = useState<'points' | 'fbt' | 'both'>('points');
   const [payoutMode, setPayoutMode] = useState<'points' | 'fbt'>('points');
   const [combinedPayoutMode, setCombinedPayoutMode] = useState<'points' | 'fbt' | 'both'>('points');
   const [showTermsOfService, setShowTermsOfService] = useState(false);
@@ -1365,6 +1365,9 @@ export default function Home() {
       queryClient.invalidateQueries({ queryKey: ['/api/points-games/bbb', selectedGroup?.id] });
       queryClient.invalidateQueries({ queryKey: ['/api/points-games', selectedGroup?.id] }); // Also invalidate general points games
       queryClient.refetchQueries({ queryKey: ['/api/points-games/bbb', selectedGroup?.id, selectedGame?.id] });
+      
+      // CRITICAL: Invalidate BBB payout calculation queries to update payouts immediately
+      queryClient.invalidateQueries({ queryKey: ['/api/calculate-combined-games'] });
       
       console.log('BBB hole data updated successfully');
       toast({ title: "Success", description: "BBB hole data updated!", variant: "default" });
@@ -3668,76 +3671,6 @@ export default function Home() {
                   </Card>
                 ) : (
                   <>
-                    {/* BBB Payout Mode Selector */}
-                    <Card>
-                      <CardContent className="p-4">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-3">💰 BBB Payout Mode</h3>
-                        <div className="grid grid-cols-2 gap-2 mb-4">
-                          <Button
-                            variant={bbbPayoutMode === 'points' ? 'default' : 'outline'}
-                            onClick={() => setBBBPayoutMode('points')}
-                            className="h-auto p-3"
-                            data-testid="button-bbb-payout-points"
-                          >
-                            <div className="text-center">
-                              <div className="font-medium">Points</div>
-                              <div className="text-xs text-gray-600">Head-to-head comparison</div>
-                            </div>
-                          </Button>
-                          <Button
-                            variant={bbbPayoutMode === 'fbt' ? 'default' : 'outline'}
-                            onClick={() => setBBBPayoutMode('fbt')}
-                            className="h-auto p-3"
-                            data-testid="button-bbb-payout-fbt"
-                          >
-                            <div className="text-center">
-                              <div className="font-medium">FBT</div>
-                              <div className="text-xs text-gray-600">Front/Back/Total wins</div>
-                            </div>
-                          </Button>
-                        </div>
-
-                        {/* BBB Value Inputs */}
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <div className="flex items-center gap-1 mb-2">
-                              <label className="text-sm font-medium text-gray-700">
-                                BBB Point Value ($)
-                              </label>
-                            </div>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              value={bbbPointValue}
-                              onChange={(e) => setBBBPointValue(e.target.value)}
-                              className="w-full"
-                              placeholder="1.00"
-                              data-testid="input-bbb-point-value"
-                            />
-                          </div>
-                          
-                          <div>
-                            <div className="flex items-center gap-1 mb-2">
-                              <label className="text-sm font-medium text-gray-700">
-                                BBB FBT Value ($)
-                              </label>
-                            </div>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              value={bbbFbtValue}
-                              onChange={(e) => setBBBFbtValue(e.target.value)}
-                              className="w-full"
-                              placeholder="5.00"
-                              data-testid="input-bbb-fbt-value"
-                            />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
                     {/* Hole Selection */}
                     <Card>
                       <CardContent className="p-4">
@@ -3880,6 +3813,91 @@ export default function Home() {
                       </CardContent>
                     </Card>
 
+                    {/* BBB Payouts */}
+                    <Card>
+                      <CardContent className="p-4">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-3">💰 BBB Payouts</h3>
+                        <div className="grid grid-cols-2 gap-2 mb-4">
+                          <Button
+                            variant={bbbPayoutMode === 'points' ? 'default' : 'outline'}
+                            onClick={() => setBBBPayoutMode('points')}
+                            className="h-auto p-3"
+                            data-testid="button-bbb-payout-points"
+                          >
+                            <div className="text-center">
+                              <div className="font-medium">Points</div>
+                            </div>
+                          </Button>
+                          <Button
+                            variant={bbbPayoutMode === 'fbt' ? 'default' : 'outline'}
+                            onClick={() => setBBBPayoutMode('fbt')}
+                            className="h-auto p-3"
+                            data-testid="button-bbb-payout-fbt"
+                          >
+                            <div className="text-center">
+                              <div className="font-medium">FBT</div>
+                            </div>
+                          </Button>
+                        </div>
+
+                        {/* BBB Value Inputs */}
+                        <div className="grid grid-cols-2 gap-3 mb-4">
+                          <div>
+                            <div className="flex items-center gap-1 mb-2">
+                              <label className="text-sm font-medium text-gray-700">
+                                BBB Point Value ($)
+                              </label>
+                            </div>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={bbbPointValue}
+                              onChange={(e) => setBBBPointValue(e.target.value)}
+                              className="w-full"
+                              placeholder="1.00"
+                              data-testid="input-bbb-point-value"
+                            />
+                          </div>
+                          
+                          <div>
+                            <div className="flex items-center gap-1 mb-2">
+                              <label className="text-sm font-medium text-gray-700">
+                                BBB FBT Value ($)
+                              </label>
+                            </div>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={bbbFbtValue}
+                              onChange={(e) => setBBBFbtValue(e.target.value)}
+                              className="w-full"
+                              placeholder="5.00"
+                              data-testid="input-bbb-fbt-value"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Update Values Button */}
+                        <Button
+                          onClick={() => {
+                            // Force cache invalidation and refresh BBB payout calculations
+                            queryClient.invalidateQueries({ queryKey: ['/api/calculate-combined-games'] });
+                            toast({
+                              title: "Success",
+                              description: "BBB payout values updated!",
+                              variant: "default",
+                            });
+                          }}
+                          className="w-full bg-emerald-500 hover:bg-emerald-600 text-white"
+                          data-testid="button-update-bbb-values"
+                        >
+                          Update Values
+                        </Button>
+                      </CardContent>
+                    </Card>
+
                     {/* BBB Score Summary */}
                     {(() => {
                       const totalPoints: Record<string, number> = {};
@@ -3917,6 +3935,124 @@ export default function Home() {
                             </div>
                           </CardContent>
                         </Card>
+                      );
+                    })()}
+
+                    {/* BBB Payout Tiles at bottom of Games>BBB page */}
+                    {(() => {
+                      const bbbPointValueNum = parseFloat(bbbPointValue);
+                      const bbbFbtValueNum = parseFloat(bbbFbtValue);
+                      const bbbPointsPayouts: Record<string, number> = {};
+                      const bbbFbtPayouts: Record<string, number> = {};
+                      
+                      // Initialize with zeros
+                      selectedGroup.players.forEach(player => {
+                        bbbPointsPayouts[player.id] = 0;
+                        bbbFbtPayouts[player.id] = 0;
+                      });
+
+                      // Get BBB Points payouts from API
+                      if (bbbPointValueNum > 0 && selectedBBBPointsPayouts?.payouts) {
+                        selectedGroup.players.forEach(player => {
+                          bbbPointsPayouts[player.id] = selectedBBBPointsPayouts.payouts[player.id] || 0;
+                        });
+                      }
+
+                      // Get BBB FBT payouts from API
+                      if (bbbFbtValueNum > 0 && selectedBBBFbtPayouts?.payouts) {
+                        selectedGroup.players.forEach(player => {
+                          bbbFbtPayouts[player.id] = selectedBBBFbtPayouts.payouts[player.id] || 0;
+                        });
+                      }
+
+                      return (
+                        <>
+                          {/* BBB Points Only Tile */}
+                          {bbbPointValueNum > 0 && (
+                            <Card className="mb-4">
+                              <CardContent className="p-4">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-3">🎯 BBB Points Only Payouts</h3>
+                                <div className="space-y-2">
+                                  {[...selectedGroup.players]
+                                    .sort((a, b) => {
+                                      const payoutA = bbbPointsPayouts[a.id] || 0;
+                                      const payoutB = bbbPointsPayouts[b.id] || 0;
+                                      return payoutB - payoutA; // Most profitable first
+                                    })
+                                    .map((player) => {
+                                      const netAmount = bbbPointsPayouts[player.id] || 0;
+                                      const isEven = Math.abs(netAmount) < 0.01;
+                                      
+                                      return (
+                                        <div key={player.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg" data-testid={`bbb-points-payout-${player.id}`}>
+                                          <div className="flex items-center">
+                                            <div 
+                                              className="w-4 h-4 rounded-full mr-3" 
+                                              style={{ backgroundColor: player.color }}
+                                            ></div>
+                                            <span className="font-medium text-gray-800">{player.name}</span>
+                                          </div>
+                                          <div className="text-right">
+                                            <div className={`text-lg font-bold ${
+                                              isEven ? 'text-gray-800' : 
+                                              netAmount > 0 ? 'text-emerald-600' : 'text-red-600'
+                                            }`}>
+                                              {isEven ? '$0.00' : 
+                                               netAmount > 0 ? `+$${netAmount.toFixed(2)}` : 
+                                               `-$${Math.abs(netAmount).toFixed(2)}`}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          )}
+
+                          {/* BBB FBT Only Tile */}
+                          {bbbFbtValueNum > 0 && (
+                            <Card className="mb-4">
+                              <CardContent className="p-4">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-3">⛳ BBB FBT Only Payouts</h3>
+                                <div className="space-y-2">
+                                  {[...selectedGroup.players]
+                                    .sort((a, b) => {
+                                      const payoutA = bbbFbtPayouts[a.id] || 0;
+                                      const payoutB = bbbFbtPayouts[b.id] || 0;
+                                      return payoutB - payoutA; // Most profitable first
+                                    })
+                                    .map((player) => {
+                                      const netAmount = bbbFbtPayouts[player.id] || 0;
+                                      const isEven = Math.abs(netAmount) < 0.01;
+                                      
+                                      return (
+                                        <div key={player.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg" data-testid={`bbb-fbt-payout-${player.id}`}>
+                                          <div className="flex items-center">
+                                            <div 
+                                              className="w-4 h-4 rounded-full mr-3" 
+                                              style={{ backgroundColor: player.color }}
+                                            ></div>
+                                            <span className="font-medium text-gray-800">{player.name}</span>
+                                          </div>
+                                          <div className="text-right">
+                                            <div className={`text-lg font-bold ${
+                                              isEven ? 'text-gray-800' : 
+                                              netAmount > 0 ? 'text-emerald-600' : 'text-red-600'
+                                            }`}>
+                                              {isEven ? '$0.00' : 
+                                               netAmount > 0 ? `+$${netAmount.toFixed(2)}` : 
+                                               `-$${Math.abs(netAmount).toFixed(2)}`}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          )}
+                        </>
                       );
                     })()}
                   </>

@@ -750,6 +750,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       await storage.createPointsGame(pointsGameData);
       
+      // Automatically create a BBB points game linked to this card game session
+      const bbbGameData = {
+        groupId,
+        gameStateId: gameState.id, // Link to the newly created card game
+        gameType: 'bbb' as const,
+        name: `${name} - BBB`,
+        holes: {}, // Initialize empty holes object
+        points: {}, // Initialize empty points object  
+        settings: { pointValue: 1, fbtValue: 10 }, // Default settings
+        createdBy: userId
+      };
+      
+      await storage.createPointsGame(bbbGameData);
+      
       res.status(201).json(gameState);
     } catch (error) {
       console.error('Error creating game state:', error);
@@ -1511,7 +1525,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           totalStrokes[player.id] = 0;
           
           for (let hole = 1; hole <= 18; hole++) {
-            const holeStrokes = game.holes?.[hole]?.[player.id] || 0;
+            const holeStrokesRaw = game.holes?.[hole]?.[player.id] || 0;
+            // For 2/9/16 games, ensure we're working with numbers
+            const holeStrokes = typeof holeStrokesRaw === 'number' ? holeStrokesRaw : parseInt(holeStrokesRaw as string) || 0;
             totalStrokes[player.id] += holeStrokes;
             
             if (hole <= 9) {

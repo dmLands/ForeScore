@@ -3363,108 +3363,132 @@ export default function Home() {
                           🎯 Bingo Bango Bongo - Hole {selectedBBBHole}
                         </h3>
                         <div className="space-y-4">
-                          {/* First On (Bingo) - Player Buttons */}
+                          {/* First On (Bingo) - Player Buttons with Checkbox */}
                           <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700">
-                              🥇 First On (Bingo) - First to reach the green
-                            </label>
+                            <div className="flex items-center gap-2">
+                              <label className="text-sm font-medium text-gray-700">
+                                🥇 First On (Bingo) - First to reach the green
+                              </label>
+                              <div className="flex items-center gap-1">
+                                <input
+                                  type="checkbox"
+                                  checked={bbbHoleData.firstOn === 'none' || !bbbHoleData.firstOn}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setBBBHoleData(prev => ({ ...prev, firstOn: 'none' }));
+                                    } else {
+                                      setBBBHoleData(prev => ({ ...prev, firstOn: '' }));
+                                    }
+                                  }}
+                                  className="w-4 h-4 text-emerald-600 rounded border-gray-300 focus:ring-emerald-500"
+                                  data-testid="checkbox-first-on-none"
+                                />
+                                <span className="text-xs text-gray-500">None</span>
+                              </div>
+                            </div>
                             <div className="flex flex-wrap gap-2">
                               {selectedGroup.players.map(player => (
                                 <button
                                   key={player.id}
                                   onClick={() => setBBBHoleData(prev => ({ ...prev, firstOn: player.id }))}
-                                  className={`flex items-center justify-center w-12 h-12 rounded-full text-white text-sm font-semibold transition-all duration-200 ${
+                                  className={`px-3 py-2 min-w-[4rem] h-10 rounded-lg text-white text-xs font-semibold transition-all duration-200 truncate ${
                                     bbbHoleData.firstOn === player.id 
-                                      ? 'ring-4 ring-emerald-400 ring-opacity-50 scale-110 shadow-lg' 
+                                      ? 'ring-4 ring-emerald-400 ring-opacity-50 scale-105 shadow-lg' 
                                       : 'hover:scale-105 shadow-md'
                                   }`}
                                   style={{ backgroundColor: player.color }}
                                   data-testid={`button-first-on-${player.id}`}
+                                  title={player.name}
                                 >
-                                  {player.initials}
+                                  {player.name}
                                 </button>
                               ))}
-                              <button
-                                onClick={() => setBBBHoleData(prev => ({ ...prev, firstOn: 'none' }))}
-                                className={`flex items-center justify-center w-12 h-12 rounded-full text-sm font-medium border-2 transition-all duration-200 ${
-                                  bbbHoleData.firstOn === 'none' || !bbbHoleData.firstOn
-                                    ? 'bg-gray-600 text-white border-gray-600 ring-4 ring-emerald-400 ring-opacity-50 scale-110 shadow-lg'
-                                    : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200 hover:scale-105 shadow-md'
-                                }`}
-                                data-testid="button-first-on-none"
-                              >
-                                None
-                              </button>
                             </div>
                           </div>
 
-                          {/* Closest To (Bango) - Player Buttons */}
+                          {/* Closest To (Bango) - Player Buttons with Checkbox */}
                           <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700">
-                              🎯 Closest To (Bango) - Closest to pin after all on green
-                            </label>
+                            <div className="flex items-center gap-2">
+                              <label className="text-sm font-medium text-gray-700">
+                                🎯 Closest To (Bango) - Closest to pin after all on green
+                              </label>
+                              <div className="flex items-center gap-1">
+                                <input
+                                  type="checkbox"
+                                  checked={bbbHoleData.closestTo === 'none' || !bbbHoleData.closestTo}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setBBBHoleData(prev => ({ ...prev, closestTo: 'none' }));
+                                    } else {
+                                      setBBBHoleData(prev => ({ ...prev, closestTo: '' }));
+                                    }
+                                  }}
+                                  className="w-4 h-4 text-emerald-600 rounded border-gray-300 focus:ring-emerald-500"
+                                  data-testid="checkbox-closest-to-none"
+                                />
+                                <span className="text-xs text-gray-500">None</span>
+                              </div>
+                            </div>
                             <div className="flex flex-wrap gap-2">
                               {selectedGroup.players.map(player => (
                                 <button
                                   key={player.id}
                                   onClick={() => setBBBHoleData(prev => ({ ...prev, closestTo: player.id }))}
-                                  className={`flex items-center justify-center w-12 h-12 rounded-full text-white text-sm font-semibold transition-all duration-200 ${
+                                  className={`px-3 py-2 min-w-[4rem] h-10 rounded-lg text-white text-xs font-semibold transition-all duration-200 truncate ${
                                     bbbHoleData.closestTo === player.id 
-                                      ? 'ring-4 ring-emerald-400 ring-opacity-50 scale-110 shadow-lg' 
+                                      ? 'ring-4 ring-emerald-400 ring-opacity-50 scale-105 shadow-lg' 
                                       : 'hover:scale-105 shadow-md'
                                   }`}
                                   style={{ backgroundColor: player.color }}
                                   data-testid={`button-closest-to-${player.id}`}
+                                  title={player.name}
                                 >
-                                  {player.initials}
+                                  {player.name}
                                 </button>
                               ))}
-                              <button
-                                onClick={() => setBBBHoleData(prev => ({ ...prev, closestTo: 'none' }))}
-                                className={`flex items-center justify-center w-12 h-12 rounded-full text-sm font-medium border-2 transition-all duration-200 ${
-                                  bbbHoleData.closestTo === 'none' || !bbbHoleData.closestTo
-                                    ? 'bg-gray-600 text-white border-gray-600 ring-4 ring-emerald-400 ring-opacity-50 scale-110 shadow-lg'
-                                    : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200 hover:scale-105 shadow-md'
-                                }`}
-                                data-testid="button-closest-to-none"
-                              >
-                                None
-                              </button>
                             </div>
                           </div>
 
-                          {/* First In (Bongo) - Player Buttons */}
+                          {/* First In (Bongo) - Player Buttons with Checkbox */}
                           <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700">
-                              ⛳ First In (Bongo) - First to hole out
-                            </label>
+                            <div className="flex items-center gap-2">
+                              <label className="text-sm font-medium text-gray-700">
+                                ⛳ First In (Bongo) - First to hole out
+                              </label>
+                              <div className="flex items-center gap-1">
+                                <input
+                                  type="checkbox"
+                                  checked={bbbHoleData.firstIn === 'none' || !bbbHoleData.firstIn}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setBBBHoleData(prev => ({ ...prev, firstIn: 'none' }));
+                                    } else {
+                                      setBBBHoleData(prev => ({ ...prev, firstIn: '' }));
+                                    }
+                                  }}
+                                  className="w-4 h-4 text-emerald-600 rounded border-gray-300 focus:ring-emerald-500"
+                                  data-testid="checkbox-first-in-none"
+                                />
+                                <span className="text-xs text-gray-500">None</span>
+                              </div>
+                            </div>
                             <div className="flex flex-wrap gap-2">
                               {selectedGroup.players.map(player => (
                                 <button
                                   key={player.id}
                                   onClick={() => setBBBHoleData(prev => ({ ...prev, firstIn: player.id }))}
-                                  className={`flex items-center justify-center w-12 h-12 rounded-full text-white text-sm font-semibold transition-all duration-200 ${
+                                  className={`px-3 py-2 min-w-[4rem] h-10 rounded-lg text-white text-xs font-semibold transition-all duration-200 truncate ${
                                     bbbHoleData.firstIn === player.id 
-                                      ? 'ring-4 ring-emerald-400 ring-opacity-50 scale-110 shadow-lg' 
+                                      ? 'ring-4 ring-emerald-400 ring-opacity-50 scale-105 shadow-lg' 
                                       : 'hover:scale-105 shadow-md'
                                   }`}
                                   style={{ backgroundColor: player.color }}
                                   data-testid={`button-first-in-${player.id}`}
+                                  title={player.name}
                                 >
-                                  {player.initials}
+                                  {player.name}
                                 </button>
                               ))}
-                              <button
-                                onClick={() => setBBBHoleData(prev => ({ ...prev, firstIn: 'none' }))}
-                                className={`flex items-center justify-center w-12 h-12 rounded-full text-sm font-medium border-2 transition-all duration-200 ${
-                                  bbbHoleData.firstIn === 'none' || !bbbHoleData.firstIn
-                                    ? 'bg-gray-600 text-white border-gray-600 ring-4 ring-emerald-400 ring-opacity-50 scale-110 shadow-lg'
-                                    : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200 hover:scale-105 shadow-md'
-                                }`}
-                                data-testid="button-first-in-none"
-                              >
-                                None
-                              </button>
                             </div>
                           </div>
                           

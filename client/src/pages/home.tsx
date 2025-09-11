@@ -2287,15 +2287,11 @@ export default function Home() {
 
                     {/* MODAL-BASED WHO OWES WHO - MOVED TO TOP */}
                     {(() => {
-                      const isCardsActive = selectedGame && gameState && gameState.cardHistory?.length > 0;
-                      const is2916Active = selectedPointsGame && 
-                        Object.values(selectedPointsGame.holes || {}).some(hole => 
-                          Object.values(hole as Record<string, any>).some((strokes: any) => strokes > 0)
-                        );
+                      const isCardsActive = selectedGame && safeGameState && safeGameState.cardHistory?.length > 0;
                       const hasPayoutValues = (parseFloat(pointValue) > 0) || (parseFloat(fbtValue) > 0);
                       
-                      // Show when any game is active
-                      return isCardsActive || (is2916Active && hasPayoutValues);
+                      // FIX: Show when cards are active OR when 2/9/16 values are set (regardless of scores)
+                      return isCardsActive || (selectedPointsGame && hasPayoutValues);
                     })() && (
                       <Card className="mb-4 card-interactive hover-lift">
                         <CardContent className="p-4">

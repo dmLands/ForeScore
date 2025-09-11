@@ -221,6 +221,18 @@ export default function Home() {
   const [pointValue, setPointValue] = useState<string>("1.00");
   const [fbtValue, setFbtValue] = useState<string>("10.00");
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+
+  // BBB game state variables
+  const [selectedBBBGame, setSelectedBBBGame] = useState<PointsGame | null>(null);
+  const [selectedBBBHole, setSelectedBBBHole] = useState<number>(1);
+  const [bbbHoleData, setBBBHoleData] = useState<{
+    firstOn?: string;
+    closestTo?: string;
+    firstIn?: string;
+  }>({});
+  const [bbbPointValue, setBBBPointValue] = useState<string>("1.00");
+  const [bbbFbtValue, setBBBFbtValue] = useState<string>("10.00");
+  const [bbbPayoutMode, setBBBPayoutMode] = useState<'points' | 'fbt'>('points');
   const [payoutMode, setPayoutMode] = useState<'points' | 'fbt'>('points');
   const [combinedPayoutMode, setCombinedPayoutMode] = useState<'points' | 'fbt' | 'both'>('points');
   const [showTermsOfService, setShowTermsOfService] = useState(false);
@@ -668,19 +680,39 @@ export default function Home() {
     enabled: !!selectedGroup?.id,
   });
 
-  // Clear selectedPointsGame and invalidate all caches when selectedGame changes
+  // BBB-specific queries - filter for BBB games only
+  const { data: bbbGames = [], isLoading: bbbGamesLoading } = useQuery<PointsGame[]>({
+    queryKey: ['/api/points-games/bbb', selectedGroup?.id, selectedGame?.id],
+    queryFn: async () => {
+      if (!selectedGroup?.id) throw new Error('No group selected');
+      const url = selectedGame?.id 
+        ? `/api/points-games/${selectedGroup.id}?gameStateId=${selectedGame.id}`
+        : `/api/points-games/${selectedGroup.id}`;
+      const response = await fetch(url, { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to fetch BBB games');
+      const allGames: PointsGame[] = await response.json();
+      // Filter for BBB games only
+      return allGames.filter(game => game.gameType === 'bbb');
+    },
+    enabled: !!selectedGroup?.id,
+  });
+
+  // Clear selectedPointsGame and selectedBBBGame and invalidate all caches when selectedGame changes
   useEffect(() => {
     setSelectedPointsGame(null);
+    setSelectedBBBGame(null); // FIX: Also clear BBB game selection for session isolation
     // Clear hole strokes when switching games to prevent stale data
     setHoleStrokes({});
     
     // Invalidate all relevant caches when switching game instances
     if (selectedGame?.id) {
       queryClient.invalidateQueries({ queryKey: ['/api/points-games'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/points-games/bbb'] }); // FIX: Also invalidate BBB caches
       queryClient.invalidateQueries({ queryKey: ['/api/game-state'] });
       queryClient.invalidateQueries({ queryKey: ['/api/groups', selectedGroup?.id, 'games'] });
       // Force fresh data fetch for the new game
       queryClient.refetchQueries({ queryKey: ['/api/points-games', selectedGroup?.id, selectedGame.id] });
+      queryClient.refetchQueries({ queryKey: ['/api/points-games/bbb', selectedGroup?.id, selectedGame.id] }); // FIX: Also refetch BBB
       queryClient.refetchQueries({ queryKey: ['/api/game-state', selectedGame.id, 'payouts'] });
     }
   }, [selectedGame?.id, selectedGroup?.id, queryClient]);
@@ -710,6 +742,31 @@ export default function Home() {
     }
   }, [selectedGroup, selectedGame, pointsGames, selectedPointsGame]);
 
+  // Auto-select BBB game for current game session - GAME SESSION ISOLATION FIX
+  useEffect(() => {
+    if (selectedGroup && selectedGame && bbbGames.length > 0) {
+      // If we have a selectedBBBGame but it's not in the current game session's games, clear it
+      if (selectedBBBGame && !bbbGames.find(game => game.id === selectedBBBGame.id)) {
+        setSelectedBBBGame(null);
+      }
+      // Auto-select the single BBB game for this game session
+      if (!selectedBBBGame) {
+        const existingGame = bbbGames[0]; // Only one game per game session allowed
+        if (existingGame) {
+          setSelectedBBBGame(existingGame);
+          console.log(`Auto-selected BBB game: ${existingGame.name} for game session: ${selectedGame.id}`);
+        }
+      }
+    }
+    // Also ensure the selected game persists even when bbbGames array is updated
+    if (selectedBBBGame && bbbGames.length > 0) {
+      const updatedGame = bbbGames.find(game => game.id === selectedBBBGame.id);
+      if (updatedGame) {
+        setSelectedBBBGame(updatedGame); // Update with latest data
+      }
+    }
+  }, [selectedGroup, selectedGame, bbbGames, selectedBBBGame]);
+
   // V6.6: Refetch points games data when switching to Games->2/9/16 to ensure saved scores are visible
   useEffect(() => {
     if (currentTab === 'games' && selectedSubGame === '2916' && selectedGroup?.id) {
@@ -719,6 +776,16 @@ export default function Home() {
       queryClient.refetchQueries({ queryKey: ['/api/points-games', selectedGroup.id, selectedGame?.id] });
     }
   }, [currentTab, selectedGroup?.id, selectedGame?.id, queryClient]);
+
+  // Handle tab switching for BBB game invalidation
+  useEffect(() => {
+    if (currentTab === 'games' && selectedSubGame === 'bbb' && selectedGroup?.id) {
+      console.log('Switching to Games->BBB - refetching BBB games data to ensure saved scores are visible');
+      queryClient.invalidateQueries({ queryKey: ['/api/points-games/bbb', selectedGroup.id] });
+      // Force refetch to get latest BBB hole data
+      queryClient.refetchQueries({ queryKey: ['/api/points-games/bbb', selectedGroup.id, selectedGame?.id] });
+    }
+  }, [currentTab, selectedSubGame, selectedGroup?.id, selectedGame?.id, queryClient]);
 
   // V6.6: Load hole strokes from server data when points game data changes or hole selection changes
   useEffect(() => {
@@ -1177,6 +1244,38 @@ export default function Home() {
         description: "Could not update hole scores. Try again.",
         variant: "destructive",
       });
+    }
+  });
+
+  // BBB-specific mutations
+  const updateBBBHoleDataMutation = useMutation({
+    mutationFn: async (data: { 
+      gameId: string; 
+      hole: number; 
+      firstOn?: string; 
+      closestTo?: string; 
+      firstIn?: string; 
+    }) => {
+      const response = await apiRequest('PUT', `/api/bbb-games/${data.gameId}/hole/${data.hole}`, {
+        firstOn: data.firstOn,
+        closestTo: data.closestTo,
+        firstIn: data.firstIn
+      });
+      return response.json();
+    },
+    onSuccess: (updatedGame: PointsGame) => {
+      setSelectedBBBGame(updatedGame);
+      // FIX: Standardize cache invalidation for both BBB-specific and general keys
+      queryClient.invalidateQueries({ queryKey: ['/api/points-games/bbb', selectedGroup?.id] });
+      queryClient.invalidateQueries({ queryKey: ['/api/points-games', selectedGroup?.id] }); // Also invalidate general points games
+      queryClient.refetchQueries({ queryKey: ['/api/points-games/bbb', selectedGroup?.id, selectedGame?.id] });
+      
+      console.log('BBB hole data updated successfully');
+      toast({ title: "Success", description: "BBB hole data updated!", variant: "default" });
+    },
+    onError: (error) => {
+      console.error('Error updating BBB hole data:', error);
+      toast({ title: "Error", description: "Failed to update BBB hole data", variant: "destructive" });
     }
   });
 
@@ -3172,6 +3271,218 @@ export default function Home() {
                 <CardContent className="p-6 text-center">
                   <h2 className="text-xl font-semibold text-gray-800 mb-2">2/9/16 Game</h2>
                   <p className="text-gray-600">Select a group to start playing the points game.</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
+
+        {/* BBB Game Tab */}
+        {currentTab === 'games' && selectedSubGame === 'bbb' && (
+          <div className="p-4 space-y-4">
+            {selectedGroup ? (
+              <>
+                {/* BBB Game Selection or Creation */}
+                {!selectedBBBGame ? (
+                  <Card>
+                    <CardContent className="p-6 text-center">
+                      {bbbGamesLoading ? (
+                        <div className="flex items-center justify-center">
+                          <div className="w-6 h-6 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mr-3"></div>
+                          <p className="text-sm text-emerald-600">
+                            Loading your BBB game...
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="text-center space-y-4">
+                          <p className="text-gray-600">No BBB games yet. BBB games are auto-created when you start a new game session.</p>
+                          <p className="text-sm text-gray-500">Switch to Games → Create Group to start a new game session with BBB included.</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <>
+                    {/* Hole Selection */}
+                    <Card>
+                      <CardContent className="p-4">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-3">Select Hole</h3>
+                        <div className="grid grid-cols-6 gap-2">
+                          {Array.from({ length: 18 }, (_, i) => i + 1).map(hole => (
+                            <Button 
+                              key={hole}
+                              variant={selectedBBBHole === hole ? "default" : "outline"}
+                              onClick={() => {
+                                setSelectedBBBHole(hole);
+                                const existingData = selectedBBBGame.holes?.[hole] || {};
+                                setBBBHoleData({
+                                  firstOn: existingData.firstOn || '',
+                                  closestTo: existingData.closestTo || '',
+                                  firstIn: existingData.firstIn || ''
+                                });
+                              }}
+                              className="p-2 text-sm"
+                              data-testid={`button-hole-${hole}`}
+                            >
+                              {hole}
+                            </Button>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Bingo Bango Bongo Scoring */}
+                    <Card>
+                      <CardContent className="p-4">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                          🎯 Bingo Bango Bongo - Hole {selectedBBBHole}
+                        </h3>
+                        <div className="space-y-4">
+                          {/* First On (Bingo) */}
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium text-gray-700">
+                              🥇 First On (Bingo) - First to reach the green
+                            </label>
+                            <Select 
+                              value={bbbHoleData.firstOn || ''} 
+                              onValueChange={(value) => setBBBHoleData(prev => ({ ...prev, firstOn: value }))}
+                            >
+                              <SelectTrigger data-testid="select-first-on">
+                                <SelectValue placeholder="Select player" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="">No one</SelectItem>
+                                {selectedGroup.players.map(player => (
+                                  <SelectItem key={player.id} value={player.id}>
+                                    <div className="flex items-center gap-2">
+                                      <div className={`w-4 h-4 rounded-full`} style={{ backgroundColor: player.color }}></div>
+                                      {player.name}
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {/* Closest To (Bango) */}
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium text-gray-700">
+                              🎯 Closest To (Bango) - Closest to pin after all on green
+                            </label>
+                            <Select 
+                              value={bbbHoleData.closestTo || ''} 
+                              onValueChange={(value) => setBBBHoleData(prev => ({ ...prev, closestTo: value }))}
+                            >
+                              <SelectTrigger data-testid="select-closest-to">
+                                <SelectValue placeholder="Select player" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="">No one</SelectItem>
+                                {selectedGroup.players.map(player => (
+                                  <SelectItem key={player.id} value={player.id}>
+                                    <div className="flex items-center gap-2">
+                                      <div className={`w-4 h-4 rounded-full`} style={{ backgroundColor: player.color }}></div>
+                                      {player.name}
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {/* First In (Bongo) */}
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium text-gray-700">
+                              ⛳ First In (Bongo) - First to hole out
+                            </label>
+                            <Select 
+                              value={bbbHoleData.firstIn || ''} 
+                              onValueChange={(value) => setBBBHoleData(prev => ({ ...prev, firstIn: value }))}
+                            >
+                              <SelectTrigger data-testid="select-first-in">
+                                <SelectValue placeholder="Select player" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="">No one</SelectItem>
+                                {selectedGroup.players.map(player => (
+                                  <SelectItem key={player.id} value={player.id}>
+                                    <div className="flex items-center gap-2">
+                                      <div className={`w-4 h-4 rounded-full`} style={{ backgroundColor: player.color }}></div>
+                                      {player.name}
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          <Button 
+                            onClick={() => {
+                              updateBBBHoleDataMutation.mutate({
+                                gameId: selectedBBBGame.id,
+                                hole: selectedBBBHole,
+                                firstOn: bbbHoleData.firstOn || undefined,
+                                closestTo: bbbHoleData.closestTo || undefined,
+                                firstIn: bbbHoleData.firstIn || undefined
+                              });
+                            }}
+                            disabled={updateBBBHoleDataMutation.isPending}
+                            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white"
+                            data-testid="button-save-bbb-data"
+                          >
+                            {updateBBBHoleDataMutation.isPending ? "Saving..." : "Save BBB Data"}
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* BBB Score Summary */}
+                    {(() => {
+                      const totalPoints: Record<string, number> = {};
+                      selectedGroup.players.forEach(player => {
+                        totalPoints[player.id] = 0;
+                        Object.values(selectedBBBGame.points || {}).forEach(holePoints => {
+                          totalPoints[player.id] += holePoints[player.id] || 0;
+                        });
+                      });
+
+                      return (
+                        <Card>
+                          <CardContent className="p-4">
+                            <h3 className="text-lg font-semibold text-gray-800 mb-3">BBB Scores</h3>
+                            <div className="space-y-2">
+                              {[...selectedGroup.players]
+                                .sort((a, b) => (totalPoints[b.id] || 0) - (totalPoints[a.id] || 0))
+                                .map((player) => (
+                                <div key={player.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                  <div className="flex items-center gap-3">
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold`}
+                                         style={{ backgroundColor: player.color }}>
+                                      {player.initials}
+                                    </div>
+                                    <span className="font-medium text-gray-800">{player.name}</span>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="text-lg font-bold text-gray-800">
+                                      {totalPoints[player.id] || 0}
+                                    </p>
+                                    <p className="text-xs text-gray-600">points</p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })()}
+                  </>
+                )}
+              </>
+            ) : (
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <h2 className="text-xl font-semibold text-gray-800 mb-2">BBB Game</h2>
+                  <p className="text-gray-600">Select a group to start playing Bingo Bango Bongo.</p>
                 </CardContent>
               </Card>
             )}

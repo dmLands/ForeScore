@@ -424,3 +424,90 @@ export function calculate2916Points(
   
   return points;
 }
+
+/**
+ * Calculate BBB points from hole data
+ * Each hole has 3 categories: firstOn, closestTo, firstIn
+ * Winner of each category gets 1 point
+ */
+export function calculateBBBPoints(
+  bbbHoleData: Record<number, { firstOn?: string; closestTo?: string; firstIn?: string }>,
+  playerIds: string[]
+): Record<string, number> {
+  const points: Record<string, number> = {};
+  playerIds.forEach(id => points[id] = 0);
+
+  Object.entries(bbbHoleData).forEach(([holeStr, holeData]) => {
+    // Award 1 point to winner of each category
+    if (holeData.firstOn && holeData.firstOn !== 'none' && playerIds.includes(holeData.firstOn)) {
+      points[holeData.firstOn] += 1;
+    }
+    if (holeData.closestTo && holeData.closestTo !== 'none' && playerIds.includes(holeData.closestTo)) {
+      points[holeData.closestTo] += 1;
+    }
+    if (holeData.firstIn && holeData.firstIn !== 'none' && playerIds.includes(holeData.firstIn)) {
+      points[holeData.firstIn] += 1;
+    }
+  });
+
+  return points;
+}
+
+/**
+ * BBB Points Game calculation (pairwise comparison like 2/9/16)
+ * Uses same pairwise logic as calculatePointsGame
+ */
+export function calculateBBBPointsGame(
+  bbbHoleData: Record<number, { firstOn?: string; closestTo?: string; firstIn?: string }>,
+  playerIds: string[],
+  valuePerPoint: number = 1
+): Record<string, number> {
+  const bbbPoints = calculateBBBPoints(bbbHoleData, playerIds);
+  return calculatePointsGame(bbbPoints, valuePerPoint);
+}
+
+/**
+ * BBB FBT Game calculation (Front/Back/Total like 2/9/16)
+ * Front = holes 1-9, Back = holes 10-18, Total = all holes
+ */
+export function calculateBBBFbtGame(
+  bbbHoleData: Record<number, { firstOn?: string; closestTo?: string; firstIn?: string }>,
+  playerIds: string[],
+  potValue: number = 10
+): Record<string, number> {
+  const frontPoints: Record<string, number> = {};
+  const backPoints: Record<string, number> = {};
+  const totalPoints: Record<string, number> = {};
+  
+  // Initialize all players with 0 points
+  playerIds.forEach(id => {
+    frontPoints[id] = 0;
+    backPoints[id] = 0;
+    totalPoints[id] = 0;
+  });
+
+  // Aggregate points by segment
+  Object.entries(bbbHoleData).forEach(([holeStr, holeData]) => {
+    const hole = parseInt(holeStr, 10);
+    const isFront = hole <= 9;
+
+    // Award points for each category
+    if (holeData.firstOn && holeData.firstOn !== 'none' && playerIds.includes(holeData.firstOn)) {
+      totalPoints[holeData.firstOn] += 1;
+      if (isFront) frontPoints[holeData.firstOn] += 1;
+      else backPoints[holeData.firstOn] += 1;
+    }
+    if (holeData.closestTo && holeData.closestTo !== 'none' && playerIds.includes(holeData.closestTo)) {
+      totalPoints[holeData.closestTo] += 1;
+      if (isFront) frontPoints[holeData.closestTo] += 1;
+      else backPoints[holeData.closestTo] += 1;
+    }
+    if (holeData.firstIn && holeData.firstIn !== 'none' && playerIds.includes(holeData.firstIn)) {
+      totalPoints[holeData.firstIn] += 1;
+      if (isFront) frontPoints[holeData.firstIn] += 1;
+      else backPoints[holeData.firstIn] += 1;
+    }
+  });
+
+  return calculateFbtGame(frontPoints, backPoints, totalPoints, potValue);
+}

@@ -485,6 +485,68 @@ export default function Home() {
     refetchOnWindowFocus: false,
   });
 
+  // BBB POINTS-ONLY PAYOUTS
+  const { data: selectedBBBPointsPayouts } = useQuery<{
+    payouts: Record<string, number>;
+    transactions: Array<any>;
+  }>({
+    queryKey: ['/api/calculate-combined-games', selectedGroup?.id, 'bbb-points-only', selectedBBBGame?.id, bbbPointValue],
+    queryFn: async () => {
+      if (!selectedGroup?.id || !selectedBBBGame?.id) throw new Error('Missing group or BBB game');
+      const response = await fetch('/api/calculate-combined-games', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          groupId: selectedGroup.id,
+          gameStateId: null,
+          pointsGameId: selectedBBBGame.id,
+          selectedGames: ['bbb-points'],
+          pointValue: bbbPointValue,
+          fbtValue: '0'
+        })
+      });
+      if (!response.ok) throw new Error('Failed to fetch BBB points payouts');
+      const data = await response.json();
+      console.log(`BBB Points payouts data for ${selectedBBBGame.id}:`, data);
+      return data;
+    },
+    enabled: !!selectedGroup?.id && !!selectedBBBGame?.id && parseFloat(bbbPointValue) > 0,
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+
+  // BBB FBT-ONLY PAYOUTS
+  const { data: selectedBBBFbtPayouts } = useQuery<{
+    payouts: Record<string, number>;
+    transactions: Array<any>;
+  }>({
+    queryKey: ['/api/calculate-combined-games', selectedGroup?.id, 'bbb-fbt-only', selectedBBBGame?.id, bbbFbtValue],
+    queryFn: async () => {
+      if (!selectedGroup?.id || !selectedBBBGame?.id) throw new Error('Missing group or BBB game');
+      const response = await fetch('/api/calculate-combined-games', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          groupId: selectedGroup.id,
+          gameStateId: null,
+          pointsGameId: selectedBBBGame.id,
+          selectedGames: ['bbb-fbt'],
+          pointValue: '0',
+          fbtValue: bbbFbtValue
+        })
+      });
+      if (!response.ok) throw new Error('Failed to fetch BBB FBT payouts');
+      const data = await response.json();
+      console.log(`BBB FBT payouts data for ${selectedBBBGame.id}:`, data);
+      return data;
+    },
+    enabled: !!selectedGroup?.id && !!selectedBBBGame?.id && parseFloat(bbbFbtValue) > 0,
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+
   // Advanced Combined Games API using Python reference implementation
   // Query for 🎯 tile Points+FBT combined scenarios (2/9/16 games only, no cards)
   const { data: pointsFbtCombinedResult } = useQuery<{
@@ -2708,6 +2770,133 @@ export default function Home() {
                               </div>
                             </CardContent>
                           </Card>
+                        </>
+                      );
+                    })()}
+
+                    {/* BBB PAYOUT TILES */}
+                    {(() => {
+                      const bbbPointValueNum = parseFloat(bbbPointValue) || 0;
+                      const bbbFbtValueNum = parseFloat(bbbFbtValue) || 0;
+                      
+                      // Show BBB tiles when BBB game exists and ANY value > 0
+                      if (!selectedBBBGame || (bbbPointValueNum <= 0 && bbbFbtValueNum <= 0)) return null;
+
+                      // Get BBB payouts from server-side APIs
+                      const bbbPointsPayouts: Record<string, number> = {};
+                      const bbbFbtPayouts: Record<string, number> = {};
+                      
+                      // Initialize with zeros
+                      selectedGroup.players.forEach(player => {
+                        bbbPointsPayouts[player.id] = 0;
+                        bbbFbtPayouts[player.id] = 0;
+                      });
+
+                      // Get BBB Points payouts from API
+                      if (bbbPointValueNum > 0 && selectedBBBPointsPayouts?.payouts) {
+                        selectedGroup.players.forEach(player => {
+                          bbbPointsPayouts[player.id] = selectedBBBPointsPayouts.payouts[player.id] || 0;
+                        });
+                      }
+
+                      // Get BBB FBT payouts from API
+                      if (bbbFbtValueNum > 0 && selectedBBBFbtPayouts?.payouts) {
+                        selectedGroup.players.forEach(player => {
+                          bbbFbtPayouts[player.id] = selectedBBBFbtPayouts.payouts[player.id] || 0;
+                        });
+                      }
+
+                      return (
+                        <>
+                          {/* BBB Points Only Tile */}
+                          {bbbPointValueNum > 0 && (
+                            <Card className="mb-4">
+                              <CardContent className="p-4">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-3">🎯 BBB Points Only Payouts</h3>
+                                <div className="space-y-2">
+                                  {[...selectedGroup.players]
+                                    .sort((a, b) => {
+                                      const payoutA = bbbPointsPayouts[a.id] || 0;
+                                      const payoutB = bbbPointsPayouts[b.id] || 0;
+                                      return payoutB - payoutA; // Most profitable first
+                                    })
+                                    .map((player) => {
+                                      const netAmount = bbbPointsPayouts[player.id] || 0;
+                                      const isEven = Math.abs(netAmount) < 0.01;
+                                      const payout = {
+                                        amount: Math.abs(netAmount),
+                                        type: netAmount >= 0 ? 'receives' : 'pays'
+                                      };
+                                      
+                                      return (
+                                        <div key={player.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                          <div className="flex items-center gap-3">
+                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold`}
+                                                 style={{ backgroundColor: player.color }}>
+                                              {player.initials}
+                                            </div>
+                                            <span className="font-medium text-gray-800">{player.name}</span>
+                                          </div>
+                                          <div className="text-right">
+                                            <p className={`text-lg font-bold ${isEven ? 'text-gray-600' : payout.type === 'receives' ? 'text-green-600' : 'text-red-600'}`}>
+                                              ${payout.amount.toFixed(2)}
+                                            </p>
+                                            <p className="text-xs text-gray-600">
+                                              {isEven ? 'Even' : payout.type === 'receives' ? 'Receives' : 'Pays'}
+                                            </p>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          )}
+
+                          {/* BBB FBT Only Tile */}
+                          {bbbFbtValueNum > 0 && (
+                            <Card className="mb-4">
+                              <CardContent className="p-4">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-3">⛳ BBB FBT Only Payouts</h3>
+                                <div className="space-y-2">
+                                  {[...selectedGroup.players]
+                                    .sort((a, b) => {
+                                      const payoutA = bbbFbtPayouts[a.id] || 0;
+                                      const payoutB = bbbFbtPayouts[b.id] || 0;
+                                      return payoutB - payoutA; // Most profitable first
+                                    })
+                                    .map((player) => {
+                                      const netAmount = bbbFbtPayouts[player.id] || 0;
+                                      const isEven = Math.abs(netAmount) < 0.01;
+                                      const payout = {
+                                        amount: Math.abs(netAmount),
+                                        type: netAmount >= 0 ? 'receives' : 'pays'
+                                      };
+                                      
+                                      return (
+                                        <div key={player.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                          <div className="flex items-center gap-3">
+                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold`}
+                                                 style={{ backgroundColor: player.color }}>
+                                              {player.initials}
+                                            </div>
+                                            <span className="font-medium text-gray-800">{player.name}</span>
+                                          </div>
+                                          <div className="text-right">
+                                            <p className={`text-lg font-bold ${isEven ? 'text-gray-600' : payout.type === 'receives' ? 'text-green-600' : 'text-red-600'}`}>
+                                              ${payout.amount.toFixed(2)}
+                                            </p>
+                                            <p className="text-xs text-gray-600">
+                                              {isEven ? 'Even' : payout.type === 'receives' ? 'Receives' : 'Pays'}
+                                            </p>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          )}
                         </>
                       );
                     })()}

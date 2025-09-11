@@ -2162,7 +2162,7 @@ export default function Home() {
                   </Card>
                 )}
 
-                {/* Card Game Payouts Component with debugging */}
+                {/* 9. 🎴 CARD GAME PAYOUTS */}
                 {selectedGame && gameState && (
                   <Card className="mb-4 card-interactive hover-lift fade-in">
                     <CardContent className="p-4">
@@ -2350,7 +2350,7 @@ export default function Home() {
                 ) : (
                   <>
 
-                    {/* MODAL-BASED WHO OWES WHO - MOVED TO TOP */}
+                    {/* 1. 💰 WHO OWES WHO - COMBINED */}
                     {(() => {
                       const isCardsActive = selectedGame && safeGameState && safeGameState.cardHistory?.length > 0;
                       const hasPayoutValues = (parseFloat(pointValue) > 0) || (parseFloat(fbtValue) > 0);
@@ -2501,7 +2501,7 @@ export default function Home() {
                     )}
 
 
-                    {/* 2/9/16 Settlement - Show when 2/9/16 game is selected and payout values are set */}
+                    {/* 5. 🎯 WHO OWES WHO - 2/9/16 GAMES */}
                     {(() => {
                       const hasPayoutValues = (parseFloat(pointValue) > 0) || (parseFloat(fbtValue) > 0);
                       const show2916WhoOwesWho = selectedPointsGame && hasPayoutValues;
@@ -2640,7 +2640,7 @@ export default function Home() {
                       );
                     })()}
 
-                    {/* NEW TILES AT BOTTOM: Points and FBT Payouts matching 2/9/16 tab results */}
+                    {/* 6. & 7. 🎯 POINTS ONLY PAYOUTS - 2/9/16 GAMES & ⛳ FBT ONLY PAYOUTS - 2/9/16 GAMES */}
                     {(() => {
                       const pointValueNum = parseFloat(pointValue) || 0;
                       const fbtValueNum = parseFloat(fbtValue) || 0;
@@ -2683,7 +2683,7 @@ export default function Home() {
 
                       return (
                         <>
-                          {/* Points Only Tile - ALWAYS SHOW */}
+                          {/* 6. Points Only Tile - ALWAYS SHOW */}
                           <Card className="mb-4">
                             <CardContent className="p-4">
                               <h3 className="text-lg font-semibold text-gray-800 mb-3">🎯 Points Only Payouts - 2/9/16 Games</h3>
@@ -2726,7 +2726,7 @@ export default function Home() {
                             </CardContent>
                           </Card>
 
-                          {/* FBT Only Tile - ALWAYS SHOW */}
+                          {/* 7. FBT Only Tile - ALWAYS SHOW */}
                           <Card className="mb-4">
                             <CardContent className="p-4">
                               <h3 className="text-lg font-semibold text-gray-800 mb-3">⛳ FBT Only Payouts - 2/9/16 Games</h3>
@@ -2772,7 +2772,7 @@ export default function Home() {
                       );
                     })()}
 
-                    {/* BBB PAYOUT TILES */}
+                    {/* 3. & 4. 🎯 BBB POINTS ONLY PAYOUTS & ⛳ BBB FBT ONLY PAYOUTS */}
                     {(() => {
                       const bbbPointValueNum = parseFloat(bbbPointValue) || 0;
                       const bbbFbtValueNum = parseFloat(bbbFbtValue) || 0;
@@ -2899,7 +2899,7 @@ export default function Home() {
                       );
                     })()}
 
-                    {/* BBB WHO OWES WHO TILE */}
+                    {/* 2. 🎯 WHO OWES WHO - BBB GAMES */}
                     {(() => {
                       const bbbPointValueNum = parseFloat(bbbPointValue) || 0;
                       const bbbFbtValueNum = parseFloat(bbbFbtValue) || 0;
@@ -3044,7 +3044,7 @@ export default function Home() {
                       </Card>
                     )}
 
-                    {/* Tile: Card Game Only Settlement - MOVED TO BOTTOM */}
+                    {/* 8. 🎴 WHO OWES WHO - CARD GAME */}
                     {(() => {
                       const isCardsActive = selectedGame && gameState && gameState.cardHistory?.length > 0;
                       return isCardsActive;

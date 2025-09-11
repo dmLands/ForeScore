@@ -1966,6 +1966,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // BBB POINTS
+      console.log('BBB POINTS DEBUG:', {
+        includesBbbPoints: selectedGames.includes('bbb-points'),
+        bbbGameExists: !!bbbGame,
+        bbbGameType: bbbGame?.gameType,
+        bbbPointValue,
+        parsedBbbPointValue: parseFloat(bbbPointValue),
+        valueCheck: parseFloat(bbbPointValue) > 0
+      });
       if (selectedGames.includes('bbb-points') && bbbGame && bbbGame.gameType === 'bbb' && parseFloat(bbbPointValue) > 0) {
         const totals: Record<string, number> = {};
         for (const p of group.players) totals[p.id] = 0;
@@ -1979,6 +1987,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // BBB FBT
+      console.log('BBB FBT DEBUG:', {
+        includesBbbFbt: selectedGames.includes('bbb-fbt'),
+        bbbGameExists: !!bbbGame,
+        bbbGameType: bbbGame?.gameType,
+        bbbFbtValue,
+        parsedBbbFbtValue: parseFloat(bbbFbtValue),
+        valueCheck: parseFloat(bbbFbtValue) > 0
+      });
       if (selectedGames.includes('bbb-fbt') && bbbGame && bbbGame.gameType === 'bbb' && parseFloat(bbbFbtValue) > 0) {
         // Convert null to undefined for type compatibility
         const bbbGameForFBT = {

@@ -500,7 +500,7 @@ export default function Home() {
         body: JSON.stringify({
           groupId: selectedGroup.id,
           gameStateId: null,
-          pointsGameId: selectedBBBGame.id,
+          bbbGameId: selectedBBBGame.id,
           selectedGames: ['bbb-points'],
           pointValue: bbbPointValue,
           fbtValue: '0'
@@ -531,7 +531,7 @@ export default function Home() {
         body: JSON.stringify({
           groupId: selectedGroup.id,
           gameStateId: null,
-          pointsGameId: selectedBBBGame.id,
+          bbbGameId: selectedBBBGame.id,
           selectedGames: ['bbb-fbt'],
           pointValue: '0',
           fbtValue: bbbFbtValue

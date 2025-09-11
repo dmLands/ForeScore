@@ -3316,9 +3316,9 @@ export default function Home() {
                                 setSelectedBBBHole(hole);
                                 const existingData = selectedBBBGame.holes?.[hole] || {};
                                 setBBBHoleData({
-                                  firstOn: existingData.firstOn || '',
-                                  closestTo: existingData.closestTo || '',
-                                  firstIn: existingData.firstIn || ''
+                                  firstOn: existingData.firstOn?.toString() || '',
+                                  closestTo: existingData.closestTo?.toString() || '',
+                                  firstIn: existingData.firstIn?.toString() || ''
                                 });
                               }}
                               className="p-2 text-sm"
@@ -3351,7 +3351,7 @@ export default function Home() {
                                 <SelectValue placeholder="Select player" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="">No one</SelectItem>
+                                <SelectItem value="none">No one</SelectItem>
                                 {selectedGroup.players.map(player => (
                                   <SelectItem key={player.id} value={player.id}>
                                     <div className="flex items-center gap-2">
@@ -3377,7 +3377,7 @@ export default function Home() {
                                 <SelectValue placeholder="Select player" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="">No one</SelectItem>
+                                <SelectItem value="none">No one</SelectItem>
                                 {selectedGroup.players.map(player => (
                                   <SelectItem key={player.id} value={player.id}>
                                     <div className="flex items-center gap-2">
@@ -3403,7 +3403,7 @@ export default function Home() {
                                 <SelectValue placeholder="Select player" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="">No one</SelectItem>
+                                <SelectItem value="none">No one</SelectItem>
                                 {selectedGroup.players.map(player => (
                                   <SelectItem key={player.id} value={player.id}>
                                     <div className="flex items-center gap-2">
@@ -3741,12 +3741,14 @@ export default function Home() {
       </main>
 
       <BottomNavigation currentTab={currentTab} onTabChange={(tab) => {
-        // Intercept Games tab click to show overlay instead of changing content
+        // FIX: Always change tab first, then show overlay for games
+        changeTab(tab);
+        
+        // Show overlay for Games tab to allow submenu selection
         if (tab === 'games') {
           setShowGamesOverlay(true);
-          return;
         }
-        changeTab(tab);
+        
         // Scroll to top when switching to Payouts tab
         if (tab === 'scoreboard') {
           window.scrollTo(0, 0);

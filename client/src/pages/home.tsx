@@ -3384,7 +3384,7 @@ export default function Home() {
                               <Button
                                 variant={bbbHoleData.firstOn === 'none' ? "default" : "outline"}
                                 onClick={() => setBBBHoleData(prev => ({ ...prev, firstOn: 'none' }))}
-                                className="p-2 text-sm"
+                                className={`p-2 text-sm ${bbbHoleData.firstOn === 'none' ? '' : 'text-gray-500'}`}
                                 data-testid="button-first-on-none"
                               >
                                 None
@@ -3413,7 +3413,7 @@ export default function Home() {
                               <Button
                                 variant={bbbHoleData.closestTo === 'none' ? "default" : "outline"}
                                 onClick={() => setBBBHoleData(prev => ({ ...prev, closestTo: 'none' }))}
-                                className="p-2 text-sm"
+                                className={`p-2 text-sm ${bbbHoleData.closestTo === 'none' ? '' : 'text-gray-500'}`}
                                 data-testid="button-closest-to-none"
                               >
                                 None
@@ -3442,7 +3442,7 @@ export default function Home() {
                               <Button
                                 variant={bbbHoleData.firstIn === 'none' ? "default" : "outline"}
                                 onClick={() => setBBBHoleData(prev => ({ ...prev, firstIn: 'none' }))}
-                                className="p-2 text-sm"
+                                className={`p-2 text-sm ${bbbHoleData.firstIn === 'none' ? '' : 'text-gray-500'}`}
                                 data-testid="button-first-in-none"
                               >
                                 None

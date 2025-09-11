@@ -3363,82 +3363,109 @@ export default function Home() {
                           🎯 Bingo Bango Bongo - Hole {selectedBBBHole}
                         </h3>
                         <div className="space-y-4">
-                          {/* First On (Bingo) */}
+                          {/* First On (Bingo) - Player Buttons */}
                           <div className="space-y-2">
                             <label className="text-sm font-medium text-gray-700">
                               🥇 First On (Bingo) - First to reach the green
                             </label>
-                            <Select 
-                              value={bbbHoleData.firstOn || ''} 
-                              onValueChange={(value) => setBBBHoleData(prev => ({ ...prev, firstOn: value }))}
-                            >
-                              <SelectTrigger data-testid="select-first-on">
-                                <SelectValue placeholder="Select player" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="none">No one</SelectItem>
-                                {selectedGroup.players.map(player => (
-                                  <SelectItem key={player.id} value={player.id}>
-                                    <div className="flex items-center gap-2">
-                                      <div className={`w-4 h-4 rounded-full`} style={{ backgroundColor: player.color }}></div>
-                                      {player.name}
-                                    </div>
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <div className="flex flex-wrap gap-2">
+                              {selectedGroup.players.map(player => (
+                                <button
+                                  key={player.id}
+                                  onClick={() => setBBBHoleData(prev => ({ ...prev, firstOn: player.id }))}
+                                  className={`flex items-center justify-center w-12 h-12 rounded-full text-white text-sm font-semibold transition-all duration-200 ${
+                                    bbbHoleData.firstOn === player.id 
+                                      ? 'ring-4 ring-emerald-400 ring-opacity-50 scale-110 shadow-lg' 
+                                      : 'hover:scale-105 shadow-md'
+                                  }`}
+                                  style={{ backgroundColor: player.color }}
+                                  data-testid={`button-first-on-${player.id}`}
+                                >
+                                  {player.initials}
+                                </button>
+                              ))}
+                              <button
+                                onClick={() => setBBBHoleData(prev => ({ ...prev, firstOn: 'none' }))}
+                                className={`flex items-center justify-center w-12 h-12 rounded-full text-sm font-medium border-2 transition-all duration-200 ${
+                                  bbbHoleData.firstOn === 'none' || !bbbHoleData.firstOn
+                                    ? 'bg-gray-600 text-white border-gray-600 ring-4 ring-emerald-400 ring-opacity-50 scale-110 shadow-lg'
+                                    : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200 hover:scale-105 shadow-md'
+                                }`}
+                                data-testid="button-first-on-none"
+                              >
+                                None
+                              </button>
+                            </div>
                           </div>
 
-                          {/* Closest To (Bango) */}
+                          {/* Closest To (Bango) - Player Buttons */}
                           <div className="space-y-2">
                             <label className="text-sm font-medium text-gray-700">
                               🎯 Closest To (Bango) - Closest to pin after all on green
                             </label>
-                            <Select 
-                              value={bbbHoleData.closestTo || ''} 
-                              onValueChange={(value) => setBBBHoleData(prev => ({ ...prev, closestTo: value }))}
-                            >
-                              <SelectTrigger data-testid="select-closest-to">
-                                <SelectValue placeholder="Select player" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="none">No one</SelectItem>
-                                {selectedGroup.players.map(player => (
-                                  <SelectItem key={player.id} value={player.id}>
-                                    <div className="flex items-center gap-2">
-                                      <div className={`w-4 h-4 rounded-full`} style={{ backgroundColor: player.color }}></div>
-                                      {player.name}
-                                    </div>
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <div className="flex flex-wrap gap-2">
+                              {selectedGroup.players.map(player => (
+                                <button
+                                  key={player.id}
+                                  onClick={() => setBBBHoleData(prev => ({ ...prev, closestTo: player.id }))}
+                                  className={`flex items-center justify-center w-12 h-12 rounded-full text-white text-sm font-semibold transition-all duration-200 ${
+                                    bbbHoleData.closestTo === player.id 
+                                      ? 'ring-4 ring-emerald-400 ring-opacity-50 scale-110 shadow-lg' 
+                                      : 'hover:scale-105 shadow-md'
+                                  }`}
+                                  style={{ backgroundColor: player.color }}
+                                  data-testid={`button-closest-to-${player.id}`}
+                                >
+                                  {player.initials}
+                                </button>
+                              ))}
+                              <button
+                                onClick={() => setBBBHoleData(prev => ({ ...prev, closestTo: 'none' }))}
+                                className={`flex items-center justify-center w-12 h-12 rounded-full text-sm font-medium border-2 transition-all duration-200 ${
+                                  bbbHoleData.closestTo === 'none' || !bbbHoleData.closestTo
+                                    ? 'bg-gray-600 text-white border-gray-600 ring-4 ring-emerald-400 ring-opacity-50 scale-110 shadow-lg'
+                                    : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200 hover:scale-105 shadow-md'
+                                }`}
+                                data-testid="button-closest-to-none"
+                              >
+                                None
+                              </button>
+                            </div>
                           </div>
 
-                          {/* First In (Bongo) */}
+                          {/* First In (Bongo) - Player Buttons */}
                           <div className="space-y-2">
                             <label className="text-sm font-medium text-gray-700">
                               ⛳ First In (Bongo) - First to hole out
                             </label>
-                            <Select 
-                              value={bbbHoleData.firstIn || ''} 
-                              onValueChange={(value) => setBBBHoleData(prev => ({ ...prev, firstIn: value }))}
-                            >
-                              <SelectTrigger data-testid="select-first-in">
-                                <SelectValue placeholder="Select player" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="none">No one</SelectItem>
-                                {selectedGroup.players.map(player => (
-                                  <SelectItem key={player.id} value={player.id}>
-                                    <div className="flex items-center gap-2">
-                                      <div className={`w-4 h-4 rounded-full`} style={{ backgroundColor: player.color }}></div>
-                                      {player.name}
-                                    </div>
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <div className="flex flex-wrap gap-2">
+                              {selectedGroup.players.map(player => (
+                                <button
+                                  key={player.id}
+                                  onClick={() => setBBBHoleData(prev => ({ ...prev, firstIn: player.id }))}
+                                  className={`flex items-center justify-center w-12 h-12 rounded-full text-white text-sm font-semibold transition-all duration-200 ${
+                                    bbbHoleData.firstIn === player.id 
+                                      ? 'ring-4 ring-emerald-400 ring-opacity-50 scale-110 shadow-lg' 
+                                      : 'hover:scale-105 shadow-md'
+                                  }`}
+                                  style={{ backgroundColor: player.color }}
+                                  data-testid={`button-first-in-${player.id}`}
+                                >
+                                  {player.initials}
+                                </button>
+                              ))}
+                              <button
+                                onClick={() => setBBBHoleData(prev => ({ ...prev, firstIn: 'none' }))}
+                                className={`flex items-center justify-center w-12 h-12 rounded-full text-sm font-medium border-2 transition-all duration-200 ${
+                                  bbbHoleData.firstIn === 'none' || !bbbHoleData.firstIn
+                                    ? 'bg-gray-600 text-white border-gray-600 ring-4 ring-emerald-400 ring-opacity-50 scale-110 shadow-lg'
+                                    : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200 hover:scale-105 shadow-md'
+                                }`}
+                                data-testid="button-first-in-none"
+                              >
+                                None
+                              </button>
+                            </div>
                           </div>
                           
                           <Button 

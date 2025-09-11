@@ -485,14 +485,15 @@ export default function Home() {
     refetchOnWindowFocus: false,
   });
 
-  // BBB POINTS-ONLY PAYOUTS
+  // BBB POINTS-ONLY PAYOUTS - Uses saved database values, not live input values
   const { data: selectedBBBPointsPayouts } = useQuery<{
     payouts: Record<string, number>;
     transactions: Array<any>;
   }>({
-    queryKey: ['/api/calculate-combined-games', selectedGroup?.id, 'bbb-points-only', selectedBBBGame?.id, bbbPointValue],
+    queryKey: ['/api/calculate-combined-games', selectedGroup?.id, 'bbb-points-only', selectedBBBGame?.id, selectedBBBGame?.settings?.pointValue],
     queryFn: async () => {
       if (!selectedGroup?.id || !selectedBBBGame?.id) throw new Error('Missing group or BBB game');
+      const savedPointValue = selectedBBBGame.settings?.pointValue || 1;
       const response = await fetch('/api/calculate-combined-games', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -502,28 +503,29 @@ export default function Home() {
           gameStateId: null,
           pointsGameId: selectedBBBGame.id,
           selectedGames: ['bbb-points'],
-          pointValue: bbbPointValue,
+          pointValue: savedPointValue.toString(),
           fbtValue: '0'
         })
       });
       if (!response.ok) throw new Error('Failed to fetch BBB points payouts');
       const data = await response.json();
-      console.log(`BBB Points payouts data for ${selectedBBBGame.id}:`, data);
+      console.log(`BBB Points payouts data for ${selectedBBBGame.id} using saved pointValue ${savedPointValue}:`, data);
       return data;
     },
-    enabled: !!selectedGroup?.id && !!selectedBBBGame?.id && parseFloat(bbbPointValue) > 0,
+    enabled: !!selectedGroup?.id && !!selectedBBBGame?.id && (selectedBBBGame?.settings?.pointValue || 0) > 0,
     retry: false,
     refetchOnWindowFocus: false,
   });
 
-  // BBB FBT-ONLY PAYOUTS
+  // BBB FBT-ONLY PAYOUTS - Uses saved database values, not live input values
   const { data: selectedBBBFbtPayouts } = useQuery<{
     payouts: Record<string, number>;
     transactions: Array<any>;
   }>({
-    queryKey: ['/api/calculate-combined-games', selectedGroup?.id, 'bbb-fbt-only', selectedBBBGame?.id, bbbFbtValue],
+    queryKey: ['/api/calculate-combined-games', selectedGroup?.id, 'bbb-fbt-only', selectedBBBGame?.id, selectedBBBGame?.settings?.fbtValue],
     queryFn: async () => {
       if (!selectedGroup?.id || !selectedBBBGame?.id) throw new Error('Missing group or BBB game');
+      const savedFbtValue = selectedBBBGame.settings?.fbtValue || 10;
       const response = await fetch('/api/calculate-combined-games', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -534,15 +536,15 @@ export default function Home() {
           pointsGameId: selectedBBBGame.id,
           selectedGames: ['bbb-fbt'],
           pointValue: '0',
-          fbtValue: bbbFbtValue
+          fbtValue: savedFbtValue.toString()
         })
       });
       if (!response.ok) throw new Error('Failed to fetch BBB FBT payouts');
       const data = await response.json();
-      console.log(`BBB FBT payouts data for ${selectedBBBGame.id}:`, data);
+      console.log(`BBB FBT payouts data for ${selectedBBBGame.id} using saved fbtValue ${savedFbtValue}:`, data);
       return data;
     },
-    enabled: !!selectedGroup?.id && !!selectedBBBGame?.id && parseFloat(bbbFbtValue) > 0,
+    enabled: !!selectedGroup?.id && !!selectedBBBGame?.id && (selectedBBBGame?.settings?.fbtValue || 0) > 0,
     retry: false,
     refetchOnWindowFocus: false,
   });

@@ -2512,7 +2512,7 @@ export default function Home() {
                       <Card className="mb-4">
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold text-gray-800">🎯 Who Owes Who - BBB Games</h3>
+                            <h3 className="text-lg font-semibold text-gray-800">🎯 BBB - Who Owes Who</h3>
                             <Select value={bbbPayoutMode} onValueChange={(value: 'points' | 'fbt' | 'both') => setBBBPayoutMode(value)}>
                               <SelectTrigger className="w-32">
                                 <SelectValue />
@@ -2767,7 +2767,7 @@ export default function Home() {
                       <Card className="mb-4">
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold text-gray-800">🎯 Who Owes Who - 2/9/16 Games</h3>
+                            <h3 className="text-lg font-semibold text-gray-800">🎯 2/9/16 - Who Owes Who</h3>
                             <Select value={combinedPayoutMode} onValueChange={(value: 'points' | 'fbt' | 'both') => setCombinedPayoutMode(value)}>
                               <SelectTrigger className="w-32">
                                 <SelectValue />
@@ -2942,7 +2942,7 @@ export default function Home() {
                           {/* 6. Points Only Tile - ALWAYS SHOW */}
                           <Card className="mb-4">
                             <CardContent className="p-4">
-                              <h3 className="text-lg font-semibold text-gray-800 mb-3">🎯 Points Only Payouts - 2/9/16 Games</h3>
+                              <h3 className="text-lg font-semibold text-gray-800 mb-3">🎯 2/9/16 – Points Only</h3>
                               <div className="space-y-2">
                                 {[...selectedGroup.players]
                                   .sort((a, b) => {
@@ -2985,7 +2985,7 @@ export default function Home() {
                           {/* 7. FBT Only Tile - ALWAYS SHOW */}
                           <Card className="mb-4">
                             <CardContent className="p-4">
-                              <h3 className="text-lg font-semibold text-gray-800 mb-3">⛳ FBT Only Payouts - 2/9/16 Games</h3>
+                              <h3 className="text-lg font-semibold text-gray-800 mb-3">⛳ 2/9/16 – FBT Only</h3>
                               <div className="space-y-2">
                                 {[...selectedGroup.players]
                                   .sort((a, b) => {
@@ -3374,7 +3374,7 @@ export default function Home() {
                       return (
                         <Card>
                           <CardContent className="p-4">
-                            <h3 className="text-lg font-semibold text-gray-800 mb-3">Scores</h3>
+                            <h3 className="text-lg font-semibold text-gray-800 mb-3">2/9/16 Scores</h3>
                             <div className="space-y-2">
                               {[...selectedGroup.players]
                                 .sort((a, b) => (totalPoints[b.id] || 0) - (totalPoints[a.id] || 0))
@@ -3465,7 +3465,7 @@ export default function Home() {
                       return (
                         <Card>
                           <CardContent className="p-4">
-                            <h3 className="text-lg font-semibold text-gray-800 mb-3">Payouts</h3>
+                            <h3 className="text-lg font-semibold text-gray-800 mb-3">2/9/16 Payouts</h3>
                             
                             {/* Payout Mode Toggle */}
                             <div className="mb-4">

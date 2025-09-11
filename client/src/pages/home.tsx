@@ -2501,17 +2501,16 @@ export default function Home() {
                     )}
 
 
-                    {/* Combined Cards + 2/9/16 Settlement - ONLY show when BOTH games are active */}
+                    {/* 2/9/16 Settlement - Show when 2/9/16 games are active */}
                     {(() => {
-                      const isCardsActive = selectedGame && gameState && gameState.cardHistory?.length > 0;
                       const is2916Active = selectedPointsGame && 
                         Object.values(selectedPointsGame.holes || {}).some(hole => 
                           Object.values(hole as Record<string, any>).some((strokes: any) => strokes > 0)
                         );
                       const hasPayoutValues = (parseFloat(pointValue) > 0) || (parseFloat(fbtValue) > 0);
-                      const bothGamesActive = isCardsActive && is2916Active && hasPayoutValues;
+                      const is2916GameActive = is2916Active && hasPayoutValues;
                       
-                      return bothGamesActive;
+                      return is2916GameActive;
                     })() && (
                       <Card className="mb-4">
                         <CardContent className="p-4">

@@ -2558,14 +2558,12 @@ export default function Home() {
 
                     {/* NEW TILES AT BOTTOM: Points and FBT Payouts matching 2/9/16 tab results */}
                     {(() => {
-                      const is2916Active = selectedPointsGame && 
-                        Object.values(selectedPointsGame.holes || {}).some(hole => 
-                          Object.values(hole as Record<string, any>).some((strokes: any) => strokes > 0)
-                        );
+                      const is2916GameSelected = selectedPointsGame !== null;
                       const pointValueNum = parseFloat(pointValue) || 0;
                       const fbtValueNum = parseFloat(fbtValue) || 0;
                       
-                      if (!is2916Active || (pointValueNum <= 0 && fbtValueNum <= 0)) return null;
+                      // FIX: Show tiles when 2/9/16 game is selected and values > 0, regardless of hole scores
+                      if (!is2916GameSelected || (pointValueNum <= 0 && fbtValueNum <= 0)) return null;
 
                       // Calculate total points for Points tile
                       const totalPoints: Record<string, number> = {};

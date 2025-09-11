@@ -893,6 +893,37 @@ export default function Home() {
     }
   }, [savedCombinedResults]);
 
+  // AUTO-POPULATE multiSelectGames when both games are active
+  useEffect(() => {
+    if (!selectedGroup || !selectedGame || !selectedPointsGame) return;
+    
+    const isCardsActive = gameState && gameState.cardHistory?.length > 0;
+    const is2916Active = Object.values(selectedPointsGame.holes || {}).some(hole => 
+      Object.values(hole as Record<string, any>).some((strokes: any) => strokes > 0)
+    );
+    const pointValueNum = parseFloat(pointValue) || 0;
+    const fbtValueNum = parseFloat(fbtValue) || 0;
+    const has2916Values = pointValueNum > 0 || fbtValueNum > 0;
+    
+    // Auto-populate multiSelectGames when games are active
+    if ((isCardsActive || (is2916Active && has2916Values)) && multiSelectGames.length === 0) {
+      const autoGames: string[] = [];
+      
+      if (isCardsActive) {
+        autoGames.push('cards');
+      }
+      if (is2916Active || has2916Values) {  // Show tiles even without scores if values are set
+        if (pointValueNum > 0) autoGames.push('points');
+        if (fbtValueNum > 0) autoGames.push('fbt');
+      }
+      
+      if (autoGames.length > 0) {
+        setMultiSelectGames(autoGames);
+        console.log('Auto-populated multiSelectGames:', autoGames);
+      }
+    }
+  }, [selectedGroup, selectedGame, selectedPointsGame, gameState, pointValue, fbtValue, multiSelectGames.length]);
+
   const { gameState, isLoading: gameLoading, drawCard, assignCard, startGame } = useGameState(selectedGroup?.id);
   
   // Defensive check for gameState to prevent crashes
@@ -2558,12 +2589,15 @@ export default function Home() {
 
                     {/* NEW TILES AT BOTTOM: Points and FBT Payouts matching 2/9/16 tab results */}
                     {(() => {
-                      const is2916GameSelected = selectedPointsGame !== null;
+                      const is2916Active = selectedPointsGame && 
+                        Object.values(selectedPointsGame.holes || {}).some(hole => 
+                          Object.values(hole as Record<string, any>).some((strokes: any) => strokes > 0)
+                        );
                       const pointValueNum = parseFloat(pointValue) || 0;
                       const fbtValueNum = parseFloat(fbtValue) || 0;
                       
-                      // FIX: Show tiles when 2/9/16 game is selected and values > 0, regardless of hole scores
-                      if (!is2916GameSelected || (pointValueNum <= 0 && fbtValueNum <= 0)) return null;
+                      // REVERT: Back to original logic - only show when 2/9/16 game has scores AND values > 0
+                      if (!is2916Active || (pointValueNum <= 0 && fbtValueNum <= 0)) return null;
 
                       // Calculate total points for Points tile
                       const totalPoints: Record<string, number> = {};
@@ -2604,7 +2638,7 @@ export default function Home() {
                           {pointValueNum > 0 && (
                             <Card className="mb-4">
                               <CardContent className="p-4">
-                                <h3 className="text-lg font-semibold text-gray-800 mb-3">🎯 Points Only Payouts</h3>
+                                <h3 className="text-lg font-semibold text-gray-800 mb-3">🎯 Points Only Payouts - 2/9/16 Games</h3>
                                 <div className="space-y-2">
                                   {[...selectedGroup.players]
                                     .sort((a, b) => {
@@ -2648,7 +2682,7 @@ export default function Home() {
                           {fbtValueNum > 0 && (
                             <Card className="mb-4">
                               <CardContent className="p-4">
-                                <h3 className="text-lg font-semibold text-gray-800 mb-3">⛳ FBT Only Payouts</h3>
+                                <h3 className="text-lg font-semibold text-gray-800 mb-3">⛳ FBT Only Payouts - 2/9/16 Games</h3>
                                 <div className="space-y-2">
                                   {[...selectedGroup.players]
                                     .sort((a, b) => {

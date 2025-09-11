@@ -2501,16 +2501,12 @@ export default function Home() {
                     )}
 
 
-                    {/* 2/9/16 Settlement - Show when 2/9/16 games are active */}
+                    {/* 2/9/16 Settlement - Show when 2/9/16 game is selected and payout values are set */}
                     {(() => {
-                      const is2916Active = selectedPointsGame && 
-                        Object.values(selectedPointsGame.holes || {}).some(hole => 
-                          Object.values(hole as Record<string, any>).some((strokes: any) => strokes > 0)
-                        );
                       const hasPayoutValues = (parseFloat(pointValue) > 0) || (parseFloat(fbtValue) > 0);
-                      const is2916GameActive = is2916Active && hasPayoutValues;
+                      const show2916WhoOwesWho = selectedPointsGame && hasPayoutValues;
                       
-                      return is2916GameActive;
+                      return show2916WhoOwesWho;
                     })() && (
                       <Card className="mb-4">
                         <CardContent className="p-4">
@@ -2907,14 +2903,8 @@ export default function Home() {
                     {(() => {
                       const bbbPointValueNum = parseFloat(bbbPointValue) || 0;
                       const bbbFbtValueNum = parseFloat(bbbFbtValue) || 0;
-                      const isBBBActive = selectedBBBGame && 
-                        Object.values(selectedBBBGame.holes || {}).some(hole => 
-                          Object.values(hole as Record<string, any>).some((playerData: any) => 
-                            (playerData.firstOn || playerData.closestTo || playerData.firstIn)
-                          )
-                        );
                       const hasBBBPayoutValues = (bbbPointValueNum > 0) || (bbbFbtValueNum > 0);
-                      const showBBBWhoOwesWho = isBBBActive && hasBBBPayoutValues;
+                      const showBBBWhoOwesWho = selectedBBBGame && hasBBBPayoutValues;
                       
                       return showBBBWhoOwesWho;
                     })() && (

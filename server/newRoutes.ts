@@ -1448,6 +1448,304 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // BBB-specific hole update endpoint with comprehensive security and validation
+  app.put('/api/bbb-games/:gameId/hole/:hole', isAuthenticated, subscriptionProtected, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Validate request parameters
+      const paramsSchema = z.object({
+        gameId: z.string().uuid('Invalid game ID format'),
+        hole: z.string().transform((val) => {
+          const holeNumber = parseInt(val);
+          if (isNaN(holeNumber) || holeNumber < 1 || holeNumber > 18) {
+            throw new Error('Hole number must be between 1 and 18');
+          }
+          return holeNumber;
+        })
+      });
+      
+      // Validate request body
+      const bodySchema = z.object({
+        firstOn: z.string().optional(),
+        closestTo: z.string().optional(),
+        firstIn: z.string().optional()
+      }).refine(data => 
+        data.firstOn || data.closestTo || data.firstIn,
+        { message: 'At least one BBB category must be provided' }
+      );
+      
+      const { gameId, hole } = paramsSchema.parse(req.params);
+      const { firstOn, closestTo, firstIn } = bodySchema.parse(req.body);
+      
+      const game = await storage.getPointsGame(gameId);
+      if (!game) {
+        return res.status(404).json({ message: 'BBB game not found' });
+      }
+
+      // Verify this is a BBB game
+      if (game.gameType !== 'bbb') {
+        return res.status(400).json({ message: 'This endpoint is only for BBB games' });
+      }
+
+      // Get group to get player list and verify user access
+      const group = await storage.getGroup(game.groupId);
+      if (!group) {
+        return res.status(404).json({ message: 'Group not found' });
+      }
+      
+      // CRITICAL SECURITY: Verify user is member of this group
+      if (group.createdBy !== userId) {
+        const userIsMember = group.players.some(player => player.id === userId);
+        if (!userIsMember) {
+          return res.status(403).json({ message: 'Access denied: You are not a member of this group' });
+        }
+      }
+      
+      // Validate that all provided player IDs exist in the group
+      const validPlayerIds = new Set(group.players.map(p => p.id));
+      const providedPlayerIds = [firstOn, closestTo, firstIn].filter(Boolean);
+      
+      for (const playerId of providedPlayerIds) {
+        if (!validPlayerIds.has(playerId!)) {
+          return res.status(400).json({ 
+            message: `Invalid player ID: ${playerId}. Player must be a member of this group.` 
+          });
+        }
+      }
+
+      // Build BBB hole data structure
+      const bbbHoleData: { firstOn?: string; closestTo?: string; firstIn?: string } = {};
+      if (firstOn) bbbHoleData.firstOn = firstOn;
+      if (closestTo) bbbHoleData.closestTo = closestTo;
+      if (firstIn) bbbHoleData.firstIn = firstIn;
+
+      // Calculate BBB points (1 point per category won)
+      const bbbPoints: Record<string, number> = {};
+      
+      // Initialize all players to 0 points for this hole
+      group.players.forEach(player => {
+        bbbPoints[player.id] = 0;
+      });
+
+      // Award points for each category
+      if (firstOn) bbbPoints[firstOn] = (bbbPoints[firstOn] || 0) + 1;
+      if (closestTo) bbbPoints[closestTo] = (bbbPoints[closestTo] || 0) + 1;
+      if (firstIn) bbbPoints[firstIn] = (bbbPoints[firstIn] || 0) + 1;
+
+      // Update the holes and points data
+      const updatedHoles = { ...game.holes };
+      const updatedPoints = { ...game.points };
+      
+      updatedHoles[hole] = bbbHoleData;
+      updatedPoints[hole] = bbbPoints;
+
+      const updatedGame = await storage.updatePointsGame(gameId, {
+        holes: updatedHoles,
+        points: updatedPoints
+      });
+
+      res.json(updatedGame);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: 'Invalid data', 
+          errors: error.errors 
+        });
+      }
+      console.error('Error updating BBB hole data:', error);
+      res.status(500).json({ message: 'Failed to update BBB hole data' });
+    }
+  });
+
+  // BBB Who Owes Who calculation endpoint with comprehensive security and validation
+  app.get('/api/bbb-games/:gameId/who-owes-who', isAuthenticated, subscriptionProtected, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Validate request parameters
+      const paramsSchema = z.object({
+        gameId: z.string().uuid('Invalid game ID format')
+      });
+      
+      // Validate query parameters
+      const querySchema = z.object({
+        pointValue: z.string().optional().transform((val) => {
+          if (!val) return 0;
+          const num = parseFloat(val);
+          if (isNaN(num) || num < 0) {
+            throw new Error('Point value must be a non-negative number');
+          }
+          return num;
+        }),
+        payoutMode: z.enum(['points', 'fbt'], {
+          errorMap: () => ({ message: 'Payout mode must be "points" or "fbt"' })
+        }),
+        fbtValue: z.string().optional().transform((val) => {
+          if (!val) return 0;
+          const num = parseFloat(val);
+          if (isNaN(num) || num < 0) {
+            throw new Error('FBT value must be a non-negative number');
+          }
+          return num;
+        })
+      }).refine(data => 
+        (data.payoutMode === 'points' && data.pointValue > 0) ||
+        (data.payoutMode === 'fbt' && data.fbtValue > 0),
+        { message: 'Point value required for points mode, FBT value required for FBT mode' }
+      );
+      
+      const { gameId } = paramsSchema.parse(req.params);
+      const { pointValue, payoutMode, fbtValue } = querySchema.parse(req.query);
+
+      const game = await storage.getPointsGame(gameId);
+      if (!game) {
+        return res.status(404).json({ message: 'BBB game not found' });
+      }
+
+      // Verify this is a BBB game
+      if (game.gameType !== 'bbb') {
+        return res.status(400).json({ message: 'This endpoint is only for BBB games' });
+      }
+
+      // Get group to access players and verify user access
+      const group = await storage.getGroup(game.groupId);
+      if (!group) {
+        return res.status(404).json({ message: 'Group not found' });
+      }
+      
+      // CRITICAL SECURITY: Verify user is member of this group
+      if (group.createdBy !== userId) {
+        const userIsMember = group.players.some(player => player.id === userId);
+        if (!userIsMember) {
+          return res.status(403).json({ message: 'Access denied: You are not a member of this group' });
+        }
+      }
+
+      const players = group.players;
+      const payouts: Record<string, number> = {};
+
+      // Initialize payouts
+      players.forEach(player => {
+        payouts[player.id] = 0;
+      });
+
+      // BBB uses the same payout calculation as 2/9/16 points game
+      if (payoutMode === 'points' && pointValue > 0) {
+        // Calculate point-based payouts (same logic as 2/9/16)
+        const totalPointsByPlayer: Record<string, number> = {};
+        players.forEach(player => {
+          totalPointsByPlayer[player.id] = 0;
+        });
+
+        // Sum points across all holes
+        Object.values(game.points || {}).forEach(holePoints => {
+          Object.entries(holePoints).forEach(([playerId, points]) => {
+            if (typeof points === 'number') {
+              totalPointsByPlayer[playerId] += points;
+            }
+          });
+        });
+
+        // Head-to-head payout calculation
+        for (let i = 0; i < players.length; i++) {
+          for (let j = i + 1; j < players.length; j++) {
+            const player1 = players[i];
+            const player2 = players[j];
+            
+            const diff = totalPointsByPlayer[player1.id] - totalPointsByPlayer[player2.id];
+            
+            if (diff > 0) {
+              // Player1 has more points, receives payment
+              payouts[player1.id] += diff * pointValue;
+              payouts[player2.id] -= diff * pointValue;
+            } else if (diff < 0) {
+              // Player2 has more points, receives payment  
+              payouts[player2.id] += (-diff) * pointValue;
+              payouts[player1.id] -= (-diff) * pointValue;
+            }
+          }
+        }
+      } else if (payoutMode === 'fbt' && fbtValue > 0) {
+        // FBT calculation for BBB (same logic as 2/9/16)
+        // Calculate point totals for FBT
+        const front9Points: Record<string, number> = {};
+        const back9Points: Record<string, number> = {};
+        const totalPoints: Record<string, number> = {};
+        
+        players.forEach(player => {
+          front9Points[player.id] = 0;
+          back9Points[player.id] = 0;
+          totalPoints[player.id] = 0;
+          
+          for (let hole = 1; hole <= 18; hole++) {
+            const holePoints = game.points?.[hole]?.[player.id] || 0;
+            const points = typeof holePoints === 'number' ? holePoints : 0;
+            totalPoints[player.id] += points;
+            
+            if (hole <= 9) {
+              front9Points[player.id] += points;
+            } else {
+              back9Points[player.id] += points;
+            }
+          }
+        });
+
+        const segments = [front9Points, back9Points, totalPoints];
+        
+        segments.forEach(segment => {
+          const segmentPlayers = Object.keys(segment);
+          if (segmentPlayers.length === 0) return;
+          
+          const maxPoints = Math.max(...segmentPlayers.map(id => segment[id]));
+          const winners = segmentPlayers.filter(id => segment[id] === maxPoints && maxPoints > 0);
+          
+          if (winners.length > 0) {
+            const payoutPerWinner = fbtValue / winners.length;
+            const payoutPerLoser = fbtValue / segmentPlayers.length;
+            
+            segmentPlayers.forEach(playerId => {
+              if (winners.includes(playerId)) {
+                payouts[playerId] += payoutPerWinner;
+              } else {
+                payouts[playerId] -= payoutPerLoser;
+              }
+            });
+          }
+        });
+      }
+
+      // Use canonical settlement logic to ensure consistency with 2/9/16 payouts
+      const whoOwesWho = settleWhoOwesWho(payouts).map(tx => ({
+        fromPlayerId: tx.from,
+        toPlayerId: tx.to,
+        amount: tx.amount,
+        fromPlayerName: players.find(p => p.id === tx.from)?.name || 'Unknown',
+        toPlayerName: players.find(p => p.id === tx.to)?.name || 'Unknown'
+      }));
+
+      // Return same data structure as 2/9/16 payouts for consistency
+      res.json({
+        whoOwesWho,
+        payouts,
+        selectedGames: [payoutMode],
+        success: true,
+        totalTransactions: whoOwesWho.length,
+        summary: payouts,
+        cardGameDetails: null
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: 'Invalid data', 
+          errors: error.errors 
+        });
+      }
+      console.error('Error calculating BBB payouts:', error);
+      res.status(500).json({ message: 'Failed to calculate BBB payouts' });
+    }
+  });
+
   // 2/9/16 Who Owes Who calculation endpoint
   app.get('/api/points-games/:gameId/who-owes-who', isAuthenticated, async (req, res) => {
     try {

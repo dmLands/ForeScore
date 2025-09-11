@@ -1370,7 +1370,6 @@ export default function Home() {
       queryClient.invalidateQueries({ queryKey: ['/api/calculate-combined-games'] });
       
       console.log('BBB hole data updated successfully');
-      toast({ title: "Success", description: "BBB hole data updated!", variant: "default" });
     },
     onError: (error) => {
       console.error('Error updating BBB hole data:', error);
@@ -3909,7 +3908,7 @@ export default function Home() {
                             className="w-full bg-emerald-500 hover:bg-emerald-600 text-white"
                             data-testid="button-save-bbb-data"
                           >
-                            {updateBBBHoleDataMutation.isPending ? "Saving..." : "Save BBB Data"}
+                            {updateBBBHoleDataMutation.isPending ? "Saving..." : "Save BBB Scores"}
                           </Button>
                         </div>
                       </CardContent>
@@ -3986,11 +3985,7 @@ export default function Home() {
                           onClick={() => {
                             // Force cache invalidation and refresh BBB payout calculations
                             queryClient.invalidateQueries({ queryKey: ['/api/calculate-combined-games'] });
-                            toast({
-                              title: "Success",
-                              description: "BBB payout values updated!",
-                              variant: "default",
-                            });
+                            // Values updated - no toast needed
                           }}
                           className="w-full bg-emerald-500 hover:bg-emerald-600 text-white"
                           data-testid="button-update-bbb-values"

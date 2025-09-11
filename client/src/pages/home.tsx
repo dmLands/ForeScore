@@ -239,7 +239,7 @@ export default function Home() {
   const [showAboutForescore, setShowAboutForescore] = useState(false);
   
   // Games tab submenu state
-  const [selectedSubGame, setSelectedSubGame] = useState<'cards' | '2916' | 'bbb'>('cards');
+  const [selectedSubGame, setSelectedSubGame] = useState<'cards' | 'points' | 'bbb'>('cards');
   const [showGamesOverlay, setShowGamesOverlay] = useState(false);
 
   // V6.5: Save point/FBT values to server
@@ -721,7 +721,7 @@ export default function Home() {
   useEffect(() => {
     if (selectedGroup && selectedGame && pointsGames.length > 0) {
       // FIX: Filter for only 2/9/16 games (not BBB)
-      const pointsOnly2916Games = pointsGames.filter(game => game.gameType === '2916');
+      const pointsOnly2916Games = pointsGames.filter(game => game.gameType === 'points');
       
       // If we have a selectedPointsGame but it's not in the current game session's 2/9/16 games, clear it
       if (selectedPointsGame && !pointsOnly2916Games.find(game => game.id === selectedPointsGame.id)) {
@@ -775,13 +775,13 @@ export default function Home() {
 
   // V6.6: Refetch points games data when switching to Games->2/9/16 to ensure saved scores are visible
   useEffect(() => {
-    if (currentTab === 'games' && selectedSubGame === '2916' && selectedGroup?.id) {
+    if (currentTab === 'games' && selectedSubGame === 'points' && selectedGroup?.id) {
       console.log('Switching to Games->2/9/16 - refetching points games data to ensure saved scores are visible');
       queryClient.invalidateQueries({ queryKey: ['/api/points-games', selectedGroup.id] });
       // Force refetch to get latest hole strokes and point data
       queryClient.refetchQueries({ queryKey: ['/api/points-games', selectedGroup.id, selectedGame?.id] });
     }
-  }, [currentTab, selectedGroup?.id, selectedGame?.id, queryClient]);
+  }, [currentTab, selectedSubGame, selectedGroup?.id, selectedGame?.id, queryClient]);
 
   // Handle tab switching for BBB game invalidation
   useEffect(() => {
@@ -1015,7 +1015,7 @@ export default function Home() {
     onSuccess: (group: Group) => {
       changeGroup(group);
       changeTab('games');
-      setSelectedSubGame('2916');
+      setSelectedSubGame('points');
       setShowJoinDialog(false);
       setJoinCode("");
       queryClient.invalidateQueries({ queryKey: ['/api/groups'] });
@@ -1098,7 +1098,7 @@ export default function Home() {
       setShowCreateGameDialog(false);
       setNewGameName("");
       changeTab('games');
-      setSelectedSubGame('2916');
+      setSelectedSubGame('points');
       queryClient.invalidateQueries({ queryKey: ['/api/groups', selectedGroup?.id, 'games'] });
       queryClient.invalidateQueries({ queryKey: ['/api/game-state', selectedGroup?.id] });
       queryClient.refetchQueries({ queryKey: ['/api/groups', selectedGroup?.id, 'games'] });
@@ -1149,7 +1149,7 @@ export default function Home() {
       setShowCreateGameDialog(false);
       setNewGameName("");
       changeTab('games');
-      setSelectedSubGame('2916');
+      setSelectedSubGame('points');
       queryClient.invalidateQueries({ queryKey: ['/api/groups'] });
       queryClient.invalidateQueries({ queryKey: ['/api/groups', group.id, 'games'] });
       queryClient.invalidateQueries({ queryKey: ['/api/game-state', group.id] });
@@ -1532,7 +1532,7 @@ export default function Home() {
                                 onClick={() => {
                                   changeGame(game);
                                   changeTab('games');
-                                  setSelectedSubGame('2916');
+                                  setSelectedSubGame('points');
                                 }}
                                 size="sm"
                                 variant="outline"
@@ -2751,7 +2751,7 @@ export default function Home() {
         )}
 
         {/* Games Tab Content (Conditional based on submenu) */}
-        {currentTab === 'games' && selectedSubGame === '2916' && (
+        {currentTab === 'games' && selectedSubGame === 'points' && (
           <div className="p-4 space-y-4">
             {selectedGroup ? (
               <>
@@ -4467,7 +4467,7 @@ export default function Home() {
                   className="w-full flex items-center gap-3 p-3 rounded-md hover:bg-gray-50 transition-colors text-left"
                   onClick={() => {
                     changeTab('games');
-                    setSelectedSubGame('2916');
+                    setSelectedSubGame('points');
                     setShowGamesOverlay(false);
                   }}
                 >

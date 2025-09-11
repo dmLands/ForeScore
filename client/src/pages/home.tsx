@@ -2901,6 +2901,157 @@ export default function Home() {
                       );
                     })()}
 
+                    {/* BBB WHO OWES WHO TILE */}
+                    {(() => {
+                      const bbbPointValueNum = parseFloat(bbbPointValue) || 0;
+                      const bbbFbtValueNum = parseFloat(bbbFbtValue) || 0;
+                      const isBBBActive = selectedBBBGame && 
+                        Object.values(selectedBBBGame.holes || {}).some(hole => 
+                          Object.values(hole as Record<string, any>).some((playerData: any) => 
+                            (playerData.firstOn || playerData.closestTo || playerData.firstIn)
+                          )
+                        );
+                      const hasBBBPayoutValues = (bbbPointValueNum > 0) || (bbbFbtValueNum > 0);
+                      const showBBBWhoOwesWho = isBBBActive && hasBBBPayoutValues;
+                      
+                      return showBBBWhoOwesWho;
+                    })() && (
+                      <Card className="mb-4">
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold text-gray-800">🎯 Who Owes Who - BBB Games</h3>
+                            <Select value={bbbPayoutMode} onValueChange={(value: 'points' | 'fbt' | 'both') => setBBBPayoutMode(value)}>
+                              <SelectTrigger className="w-32">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="points">Points Only</SelectItem>
+                                <SelectItem value="fbt">FBT Only</SelectItem>
+                                <SelectItem value="both">Both</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-4">
+                            {bbbPayoutMode === 'points' ? 'Points-based settlement from BBB games only.' :
+                             bbbPayoutMode === 'fbt' ? 'FBT settlement from BBB games only.' :
+                             'Combined settlement for Points + FBT from BBB games only.'}
+                          </p>
+                          
+                          {(() => {
+                            // Use individual payout results for BBB games only
+                            const getTransactionsForBBBMode = () => {
+                              const bbbPointValueNum = parseFloat(bbbPointValue);
+                              const bbbFbtValueNum = parseFloat(bbbFbtValue);
+                              
+                              // For Points Only mode, use selectedBBBPointsPayouts
+                              if (bbbPayoutMode === 'points' && selectedBBBPointsPayouts?.transactions) {
+                                return selectedBBBPointsPayouts.transactions;
+                              }
+                              
+                              // For FBT Only mode, use selectedBBBFbtPayouts
+                              if (bbbPayoutMode === 'fbt' && selectedBBBFbtPayouts?.transactions) {
+                                return selectedBBBFbtPayouts.transactions;
+                              }
+                              
+                              // For Both mode, create combined transactions by merging points and FBT
+                              if (bbbPayoutMode === 'both') {
+                                const combinedPayouts: Record<string, number> = {};
+                                
+                                // Initialize with zeros
+                                selectedGroup.players.forEach(player => {
+                                  combinedPayouts[player.id] = 0;
+                                });
+                                
+                                // Add points payouts
+                                if (bbbPointValueNum > 0 && selectedBBBPointsPayouts?.payouts) {
+                                  selectedGroup.players.forEach(player => {
+                                    combinedPayouts[player.id] += selectedBBBPointsPayouts.payouts[player.id] || 0;
+                                  });
+                                }
+                                
+                                // Add FBT payouts
+                                if (bbbFbtValueNum > 0 && selectedBBBFbtPayouts?.payouts) {
+                                  selectedGroup.players.forEach(player => {
+                                    combinedPayouts[player.id] += selectedBBBFbtPayouts.payouts[player.id] || 0;
+                                  });
+                                }
+                                
+                                // Convert to transactions using the same algorithm as server-side
+                                const players = selectedGroup.players.map(p => ({
+                                  playerId: p.id,
+                                  playerName: p.name,
+                                  netPayout: combinedPayouts[p.id] || 0
+                                }));
+                                
+                                const debtors = players.filter(p => p.netPayout < -0.01);
+                                const creditors = players.filter(p => p.netPayout > 0.01);
+                                const transactions: any[] = [];
+                                
+                                for (const debtor of debtors) {
+                                  let remainingDebt = Math.abs(debtor.netPayout);
+                                  
+                                  for (const creditor of creditors) {
+                                    if (remainingDebt <= 0.01) break;
+                                    
+                                    let availableCredit = creditor.netPayout;
+                                    const alreadyReceived = transactions
+                                      .filter((t: any) => t.to === creditor.playerId)
+                                      .reduce((sum: number, t: any) => sum + t.amount, 0);
+                                    availableCredit -= alreadyReceived;
+                                    
+                                    if (availableCredit > 0.01) {
+                                      const paymentAmount = Math.min(remainingDebt, availableCredit);
+                                      transactions.push({
+                                        from: debtor.playerId,
+                                        fromName: debtor.playerName,
+                                        to: creditor.playerId,
+                                        toName: creditor.playerName,
+                                        amount: paymentAmount
+                                      });
+                                      remainingDebt -= paymentAmount;
+                                    }
+                                  }
+                                }
+                                
+                                return transactions;
+                              }
+                              
+                              return [];
+                            };
+                            
+                            const transactions = getTransactionsForBBBMode();
+
+                            if (transactions.length === 0) {
+                              return (
+                                <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                  <p className="text-gray-800">All players are even - no payments needed!</p>
+                                </div>
+                              );
+                            }
+
+                            return (
+                              <div className="space-y-2">
+                                {transactions.map((transaction: any, index: number) => (
+                                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                    <div className="flex items-center gap-3">
+                                      <div className="text-sm">
+                                        <span className="font-medium text-red-600">{transaction.fromName}</span>
+                                        <span className="text-gray-600"> owes </span>
+                                        <span className="font-medium text-green-600">{transaction.toName}</span>
+                                      </div>
+                                    </div>
+                                    <div className="text-right">
+                                      <p className="text-lg font-bold text-black">${transaction.amount.toFixed(2)}</p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          })()}
+                        </CardContent>
+                      </Card>
+                    )}
+
                     {/* Tile: Card Game Only Settlement - MOVED TO BOTTOM */}
                     {(() => {
                       const isCardsActive = selectedGame && gameState && gameState.cardHistory?.length > 0;

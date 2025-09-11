@@ -171,20 +171,32 @@ export const pointsGameSettingsSchema = z.object({
   fbtValue: z.number().min(0).optional(),
 });
 
+// BBB-specific types
+export interface BBBHoleData {
+  firstOn?: string; // player ID
+  closestTo?: string; // player ID
+  firstIn?: string; // player ID
+}
+
+export interface BBBGameHoles {
+  [hole: number]: BBBHoleData;
+}
+
 // Types
 export type InsertGroup = z.infer<typeof insertGroupSchema>;
 export type Group = typeof groups.$inferSelect;
 export type InsertGameState = z.infer<typeof insertGameStateSchema>;
 export type GameState = typeof gameStates.$inferSelect;
 
-// Points Game Tables
+// Points Game Tables - Extended to support both 2/9/16 and BBB games
 export const pointsGames = pgTable("points_games", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   groupId: varchar("group_id").notNull().references(() => groups.id, { onDelete: "cascade" }),
-  gameStateId: varchar("game_state_id").references(() => gameStates.id, { onDelete: "cascade" }), // NEW: Link to specific card game session
+  gameStateId: varchar("game_state_id").references(() => gameStates.id, { onDelete: "cascade" }), // Link to specific card game session
   name: varchar("name").notNull(),
-  holes: jsonb("holes").$type<Record<number, Record<string, number>>>().default({}), // hole -> playerId -> strokes
-  points: jsonb("points").$type<Record<number, Record<string, number>>>().default({}), // hole -> playerId -> points
+  gameType: varchar("game_type").$type<'points' | 'bbb'>().notNull().default('points'), // NEW: Distinguish between 2/9/16 and BBB
+  holes: jsonb("holes").$type<Record<number, Record<string, number | string>>>().default({}), // For 2/9/16: hole -> playerId -> strokes; For BBB: hole -> category -> playerId
+  points: jsonb("points").$type<Record<number, Record<string, number>>>().default({}), // hole -> playerId -> points (calculated for both game types)
   settings: jsonb("settings").$type<{ pointValue?: number; fbtValue?: number }>().default({ pointValue: 1, fbtValue: 10 }), // Point and FBT values
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

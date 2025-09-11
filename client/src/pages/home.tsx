@@ -629,9 +629,12 @@ export default function Home() {
       selectedGroup?.id,
       selectedGame?.id, 
       selectedPointsGame?.id,
+      selectedBBBGame?.id,
       multiSelectGames,
       pointValue,
-      fbtValue
+      fbtValue,
+      bbbPointValue,
+      bbbFbtValue
     ],
     queryFn: async () => {
       if (!selectedGroup?.id || !multiSelectGames.length) {
@@ -648,9 +651,12 @@ export default function Home() {
           groupId: selectedGroup.id,
           gameStateId: selectedGame?.id,
           pointsGameId: selectedPointsGame?.id,
+          bbbGameId: selectedBBBGame?.id,
           selectedGames: multiSelectGames,
           pointValue,
-          fbtValue
+          fbtValue,
+          bbbPointValue,
+          bbbFbtValue
         })
       });
 
@@ -4899,6 +4905,66 @@ export default function Home() {
                   </div>
                 </Button>
               )}
+              
+              {/* BBB Points Game Option */}
+              {selectedBBBGame && parseFloat(bbbPointValue) > 0 && (
+                <Button 
+                  variant={tempSelectedGames.includes('bbb-points') ? 'default' : 'outline'}
+                  className={`w-full justify-start h-auto p-3 ${
+                    tempSelectedGames.includes('bbb-points') 
+                      ? 'bg-amber-100 hover:bg-amber-200 text-amber-800 border-amber-300' 
+                      : 'hover:bg-gray-50'
+                  }`}
+                  onClick={() => {
+                    if (tempSelectedGames.includes('bbb-points')) {
+                      setTempSelectedGames(tempSelectedGames.filter(g => g !== 'bbb-points'));
+                    } else {
+                      setTempSelectedGames([...tempSelectedGames, 'bbb-points']);
+                    }
+                  }}
+                  data-testid="button-select-bbb-points"
+                >
+                  <div className="flex items-center gap-3 w-full">
+                    <span className="text-lg">🎲</span>
+                    <div className="text-left">
+                      <div className="font-medium">BBB Points Game</div>
+                      <div className={`text-sm ${tempSelectedGames.includes('bbb-points') ? 'text-amber-600' : 'text-gray-600'}`}>
+                        ${bbbPointValue} per point
+                      </div>
+                    </div>
+                  </div>
+                </Button>
+              )}
+              
+              {/* BBB FBT Game Option */}
+              {selectedBBBGame && parseFloat(bbbFbtValue) > 0 && (
+                <Button 
+                  variant={tempSelectedGames.includes('bbb-fbt') ? 'default' : 'outline'}
+                  className={`w-full justify-start h-auto p-3 ${
+                    tempSelectedGames.includes('bbb-fbt') 
+                      ? 'bg-amber-100 hover:bg-amber-200 text-amber-800 border-amber-300' 
+                      : 'hover:bg-gray-50'
+                  }`}
+                  onClick={() => {
+                    if (tempSelectedGames.includes('bbb-fbt')) {
+                      setTempSelectedGames(tempSelectedGames.filter(g => g !== 'bbb-fbt'));
+                    } else {
+                      setTempSelectedGames([...tempSelectedGames, 'bbb-fbt']);
+                    }
+                  }}
+                  data-testid="button-select-bbb-fbt"
+                >
+                  <div className="flex items-center gap-3 w-full">
+                    <span className="text-lg">🏌️</span>
+                    <div className="text-left">
+                      <div className="font-medium">BBB FBT Game</div>
+                      <div className={`text-sm ${tempSelectedGames.includes('bbb-fbt') ? 'text-amber-600' : 'text-gray-600'}`}>
+                        ${bbbFbtValue} per victory
+                      </div>
+                    </div>
+                  </div>
+                </Button>
+              )}
             </div>
             
             {/* Action Buttons */}
@@ -4930,9 +4996,12 @@ export default function Home() {
                           groupId: selectedGroup.id,
                           gameStateId: selectedGame?.id,
                           pointsGameId: selectedPointsGame?.id,
+                          bbbGameId: selectedBBBGame?.id,
                           selectedGames: tempSelectedGames,
                           pointValue: parseFloat(pointValue),
                           fbtValue: parseFloat(fbtValue),
+                          bbbPointValue: parseFloat(bbbPointValue),
+                          bbbFbtValue: parseFloat(bbbFbtValue),
                           saveResults: true
                         })
                       });

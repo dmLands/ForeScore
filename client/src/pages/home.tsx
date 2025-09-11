@@ -893,37 +893,6 @@ export default function Home() {
     }
   }, [savedCombinedResults]);
 
-  // AUTO-POPULATE multiSelectGames when both games are active
-  useEffect(() => {
-    if (!selectedGroup || !selectedGame || !selectedPointsGame) return;
-    
-    const isCardsActive = gameState && gameState.cardHistory?.length > 0;
-    const is2916Active = Object.values(selectedPointsGame.holes || {}).some(hole => 
-      Object.values(hole as Record<string, any>).some((strokes: any) => strokes > 0)
-    );
-    const pointValueNum = parseFloat(pointValue) || 0;
-    const fbtValueNum = parseFloat(fbtValue) || 0;
-    const has2916Values = pointValueNum > 0 || fbtValueNum > 0;
-    
-    // Auto-populate multiSelectGames when games are active
-    if ((isCardsActive || (is2916Active && has2916Values)) && multiSelectGames.length === 0) {
-      const autoGames: string[] = [];
-      
-      if (isCardsActive) {
-        autoGames.push('cards');
-      }
-      if (is2916Active || has2916Values) {  // Show tiles even without scores if values are set
-        if (pointValueNum > 0) autoGames.push('points');
-        if (fbtValueNum > 0) autoGames.push('fbt');
-      }
-      
-      if (autoGames.length > 0) {
-        setMultiSelectGames(autoGames);
-        console.log('Auto-populated multiSelectGames:', autoGames);
-      }
-    }
-  }, [selectedGroup, selectedGame, selectedPointsGame, gameState, pointValue, fbtValue, multiSelectGames.length]);
-
   const { gameState, isLoading: gameLoading, drawCard, assignCard, startGame } = useGameState(selectedGroup?.id);
   
   // Defensive check for gameState to prevent crashes
@@ -936,11 +905,11 @@ export default function Home() {
   };
   const { isConnected } = useWebSocket(selectedGroup?.id);
 
-  // Calculate if payout data is ready for Payouts tab
+  // Calculate if payout data is ready for Payouts tab (MOVED AFTER gameState initialization)
   const calculatePayoutDataReady = () => {
     if (!selectedGroup || !selectedGame) return true; // No game selected, don't wait
     
-    const isCardsActive = selectedGame && gameState && gameState.cardHistory?.length > 0;
+    const isCardsActive = selectedGame && safeGameState && safeGameState.cardHistory?.length > 0;
     const is2916Active = selectedPointsGame && 
       Object.values(selectedPointsGame.holes || {}).some(hole => 
         Object.values(hole as Record<string, any>).some((strokes: any) => strokes > 0)
@@ -996,6 +965,34 @@ export default function Home() {
     return true;
   };
   
+  // AUTO-POPULATE multiSelectGames when games have valid values
+  useEffect(() => {
+    if (!selectedGroup || !selectedGame || !selectedPointsGame) return;
+    
+    const isCardsActive = safeGameState && safeGameState.cardHistory?.length > 0;
+    const pointValueNum = parseFloat(pointValue) || 0;
+    const fbtValueNum = parseFloat(fbtValue) || 0;
+    const has2916Values = pointValueNum > 0 || fbtValueNum > 0;
+    
+    // Auto-populate multiSelectGames when games have valid values
+    if ((isCardsActive || has2916Values) && multiSelectGames.length === 0) {
+      const autoGames: string[] = [];
+      
+      if (isCardsActive) {
+        autoGames.push('cards');
+      }
+      if (has2916Values) {  // Show combined tile when values are set
+        if (pointValueNum > 0) autoGames.push('points');
+        if (fbtValueNum > 0) autoGames.push('fbt');
+      }
+      
+      if (autoGames.length > 0) {
+        setMultiSelectGames(autoGames);
+        console.log('Auto-populated multiSelectGames:', autoGames);
+      }
+    }
+  }, [selectedGroup, selectedGame, selectedPointsGame, safeGameState, pointValue, fbtValue, multiSelectGames.length]);
+
   // Now update the payoutDataReady state reactively
   const newPayoutDataReady = calculatePayoutDataReady();
   useEffect(() => {

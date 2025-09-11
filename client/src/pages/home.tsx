@@ -3328,6 +3328,76 @@ export default function Home() {
                   </Card>
                 ) : (
                   <>
+                    {/* BBB Payout Mode Selector */}
+                    <Card>
+                      <CardContent className="p-4">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-3">💰 BBB Payout Mode</h3>
+                        <div className="grid grid-cols-2 gap-2 mb-4">
+                          <Button
+                            variant={bbbPayoutMode === 'points' ? 'default' : 'outline'}
+                            onClick={() => setBBBPayoutMode('points')}
+                            className="h-auto p-3"
+                            data-testid="button-bbb-payout-points"
+                          >
+                            <div className="text-center">
+                              <div className="font-medium">Points</div>
+                              <div className="text-xs text-gray-600">Head-to-head comparison</div>
+                            </div>
+                          </Button>
+                          <Button
+                            variant={bbbPayoutMode === 'fbt' ? 'default' : 'outline'}
+                            onClick={() => setBBBPayoutMode('fbt')}
+                            className="h-auto p-3"
+                            data-testid="button-bbb-payout-fbt"
+                          >
+                            <div className="text-center">
+                              <div className="font-medium">FBT</div>
+                              <div className="text-xs text-gray-600">Front/Back/Total wins</div>
+                            </div>
+                          </Button>
+                        </div>
+
+                        {/* BBB Value Inputs */}
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <div className="flex items-center gap-1 mb-2">
+                              <label className="text-sm font-medium text-gray-700">
+                                BBB Point Value ($)
+                              </label>
+                            </div>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={bbbPointValue}
+                              onChange={(e) => setBBBPointValue(e.target.value)}
+                              className="w-full"
+                              placeholder="1.00"
+                              data-testid="input-bbb-point-value"
+                            />
+                          </div>
+                          
+                          <div>
+                            <div className="flex items-center gap-1 mb-2">
+                              <label className="text-sm font-medium text-gray-700">
+                                BBB FBT Value ($)
+                              </label>
+                            </div>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={bbbFbtValue}
+                              onChange={(e) => setBBBFbtValue(e.target.value)}
+                              className="w-full"
+                              placeholder="5.00"
+                              data-testid="input-bbb-fbt-value"
+                            />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
                     {/* Hole Selection */}
                     <Card>
                       <CardContent className="p-4">

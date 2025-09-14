@@ -3,7 +3,7 @@ import express from "express";
 import { createServer, type Server } from "http";
 import { z } from "zod";
 import { storage } from "./storage.js";
-import { setupAuth, isAuthenticated, generateRoomToken } from "./replitAuth.js";
+import { setupAuth, isAuthenticated, generateRoomToken, requireAdmin } from "./replitAuth.js";
 import { calculateCardGameDetails, calculate2916Points, validateCardAssignment, calculateCardsGame, calculatePointsGame, calculateFbtGame, buildFbtNetsFromPointsGame, combineGames, settleWhoOwesWho, combineTotals, generateSettlement, calculateBBBPointsGame, calculateBBBFbtGame } from "./secureGameLogic.js";
 import { SecureWebSocketManager } from "./secureWebSocket.js";
 import { registerUser, authenticateUser, registerSchema, loginSchema } from "./localAuth.js";
@@ -2312,7 +2312,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // User export endpoint (admin) - extracts all user data with exportable fields
-  app.get('/api/admin/export-users', isAuthenticated, async (req, res) => {
+  app.get('/api/admin/export-users', isAuthenticated, requireAdmin, async (req, res) => {
     try {
       console.log('Admin user export requested by user:', (req as any).user?.claims?.sub);
       
@@ -2375,7 +2375,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // WebSocket stats endpoint (admin) - only available in production
-  app.get('/api/admin/websocket-stats', isAuthenticated, async (req, res) => {
+  app.get('/api/admin/websocket-stats', isAuthenticated, requireAdmin, async (req, res) => {
     if (process.env.NODE_ENV !== 'production') {
       return res.json({ message: 'WebSocket stats only available in production', rooms: 0, connections: 0 });
     }

@@ -13,6 +13,7 @@ import ResetPassword from "@/pages/reset-password";
 import Subscribe from "@/pages/subscribe";
 import ManageSubscription from "@/pages/manage-subscription";
 import NotFound from "@/pages/not-found";
+import AdminPage from "@/pages/admin";
 
 // Guard component that wraps Home to check subscription access
 function ProtectedHome() {
@@ -44,6 +45,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={ProtectedHome} />
+      <Route path="/admin" component={AdminPage} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
       <Route path="/subscribe" component={Subscribe} />

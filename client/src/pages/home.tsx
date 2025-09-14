@@ -1579,6 +1579,12 @@ export default function Home() {
                             Reset Password
                           </Link>
                         </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href="/admin" className="cursor-pointer text-gray-900 hover:text-gray-700">
+                            <User className="h-4 w-4 mr-2" />
+                            Admin Panel
+                          </Link>
+                        </DropdownMenuItem>
                       </div>
                     </div>
                     <DropdownMenuSeparator />

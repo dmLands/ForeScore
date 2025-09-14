@@ -12,10 +12,12 @@ interface SubscriptionAccess {
 const ADMIN_EMAILS = new Set(['daniel@danonano.com']);
 
 export function isAdmin(user: any): boolean {
-  if (!user?.claims?.email) {
+  // Check both possible email locations (local auth vs Replit auth)
+  const email = user?.email || user?.claims?.email;
+  if (!email) {
     return false;
   }
-  return ADMIN_EMAILS.has(user.claims.email.toLowerCase());
+  return ADMIN_EMAILS.has(email.toLowerCase());
 }
 
 export function useAuth() {

@@ -196,7 +196,7 @@ function CardGamePayouts({ selectedGroup, gameState, payoutData, selectedPointsG
 }
 
 export default function Home() {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   
   // Track payout data readiness for the restoration logic
   const [payoutDataReady, setPayoutDataReady] = useState(true);
@@ -1579,12 +1579,14 @@ export default function Home() {
                             Reset Password
                           </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link href="/admin" className="cursor-pointer text-gray-900 hover:text-gray-700">
-                            <User className="h-4 w-4 mr-2" />
-                            Admin Panel
-                          </Link>
-                        </DropdownMenuItem>
+                        {isAdmin && (
+                          <DropdownMenuItem asChild>
+                            <Link href="/admin" className="cursor-pointer text-gray-900 hover:text-gray-700">
+                              <User className="h-4 w-4 mr-2" />
+                              Admin Panel
+                            </Link>
+                          </DropdownMenuItem>
+                        )}
                       </div>
                     </div>
                     <DropdownMenuSeparator />

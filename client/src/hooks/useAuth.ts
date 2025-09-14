@@ -8,6 +8,16 @@ interface SubscriptionAccess {
   trialEndsAt?: string;
 }
 
+// Admin authorization - check if user email is in admin list
+const ADMIN_EMAILS = new Set(['daniel@danonano.com']);
+
+export function isAdmin(user: any): boolean {
+  if (!user?.claims?.email) {
+    return false;
+  }
+  return ADMIN_EMAILS.has(user.claims.email.toLowerCase());
+}
+
 export function useAuth() {
   const [location, setLocation] = useLocation();
   
@@ -30,6 +40,7 @@ export function useAuth() {
 
   const isAuthenticated = !!user && !userError;
   const isLoading = userLoading || (isAuthenticated && subscriptionLoading);
+  const userIsAdmin = isAdmin(user);
   
   // Only check subscription status if we have data and no error
   const hasActiveSubscription = subscriptionAccess?.hasAccess ?? false;
@@ -56,5 +67,6 @@ export function useAuth() {
     isAuthenticated,
     hasActiveSubscription,
     subscriptionAccess,
+    isAdmin: userIsAdmin,
   };
 }

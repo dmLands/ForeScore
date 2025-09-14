@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Download, Users, Copy, CheckCircle } from "lucide-react";
+import { Download, Users, Copy, CheckCircle, Shield, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 interface UserData {
   'First Name': string;
@@ -25,9 +26,57 @@ interface ExportResponse {
 export default function AdminPage() {
   const [copySuccess, setCopySuccess] = useState<string | null>(null);
   const { toast } = useToast();
+  const { isAuthenticated, isLoading, isAdmin } = useAuth();
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show unauthorized message if user is not authenticated or not admin
+  if (!isAuthenticated || !isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="mx-auto mb-4 w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+              <Shield className="h-6 w-6 text-red-600" />
+            </div>
+            <CardTitle className="text-xl font-semibold text-gray-900">
+              Access Denied
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="text-center">
+            <div className="mb-4">
+              <AlertTriangle className="h-8 w-8 text-amber-500 mx-auto mb-2" />
+              <p className="text-gray-600 mb-4">
+                You don't have permission to access this admin panel. 
+                Only authorized administrators can view this page.
+              </p>
+            </div>
+            <Button 
+              onClick={() => window.history.back()} 
+              variant="outline"
+              className="w-full"
+              data-testid="button-go-back"
+            >
+              Go Back
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   // Fetch user data
-  const { data: exportData, isLoading, error } = useQuery<ExportResponse>({
+  const { data: exportData, isLoading: dataLoading, error } = useQuery<ExportResponse>({
     queryKey: ['/api/admin/export-users'],
     retry: 1,
   });
@@ -76,7 +125,7 @@ export default function AdminPage() {
     });
   };
 
-  if (isLoading) {
+  if (dataLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

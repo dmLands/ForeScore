@@ -200,3 +200,25 @@ export function verifyRoomToken(token: string): { userId: string, roomId: string
     return null;
   }
 }
+
+// Admin authorization - restrict to specific users only
+const ADMIN_EMAILS = new Set(['daniel@danonano.com']);
+
+export const requireAdmin: RequestHandler = async (req, res, next) => {
+  const user = req.user as any;
+  
+  if (!req.isAuthenticated()) {
+    console.log('Admin access denied: User not authenticated');
+    return res.status(401).json({ message: 'Not authenticated' });
+  }
+
+  const userEmail = (user.claims?.email || '').toLowerCase();
+  
+  if (!ADMIN_EMAILS.has(userEmail)) {
+    console.log(`Admin access denied for user: ${userEmail} (ID: ${user.claims?.sub})`);
+    return res.status(403).json({ message: 'Admin access required' });
+  }
+
+  console.log(`Admin access granted for user: ${userEmail}`);
+  next();
+};

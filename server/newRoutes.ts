@@ -2311,6 +2311,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User export endpoint (admin) - extracts all user data with exportable fields
+  app.get('/api/admin/export-users', isAuthenticated, async (req, res) => {
+    try {
+      console.log('Admin user export requested by user:', (req as any).user?.claims?.sub);
+      
+      // Extract all users with requested fields
+      const allUsers = await db
+        .select({
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          email: users.email,
+          authMethod: users.authMethod,
+          createdAt: users.createdAt
+        })
+        .from(users);
+      
+      console.log(`Found ${allUsers.length} users for export`);
+
+      // Format for CSV export
+      const csvData = allUsers.map(user => ({
+        'First Name': user.firstName || '',
+        'Last Name': user.lastName || '',
+        'Email Address': user.email || '',
+        'Auth Method': user.authMethod || '',
+        'Created At': user.createdAt?.toISOString() || ''
+      }));
+
+      // Set headers for CSV download
+      const format = req.query.format || 'json';
+      
+      if (format === 'csv') {
+        const csvHeaders = Object.keys(csvData[0] || {});
+        const csvRows = csvData.map(row => 
+          csvHeaders.map(header => `"${(row as any)[header]}"`).join(',')
+        );
+        const csvContent = [
+          csvHeaders.join(','),
+          ...csvRows
+        ].join('\n');
+        
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', 'attachment; filename="users_export.csv"');
+        res.send(csvContent);
+      } else {
+        // Return JSON format
+        res.json({
+          success: true,
+          count: allUsers.length,
+          users: csvData,
+          exportedAt: new Date().toISOString()
+        });
+      }
+    } catch (error) {
+      console.error('Error exporting users:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Failed to export user data',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // WebSocket stats endpoint (admin) - only available in production
   app.get('/api/admin/websocket-stats', isAuthenticated, async (req, res) => {
     if (process.env.NODE_ENV !== 'production') {

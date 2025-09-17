@@ -140,13 +140,14 @@ export class StripeService {
     const trialEnd = new Date();
     trialEnd.setDate(trialEnd.getDate() + plan.trialDays);
     
-    // Create subscription with saved payment method and tax calculation
+    // Create subscription with PROPER TRIAL SETUP to prevent immediate charging
     const subscriptionData: any = {
       customer: customerId,
       items: [{
         price: plan.priceId,
       }],
-      trial_end: Math.floor(trialEnd.getTime() / 1000), // 7-day trial
+      // Use trial_period_days instead of trial_end to prevent immediate charging
+      trial_period_days: plan.trialDays,
       metadata: {
         userId,
         planKey,
@@ -189,7 +190,7 @@ export class StripeService {
     }
     
     // Don't allow access for incomplete subscriptions
-    if (user.subscriptionStatus === 'incomplete' || user.subscriptionStatus === 'incomplete_expired') {
+    if (user.subscriptionStatus === 'incomplete') {
       return { hasAccess: false, reason: 'Payment required' };
     }
     
@@ -201,11 +202,28 @@ export class StripeService {
       if (now < trialEnd) {
         return { hasAccess: true, trialEndsAt: trialEnd };
       } else {
-        // Trial expired
+        // Trial expired - check if Stripe subscription has been activated
+        try {
+          if (user.stripeSubscriptionId) {
+            const stripeSubscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
+            
+            // If Stripe shows subscription is active, update our records and grant access
+            if (stripeSubscription.status === 'active') {
+              await storage.updateUserSubscription(userId, {
+                subscriptionStatus: 'active',
+              });
+              return { hasAccess: true };
+            }
+          }
+        } catch (error) {
+          console.error('Error checking Stripe subscription status:', error);
+        }
+        
+        // Trial truly expired without payment - gracefully handle
         await storage.updateUserSubscription(userId, {
           subscriptionStatus: 'past_due',
         });
-        return { hasAccess: false, reason: 'Trial expired' };
+        return { hasAccess: false, reason: 'Trial expired - please update payment' };
       }
     }
     
@@ -226,11 +244,8 @@ export class StripeService {
         break;
         
       case 'invoice.payment_succeeded':
-        // When first payment succeeds on incomplete subscription, start trial
-        const invoice = event.data.object as Stripe.Invoice;
-        if (invoice.subscription && typeof invoice.subscription === 'string') {
-          await this.startTrialAfterPayment(invoice.subscription);
-        }
+        // Skip trial adjustment - trials are handled during subscription creation
+        // This prevents double-processing that causes immediate charging
         break;
         
       case 'customer.subscription.updated':
@@ -249,35 +264,8 @@ export class StripeService {
     }
   }
 
-  /**
-   * Start trial period after successful payment confirmation
-   */
-  private async startTrialAfterPayment(subscriptionId: string): Promise<void> {
-    try {
-      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-      const userId = subscription.metadata.userId;
-      const trialDays = parseInt(subscription.metadata.trialDays || '7');
-      
-      if (userId && subscription.status === 'active') {
-        // Calculate trial end date
-        const trialEnd = new Date();
-        trialEnd.setDate(trialEnd.getDate() + trialDays);
-        
-        // Update subscription to add trial period
-        await stripe.subscriptions.update(subscriptionId, {
-          trial_end: Math.floor(trialEnd.getTime() / 1000),
-        });
-        
-        // Update user record to trialing status
-        await storage.updateUserSubscription(userId, {
-          subscriptionStatus: 'trialing',
-          trialEndsAt: trialEnd,
-        });
-      }
-    } catch (error) {
-      console.error('Error starting trial after payment:', error);
-    }
-  }
+  // REMOVED: startTrialAfterPayment method was causing immediate charging during trials
+  // Trials are now properly handled during initial subscription creation
   
   /**
    * Update subscription status in database based on Stripe data

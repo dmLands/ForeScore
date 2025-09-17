@@ -41,27 +41,21 @@ export async function requireSubscriptionAccess(
       return next();
     }
 
-    // No access - log user out and require re-authentication with payment
-    req.logout((err) => {
-      if (err) {
-        console.error('Logout error during subscription check:', err);
-      }
-      
-      // Destroy session
-      req.session.destroy((err) => {
-        if (err) {
-          console.error('Session destroy error:', err);
-        }
-        
-        // Clear session cookie
-        res.clearCookie('connect.sid');
-        
-        // Return unauthorized to force login flow
-        return res.status(401).json({
-          message: 'Your session has expired. Please log in again.',
-          redirectTo: '/login'
-        });
+    // No access - handle gracefully based on reason
+    if (accessInfo.reason === 'Trial expired - please update payment') {
+      // Trial expired but user is still authenticated - redirect to subscription page
+      return res.status(402).json({
+        message: 'Your free trial has ended. Please subscribe to continue using ForeScore.',
+        reason: accessInfo.reason,
+        redirectTo: '/subscribe'
       });
+    }
+    
+    // For other access issues, provide appropriate responses without destroying session
+    return res.status(402).json({
+      message: 'Subscription required to access this feature.',
+      reason: accessInfo.reason || 'No active subscription',
+      redirectTo: '/subscribe'
     });
 
   } catch (error) {

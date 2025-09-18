@@ -53,7 +53,7 @@ export function useTabPersistence(payoutDataReady?: boolean) {
   });
 
   // Fetch group data when preferences contain a selectedGroupId
-  const { data: groupData } = useQuery({
+  const { data: groupData, isLoading: groupLoading } = useQuery({
     queryKey: ['/api/groups', preferences?.selectedGroupId],
     queryFn: async () => {
       const response = await fetch(`/api/groups/${preferences!.selectedGroupId}`, {
@@ -67,7 +67,7 @@ export function useTabPersistence(payoutDataReady?: boolean) {
   });
 
   // Fetch game data when preferences contain a selectedGameId
-  const { data: gameData } = useQuery({
+  const { data: gameData, isLoading: gameLoading } = useQuery({
     queryKey: ['/api/game-state', preferences?.selectedGameId],
     queryFn: async () => {
       const response = await fetch(`/api/game-state/${preferences!.selectedGameId}`, {
@@ -88,9 +88,9 @@ export function useTabPersistence(payoutDataReady?: boolean) {
     const wantGame  = !!preferences.selectedGameId;
     const targetTab = preferences.currentTab ?? 'groups';
 
-    // We only finish init once required data are present
-    const groupReady = !wantGroup || !!groupData;
-    const gameReady  = !wantGame  || !!gameData;
+    // We only finish init once required data queries are complete (even if data is null due to 404)
+    const groupReady = !wantGroup || !groupLoading;
+    const gameReady  = !wantGame  || !gameLoading;
     
     // For Payouts tab, also wait for payout-critical data to prevent tile re-ordering flicker
     const needPayoutData = targetTab === 'scoreboard' && wantGroup && wantGame;
@@ -103,7 +103,7 @@ export function useTabPersistence(payoutDataReady?: boolean) {
     setSelectedGroup(groupData ?? null);
     setSelectedGame(gameData ?? null);
     setIsInitialized(true);
-  }, [preferences, groupData, gameData, isInitialized, payoutDataReady]);
+  }, [preferences, groupData, gameData, groupLoading, gameLoading, isInitialized, payoutDataReady]);
 
   // when saving to server, also mirror to LS
   const saveState = useCallback(async (updates: Partial<{

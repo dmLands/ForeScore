@@ -48,12 +48,12 @@ export default function ManageSubscription() {
   const queryClient = useQueryClient();
   const { hasActiveSubscription, isLoading: authLoading, subscriptionAccess } = useAuth();
 
-  // Redirect users without active subscriptions to subscribe page
+  // Redirect users without any subscription access (including trials) to subscribe page
   useEffect(() => {
-    if (!authLoading && !hasActiveSubscription) {
+    if (!authLoading && !subscriptionAccess?.hasAccess) {
       setLocation('/subscribe');
     }
-  }, [authLoading, hasActiveSubscription, setLocation]);
+  }, [authLoading, subscriptionAccess?.hasAccess, setLocation]);
 
   // Fetch subscription status (using data from auth hook for consistency)
   const { data: accessInfo, isLoading: statusLoading } = useQuery<SubscriptionAccess>({
@@ -75,12 +75,22 @@ export default function ManageSubscription() {
       return response.json();
     },
     onSuccess: () => {
+      const isTrial = statusInfo.status === 'trial';
+      
       toast({
         title: "Subscription Canceled",
-        description: "Your subscription has been canceled. You'll continue to have access until the end of your billing period.",
+        description: isTrial 
+          ? "Your trial has been canceled and your access has ended immediately."
+          : "Your subscription has been canceled. You'll continue to have access until the end of your billing period.",
       });
+      
       queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      
+      // Navigate back to subscribe page after cancellation
+      setTimeout(() => {
+        setLocation('/subscribe');
+      }, 2000); // Give user time to read the toast
     },
     onError: (error: any) => {
       toast({
@@ -226,15 +236,15 @@ export default function ManageSubscription() {
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Upgrade/Subscribe Actions */}
-            {(!currentAccessInfo?.hasAccess || statusInfo.status === 'trial') && (
+            {!currentAccessInfo?.hasAccess && (
               <div className="space-y-3">
                 <Button
                   onClick={() => setLocation('/subscribe')}
                   className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
-                  data-testid="button-upgrade-subscription"
+                  data-testid="button-start-subscription"
                 >
                   <CreditCard className="w-4 h-4 mr-2" />
-                  {statusInfo.status === 'trial' ? 'Upgrade to Paid Plan' : 'Start Free Trial'}
+                  Start Free Trial
                 </Button>
                 
                 {plans && (
@@ -255,12 +265,61 @@ export default function ManageSubscription() {
               </div>
             )}
 
-            {/* Cancel Subscription */}
+            {/* Trial Actions */}
+            {currentAccessInfo?.hasAccess && statusInfo.status === 'trial' && (
+              <div className="space-y-3">
+                {/* Upgrade to Paid Plan */}
+                <Button
+                  onClick={() => setLocation('/subscribe')}
+                  className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                  data-testid="button-upgrade-subscription"
+                >
+                  <CreditCard className="w-4 h-4 mr-2" />
+                  Upgrade to Paid Plan
+                </Button>
+                
+                {/* Cancel Trial */}
+                <div className="border-t pt-4">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" className="w-full border-red-200 text-red-600 hover:bg-red-50" data-testid="button-cancel-trial">
+                        <XCircle className="w-4 h-4 mr-2" />
+                        Cancel Trial Subscription
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="flex items-center space-x-2">
+                          <AlertTriangle className="w-5 h-5 text-orange-500" />
+                          <span>Cancel Trial Subscription?</span>
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to cancel your free trial? 
+                          You'll lose access to ForeScore immediately and won't be charged.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Keep Trial</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => cancelSubscriptionMutation.mutate()}
+                          disabled={cancelSubscriptionMutation.isPending}
+                          className="bg-red-600 hover:bg-red-700"
+                        >
+                          {cancelSubscriptionMutation.isPending ? "Canceling..." : "Yes, Cancel Trial"}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </div>
+            )}
+
+            {/* Cancel Active Subscription */}
             {currentAccessInfo?.hasAccess && statusInfo.status === 'active' && (
               <div className="border-t pt-4">
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="outline" className="w-full border-red-200 text-red-600 hover:bg-red-50">
+                    <Button variant="outline" className="w-full border-red-200 text-red-600 hover:bg-red-50" data-testid="button-cancel-subscription">
                       <XCircle className="w-4 h-4 mr-2" />
                       Cancel Subscription
                     </Button>

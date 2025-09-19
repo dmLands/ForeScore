@@ -325,17 +325,18 @@ export class StripeService {
     if (!userId) return;
     
     console.log(`Webhook: Updating subscription ${subscription.id} for user ${userId}`);
-    console.log(`Status: ${subscription.status}, current_period_end: ${subscription.current_period_end}, trial_end: ${subscription.trial_end}`);
+    console.log(`Status: ${subscription.status}, current_period_end: ${(subscription as any).current_period_end}, trial_end: ${(subscription as any).trial_end}`);
     
     // Extract canonical Stripe subscription data
+    const sub = subscription as any; // Cast to access all Stripe fields
     const stripeSubscriptionData = {
       userId: userId,
       stripeSubscriptionId: subscription.id,
       stripeCustomerId: subscription.customer as string,
       stripePriceId: subscription.items.data[0]?.price.id || '',
       status: subscription.status as 'trialing' | 'active' | 'canceled' | 'incomplete' | 'past_due' | 'unpaid' | 'paused',
-      currentPeriodStart: subscription.current_period_start ? new Date(subscription.current_period_start * 1000) : null,
-      currentPeriodEnd: subscription.current_period_end ? new Date(subscription.current_period_end * 1000) : null,
+      currentPeriodStart: sub.current_period_start ? new Date(sub.current_period_start * 1000) : null,
+      currentPeriodEnd: sub.current_period_end ? new Date(sub.current_period_end * 1000) : null,
       trialStart: subscription.trial_start ? new Date(subscription.trial_start * 1000) : null,
       trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
       cancelAt: subscription.cancel_at ? new Date(subscription.cancel_at * 1000) : null,
@@ -412,6 +413,67 @@ export class StripeService {
     await stripe.subscriptions.update(user.stripeSubscriptionId, {
       cancel_at_period_end: false,
     });
+  }
+
+  /**
+   * Sync existing subscription from Stripe to canonical database structure
+   */
+  async syncSubscriptionFromStripe(userId: string): Promise<void> {
+    console.log(`🔄 Syncing subscription data for user: ${userId}`);
+    
+    const user = await storage.getUser(userId);
+    if (!user?.stripeSubscriptionId) {
+      console.log(`❌ No Stripe subscription ID found for user: ${userId}`);
+      return;
+    }
+
+    try {
+      // Fetch current subscription from Stripe
+      const stripeSubscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
+      console.log(`✅ Retrieved Stripe subscription: ${stripeSubscription.id}, status: ${stripeSubscription.status}`);
+
+      // Cast subscription to access all fields
+      const sub = stripeSubscription as any;
+      
+      // Extract canonical fields
+      const subscriptionData: any = {
+        userId,
+        stripeSubscriptionId: stripeSubscription.id,
+        stripeCustomerId: stripeSubscription.customer as string,
+        status: stripeSubscription.status,
+        currentPeriodStart: sub.current_period_start ? 
+          new Date(sub.current_period_start * 1000) : null,
+        currentPeriodEnd: sub.current_period_end ? 
+          new Date(sub.current_period_end * 1000) : null,
+        trialStart: stripeSubscription.trial_start ? 
+          new Date(stripeSubscription.trial_start * 1000) : null,
+        trialEnd: stripeSubscription.trial_end ? 
+          new Date(stripeSubscription.trial_end * 1000) : null,
+        cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end || false,
+        canceledAt: stripeSubscription.canceled_at ? 
+          new Date(stripeSubscription.canceled_at * 1000) : null,
+      };
+
+      // Extract price ID from subscription items
+      if (stripeSubscription.items?.data?.[0]?.price?.id) {
+        subscriptionData.stripePriceId = stripeSubscription.items.data[0].price.id;
+        console.log(`📦 Found price ID: ${subscriptionData.stripePriceId}`);
+      }
+
+      // Store in canonical database structure
+      await storage.upsertStripeSubscription(subscriptionData);
+      
+      console.log(`✅ Successfully synced subscription data for user ${userId}`);
+      if (subscriptionData.currentPeriodEnd) {
+        console.log(`📅 Next renewal date: ${subscriptionData.currentPeriodEnd}`);
+      }
+      if (subscriptionData.trialEnd) {
+        console.log(`🎯 Trial ends: ${subscriptionData.trialEnd}`);
+      }
+    } catch (error) {
+      console.error(`❌ Error syncing subscription for user ${userId}:`, error);
+      throw error;
+    }
   }
 }
 

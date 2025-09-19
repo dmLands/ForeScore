@@ -9,7 +9,7 @@ import { SecureWebSocketManager } from "./secureWebSocket.js";
 import { registerUser, authenticateUser, registerSchema, loginSchema } from "./localAuth.js";
 import { insertGroupSchema, insertGameStateSchema, insertPointsGameSchema, cardValuesSchema, pointsGameSettingsSchema, gameStates, roomStates, userPreferences, insertUserPreferencesSchema, passwordResetTokens, insertPasswordResetTokenSchema, users, type Card, type CardAssignment } from "@shared/schema";
 import { db } from "./db.js";
-import { sql, eq, and, gt } from "drizzle-orm";
+import { sql, eq, and, gt, isNotNull } from "drizzle-orm";
 import { sendForgotPasswordEmail } from "./emailService.js";
 import { stripeService, SUBSCRIPTION_PLANS, stripe } from "./stripeService.js";
 import { requireSubscriptionAccess, isPublicRoute } from "./subscriptionMiddleware.js";
@@ -176,6 +176,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Subscription cancellation error:', error);
       res.status(500).json({ 
         message: 'Failed to cancel subscription',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  app.post('/api/subscription/sync', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      await stripeService.syncSubscriptionFromStripe(userId);
+      res.json({ message: 'Subscription data synced successfully' });
+    } catch (error) {
+      console.error('Subscription sync error:', error);
+      res.status(500).json({ 
+        message: 'Failed to sync subscription data',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Temporary admin endpoint to sync all subscriptions (REMOVE IN PRODUCTION)
+  app.post('/api/admin/sync-all-subscriptions', async (req, res) => {
+    try {
+      // Get all users with Stripe subscription IDs
+      const usersWithSubscriptions = await db
+        .select()
+        .from(users)
+        .where(isNotNull(users.stripeSubscriptionId));
+      
+      const results = [];
+      
+      for (const user of usersWithSubscriptions) {
+        try {
+          await stripeService.syncSubscriptionFromStripe(user.id);
+          results.push({ userId: user.id, email: user.email, status: 'success' });
+          console.log(`✅ Synced subscription for user: ${user.email}`);
+        } catch (error) {
+          results.push({ 
+            userId: user.id, 
+            email: user.email, 
+            status: 'error', 
+            error: error instanceof Error ? error.message : 'Unknown error' 
+          });
+          console.error(`❌ Failed to sync for user ${user.email}:`, error);
+        }
+      }
+      
+      res.json({ 
+        message: `Synced subscriptions for ${results.filter(r => r.status === 'success').length}/${results.length} users`,
+        results 
+      });
+    } catch (error) {
+      console.error('Admin sync error:', error);
+      res.status(500).json({ 
+        message: 'Failed to sync subscriptions',
         error: error instanceof Error ? error.message : 'Unknown error'
       });
     }

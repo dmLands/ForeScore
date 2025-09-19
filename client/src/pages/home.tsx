@@ -672,12 +672,22 @@ export default function Home() {
       selectedPointsGame?.id,
       multiSelectGames,
       pointValue,
-      fbtValue
+      fbtValue,
+      bbbPointValue,
+      bbbFbtValue
     ],
     queryFn: async () => {
       if (!selectedGroup?.id || !multiSelectGames.length) {
         throw new Error('Group and selected games required');
       }
+
+      // Use appropriate values based on game types in selection
+      const hasBBBGames = multiSelectGames.some(game => game.startsWith('bbb-'));
+      const hasRegular2916Games = multiSelectGames.some(game => ['points', 'fbt'].includes(game));
+      
+      // Determine which values to use (parse to numbers for API consistency)
+      const apiPointValue = parseFloat(hasBBBGames ? bbbPointValue : pointValue);
+      const apiFbtValue = parseFloat(hasBBBGames ? bbbFbtValue : fbtValue);
 
       const response = await fetch('/api/calculate-combined-games', {
         method: 'POST',
@@ -690,8 +700,8 @@ export default function Home() {
           gameStateId: selectedGame?.id,
           pointsGameId: selectedPointsGame?.id,
           selectedGames: multiSelectGames,
-          pointValue,
-          fbtValue
+          pointValue: apiPointValue,
+          fbtValue: apiFbtValue
         })
       });
 
@@ -2486,6 +2496,16 @@ export default function Home() {
                                 {multiSelectGames.includes('fbt') && (
                                   <div className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium fade-in stagger-2">
                                     ⛳ 2/9/16 FBT
+                                  </div>
+                                )}
+                                {multiSelectGames.includes('bbb-points') && (
+                                  <div className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium fade-in stagger-3">
+                                    🎲 BBB Points
+                                  </div>
+                                )}
+                                {multiSelectGames.includes('bbb-fbt') && (
+                                  <div className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-medium fade-in stagger-4">
+                                    🏌️ BBB FBT
                                   </div>
                                 )}
                               </div>
@@ -4997,6 +5017,11 @@ export default function Home() {
                   // V6.5: Trigger calculation with saveResults=true
                   if (tempSelectedGames.length > 0 && selectedGroup?.id) {
                     try {
+                      // Use appropriate values based on game types in temp selection
+                      const hasBBBGames = tempSelectedGames.some(game => game.startsWith('bbb-'));
+                      const savePointValue = hasBBBGames ? parseFloat(bbbPointValue) : parseFloat(pointValue);
+                      const saveFbtValue = hasBBBGames ? parseFloat(bbbFbtValue) : parseFloat(fbtValue);
+                      
                       const response = await fetch('/api/calculate-combined-games', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -5006,8 +5031,8 @@ export default function Home() {
                           gameStateId: selectedGame?.id,
                           pointsGameId: selectedPointsGame?.id,
                           selectedGames: tempSelectedGames,
-                          pointValue: parseFloat(pointValue),
-                          fbtValue: parseFloat(fbtValue),
+                          pointValue: savePointValue,
+                          fbtValue: saveFbtValue,
                           saveResults: true
                         })
                       });

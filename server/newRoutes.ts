@@ -1995,19 +1995,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let regular2916Game = null;
       let bbbGame = null;
       
-      // Only fetch all games if we have mixed game types selected
+      // Always fetch all games if we have BBB games OR mixed scenarios
       const hasBBBGames = selectedGames.includes('bbb-points') || selectedGames.includes('bbb-fbt');
       const hasRegularGames = selectedGames.includes('points') || selectedGames.includes('fbt');
       
-      if (hasBBBGames && hasRegularGames) {
-        // Mixed scenario: fetch both games
-        allPointsGames = await storage.getPointsGamesByGroup(groupId);
+      if (hasBBBGames || hasRegularGames) {
+        // Fetch all games to handle both individual and mixed scenarios - FIXED: pass gameStateId
+        allPointsGames = await storage.getPointsGames(groupId, gameStateId || undefined);
         regular2916Game = allPointsGames.find(g => g.gameType === 'points');
         bbbGame = allPointsGames.find(g => g.gameType === 'bbb');
-        console.log('🔍 MIXED GAME SCENARIO - fetched both games:', {
+        console.log('🔍 MULTI-GAME FETCH - fetched games:', {
           regular2916GameId: regular2916Game?.id,
           bbbGameId: bbbGame?.id,
-          selectedGames
+          selectedGames,
+          totalGamesFound: allPointsGames.length,
+          gameStateId: gameStateId || 'none'
         });
       }
       

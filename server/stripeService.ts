@@ -206,11 +206,21 @@ export class StripeService {
         try {
           console.log(`Fetching Stripe subscription details for user ${userId}, subscription: ${user.stripeSubscriptionId}`);
           const stripeSubscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
-          console.log(`Stripe subscription status: ${stripeSubscription.status}, current_period_end: ${(stripeSubscription as any).current_period_end}`);
           
-          if ((stripeSubscription as any).current_period_end) {
-            nextRenewalDate = new Date((stripeSubscription as any).current_period_end * 1000);
-            console.log(`Next renewal date: ${nextRenewalDate}`);
+          // Cast to any to access Stripe properties properly
+          const sub = stripeSubscription as any;
+          console.log(`Stripe subscription status: ${sub.status}`);
+          console.log(`current_period_end: ${sub.current_period_end}`);
+          console.log(`trial_end: ${sub.trial_end}`);
+          console.log(`cancel_at_period_end: ${sub.cancel_at_period_end}`);
+          
+          // Use current_period_end for renewal date, fallback to trial_end if in trial
+          const renewalTimestamp = sub.current_period_end || sub.trial_end;
+          if (renewalTimestamp) {
+            nextRenewalDate = new Date(renewalTimestamp * 1000);
+            console.log(`Next renewal date: ${nextRenewalDate} (from ${sub.current_period_end ? 'current_period_end' : 'trial_end'})`);
+          } else {
+            console.log('No renewal date found in Stripe subscription');
           }
           
           // Extract current plan information

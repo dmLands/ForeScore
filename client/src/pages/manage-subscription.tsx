@@ -241,7 +241,7 @@ export default function ManageSubscription() {
         </Card>
 
         {/* Billing Information Card - Active Subscriptions Only */}
-        {currentAccessInfo?.hasAccess && statusInfo.status === 'active' && currentAccessInfo.nextRenewalDate && (
+        {currentAccessInfo?.hasAccess && statusInfo.status === 'active' && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
@@ -276,11 +276,19 @@ export default function ManageSubscription() {
                 <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
                   <div>
                     <h4 className="font-medium text-green-900">Next Billing Date</h4>
-                    <p className="text-sm text-green-700">Your subscription will automatically renew on this date</p>
+                    <p className="text-sm text-green-700">
+                      {currentAccessInfo.nextRenewalDate 
+                        ? "Your subscription will automatically renew on this date"
+                        : "Billing information is being synchronized with Stripe"
+                      }
+                    </p>
                   </div>
                   <div className="text-right">
                     <p className="text-lg font-bold text-green-900" data-testid="text-next-renewal">
-                      {formatDate(currentAccessInfo.nextRenewalDate)}
+                      {currentAccessInfo.nextRenewalDate 
+                        ? formatDate(currentAccessInfo.nextRenewalDate)
+                        : "Updating..."
+                      }
                     </p>
                     <p className="text-sm text-green-600">Auto-renewal enabled</p>
                   </div>

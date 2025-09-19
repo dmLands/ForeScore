@@ -2491,31 +2491,44 @@ export default function Home() {
                               
                               {/* Selected Games Display */}
                               <div className="flex flex-wrap gap-2 mb-4">
-                                {multiSelectGames.includes('cards') && (
-                                  <div className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium fade-in">
-                                    🎴 Card Game
-                                  </div>
-                                )}
-                                {multiSelectGames.includes('points') && (
-                                  <div className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium fade-in stagger-1">
-                                    🎯 2/9/16 Points
-                                  </div>
-                                )}
-                                {multiSelectGames.includes('fbt') && (
-                                  <div className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium fade-in stagger-2">
-                                    ⛳ 2/9/16 FBT
-                                  </div>
-                                )}
-                                {multiSelectGames.includes('bbb-points') && (
-                                  <div className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium fade-in stagger-3">
-                                    🎲 BBB Points
-                                  </div>
-                                )}
-                                {multiSelectGames.includes('bbb-fbt') && (
-                                  <div className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-medium fade-in stagger-4">
-                                    🏌️ BBB FBT
-                                  </div>
-                                )}
+                                {(() => {
+                                  // Check if games are actually active, not just selected
+                                  const isCardsActive = selectedGame && safeGameState && safeGameState.cardHistory?.length > 0;
+                                  const hasPointsValues = parseFloat(pointValue) > 0;
+                                  const hasFbtValues = parseFloat(fbtValue) > 0;
+                                  const hasBBBPointsValues = parseFloat(bbbPointValue) > 0;
+                                  const hasBBBFbtValues = parseFloat(bbbFbtValue) > 0;
+
+                                  return (
+                                    <>
+                                      {multiSelectGames.includes('cards') && isCardsActive && (
+                                        <div className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium fade-in">
+                                          🎴 Card Game
+                                        </div>
+                                      )}
+                                      {multiSelectGames.includes('points') && selectedPointsGame && hasPointsValues && (
+                                        <div className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium fade-in stagger-1">
+                                          🎯 2/9/16 Points
+                                        </div>
+                                      )}
+                                      {multiSelectGames.includes('fbt') && selectedPointsGame && hasFbtValues && (
+                                        <div className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium fade-in stagger-2">
+                                          ⛳ 2/9/16 FBT
+                                        </div>
+                                      )}
+                                      {multiSelectGames.includes('bbb-points') && selectedBBBGame && hasBBBPointsValues && (
+                                        <div className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium fade-in stagger-3">
+                                          🎲 BBB Points
+                                        </div>
+                                      )}
+                                      {multiSelectGames.includes('bbb-fbt') && selectedBBBGame && hasBBBFbtValues && (
+                                        <div className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-medium fade-in stagger-4">
+                                          🏌️ BBB FBT
+                                        </div>
+                                      )}
+                                    </>
+                                  );
+                                })()}
                               </div>
                               
                               {(() => {

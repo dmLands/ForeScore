@@ -1990,10 +1990,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const gameState = gameStateId ? await storage.getGameStateById(gameStateId) : null;
       const pointsGame = pointsGameId ? await storage.getPointsGame(pointsGameId) : null;
       
-      // FIX: Fetch ALL points games for this group to handle mixed game types
-      const allPointsGames = await storage.getPointsGamesByGroup(groupId);
-      const regular2916Game = allPointsGames.find(g => g.gameType === 'points');
-      const bbbGame = allPointsGames.find(g => g.gameType === 'bbb');
+      // FIX: For mixed game scenarios, fetch ALL points games to access both types
+      let allPointsGames = [];
+      let regular2916Game = null;
+      let bbbGame = null;
+      
+      // Only fetch all games if we have mixed game types selected
+      const hasBBBGames = selectedGames.includes('bbb-points') || selectedGames.includes('bbb-fbt');
+      const hasRegularGames = selectedGames.includes('points') || selectedGames.includes('fbt');
+      
+      if (hasBBBGames && hasRegularGames) {
+        // Mixed scenario: fetch both games
+        allPointsGames = await storage.getPointsGamesByGroup(groupId);
+        regular2916Game = allPointsGames.find(g => g.gameType === 'points');
+        bbbGame = allPointsGames.find(g => g.gameType === 'bbb');
+        console.log('🔍 MIXED GAME SCENARIO - fetched both games:', {
+          regular2916GameId: regular2916Game?.id,
+          bbbGameId: bbbGame?.id,
+          selectedGames
+        });
+      }
       
       // DEBUG: Log what data we found
       console.log('🔍 DATA AVAILABLE:', {
@@ -2030,10 +2046,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // POINTS (Regular 2/9/16 game)
-      if (selectedGames.includes('points') && pointsGame && parseFloat(pointValue) > 0) {
+      const regularGameForPoints = regular2916Game || pointsGame;
+      if (selectedGames.includes('points') && regularGameForPoints && parseFloat(pointValue) > 0) {
+        console.log('🔍 REGULAR POINTS using game:', regularGameForPoints.id, 'type:', regularGameForPoints.gameType);
         const totals: Record<string, number> = {};
         for (const p of group.players) totals[p.id] = 0;
-        for (const [, holePoints] of Object.entries(pointsGame.points || {})) {
+        for (const [, holePoints] of Object.entries(regularGameForPoints.points || {})) {
           for (const pid of Object.keys(totals)) {
             totals[pid] += holePoints?.[pid] || 0;
           }
@@ -2043,65 +2061,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // FBT (Regular 2/9/16 game)
-      if (selectedGames.includes('fbt') && pointsGame && parseFloat(fbtValue) > 0) {
+      const regularGameForFBT = regular2916Game || pointsGame;
+      if (selectedGames.includes('fbt') && regularGameForFBT && parseFloat(fbtValue) > 0) {
+        console.log('🔍 REGULAR FBT using game:', regularGameForFBT.id, 'type:', regularGameForFBT.gameType);
         // Convert null to undefined for type compatibility
         const pointsGameForFBT = {
-          ...pointsGame,
-          points: pointsGame.points || undefined
+          ...regularGameForFBT,
+          points: regularGameForFBT.points || undefined
         };
         nets.push(buildFbtNetsFromPointsGame(group.players, pointsGameForFBT, parseFloat(fbtValue)));
         activeGames.push('fbt');
       }
 
       // BBB POINTS
-      const bbbPointsCondition = selectedGames.includes('bbb-points') && pointsGame && pointsGame.gameType === 'bbb' && parseFloat(pointValue) > 0;
-      console.log('🔍 BBB POINTS CHECK (RESTORED):', {
+      const bbbGameForPoints = bbbGame || (pointsGame?.gameType === 'bbb' ? pointsGame : null);
+      const bbbPointsCondition = selectedGames.includes('bbb-points') && bbbGameForPoints && parseFloat(pointValue) > 0;
+      console.log('🔍 BBB POINTS CHECK (UPDATED):', {
         includesBBBPoints: selectedGames.includes('bbb-points'),
-        hasPointsGame: !!pointsGame,
-        pointsGameType: pointsGame?.gameType,
-        pointsGameId: pointsGame?.id,
+        hasBBBGame: !!bbbGameForPoints,
+        bbbGameId: bbbGameForPoints?.id,
+        bbbGameType: bbbGameForPoints?.gameType,
         pointValue: parseFloat(pointValue),
         conditionMet: bbbPointsCondition
       });
       
       if (bbbPointsCondition) {
         const playerIds = group.players.map(p => p.id);
-        const bbbHoleData = pointsGame.holes || {};
-        console.log('🔍 BBB POINTS DATA (RESTORED):', {
+        const bbbHoleData = bbbGameForPoints.holes || {};
+        console.log('🔍 BBB POINTS DATA (UPDATED):', {
           playerIds,
           bbbHoleDataKeys: Object.keys(bbbHoleData),
           bbbHoleData: JSON.stringify(bbbHoleData, null, 2)
         });
         
         const bbbPointsResult = calculateBBBPointsGame(bbbHoleData, playerIds, parseFloat(pointValue));
-        console.log('🔍 BBB POINTS RESULT (RESTORED):', bbbPointsResult);
+        console.log('🔍 BBB POINTS RESULT (UPDATED):', bbbPointsResult);
         
         nets.push(bbbPointsResult);
         activeGames.push('bbb-points');
       }
 
       // BBB FBT
-      const bbbFbtCondition = selectedGames.includes('bbb-fbt') && pointsGame && pointsGame.gameType === 'bbb' && parseFloat(fbtValue) > 0;
-      console.log('🔍 BBB FBT CHECK (RESTORED):', {
+      const bbbGameForFBT = bbbGame || (pointsGame?.gameType === 'bbb' ? pointsGame : null);
+      const bbbFbtCondition = selectedGames.includes('bbb-fbt') && bbbGameForFBT && parseFloat(fbtValue) > 0;
+      console.log('🔍 BBB FBT CHECK (UPDATED):', {
         includesBBBFbt: selectedGames.includes('bbb-fbt'),
-        hasPointsGame: !!pointsGame,
-        pointsGameType: pointsGame?.gameType,
-        pointsGameId: pointsGame?.id,
+        hasBBBGame: !!bbbGameForFBT,
+        bbbGameId: bbbGameForFBT?.id,
+        bbbGameType: bbbGameForFBT?.gameType,
         fbtValue: parseFloat(fbtValue),
         conditionMet: bbbFbtCondition
       });
       
       if (bbbFbtCondition) {
         const playerIds = group.players.map(p => p.id);
-        const bbbHoleData = pointsGame.holes || {};
-        console.log('🔍 BBB FBT DATA (RESTORED):', {
+        const bbbHoleData = bbbGameForFBT.holes || {};
+        console.log('🔍 BBB FBT DATA (UPDATED):', {
           playerIds,
           bbbHoleDataKeys: Object.keys(bbbHoleData),
           bbbHoleData: JSON.stringify(bbbHoleData, null, 2)
         });
         
         const bbbFbtResult = calculateBBBFbtGame(bbbHoleData, playerIds, parseFloat(fbtValue));
-        console.log('🔍 BBB FBT RESULT (RESTORED):', bbbFbtResult);
+        console.log('🔍 BBB FBT RESULT (UPDATED):', bbbFbtResult);
         
         nets.push(bbbFbtResult);
         activeGames.push('bbb-fbt');

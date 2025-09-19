@@ -262,12 +262,15 @@ export class StripeService {
         }
       }
       
-      return { 
+      const result = { 
         hasAccess: true, 
         subscriptionStatus: 'active',
         nextRenewalDate,
         currentPlan
       };
+      
+      console.log('Returning subscription status:', JSON.stringify(result, null, 2));
+      return result;
     }
     
     // Don't allow access for incomplete subscriptions
@@ -327,7 +330,9 @@ export class StripeService {
                 }
               }
               
-              return { hasAccess: true, subscriptionStatus: 'active', nextRenewalDate, currentPlan };
+              const result = { hasAccess: true, subscriptionStatus: 'active', nextRenewalDate, currentPlan };
+              console.log('Returning trial-to-paid conversion result:', JSON.stringify(result, null, 2));
+              return result;
             }
           }
         } catch (error) {

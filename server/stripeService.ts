@@ -178,7 +178,19 @@ export class StripeService {
   /**
    * Check if user has access (active subscription or in trial)
    */
-  async hasAccess(userId: string): Promise<{ hasAccess: boolean; reason?: string; trialEndsAt?: Date; nextRenewalDate?: Date; subscriptionStatus?: string }> {
+  async hasAccess(userId: string): Promise<{ 
+    hasAccess: boolean; 
+    reason?: string; 
+    trialEndsAt?: Date; 
+    nextRenewalDate?: Date; 
+    subscriptionStatus?: string;
+    currentPlan?: {
+      name: string;
+      amount: number;
+      interval: string;
+      planKey: string;
+    };
+  }> {
     const user = await storage.getUser(userId);
     if (!user) {
       return { hasAccess: false, reason: 'User not found' };
@@ -186,8 +198,9 @@ export class StripeService {
     
     // Check subscription status
     if (user.subscriptionStatus === 'active') {
-      // For active subscriptions, fetch next renewal date from Stripe
+      // For active subscriptions, fetch next renewal date and plan info from Stripe
       let nextRenewalDate: Date | undefined;
+      let currentPlan: any = undefined;
       
       if (user.stripeSubscriptionId) {
         try {
@@ -195,15 +208,35 @@ export class StripeService {
           if ((stripeSubscription as any).current_period_end) {
             nextRenewalDate = new Date((stripeSubscription as any).current_period_end * 1000);
           }
+          
+          // Extract current plan information
+          if (stripeSubscription.items?.data?.[0]?.price) {
+            const price = stripeSubscription.items.data[0].price;
+            const priceId = price.id;
+            
+            // Find matching plan in our SUBSCRIPTION_PLANS
+            for (const [planKey, plan] of Object.entries(SUBSCRIPTION_PLANS)) {
+              if (plan.priceId === priceId) {
+                currentPlan = {
+                  name: plan.name,
+                  amount: plan.amount,
+                  interval: plan.interval,
+                  planKey: planKey,
+                };
+                break;
+              }
+            }
+          }
         } catch (error) {
-          console.error('Error fetching renewal date from Stripe:', error);
+          console.error('Error fetching subscription details from Stripe:', error);
         }
       }
       
       return { 
         hasAccess: true, 
         subscriptionStatus: 'active',
-        nextRenewalDate 
+        nextRenewalDate,
+        currentPlan
       };
     }
     
@@ -231,13 +264,34 @@ export class StripeService {
                 subscriptionStatus: 'active',
               });
               
-              // Include next renewal date
+              // Include next renewal date and plan info
               let nextRenewalDate: Date | undefined;
+              let currentPlan: any = undefined;
+              
               if ((stripeSubscription as any).current_period_end) {
                 nextRenewalDate = new Date((stripeSubscription as any).current_period_end * 1000);
               }
               
-              return { hasAccess: true, subscriptionStatus: 'active', nextRenewalDate };
+              // Extract current plan information
+              if (stripeSubscription.items?.data?.[0]?.price) {
+                const price = stripeSubscription.items.data[0].price;
+                const priceId = price.id;
+                
+                // Find matching plan in our SUBSCRIPTION_PLANS
+                for (const [planKey, plan] of Object.entries(SUBSCRIPTION_PLANS)) {
+                  if (plan.priceId === priceId) {
+                    currentPlan = {
+                      name: plan.name,
+                      amount: plan.amount,
+                      interval: plan.interval,
+                      planKey: planKey,
+                    };
+                    break;
+                  }
+                }
+              }
+              
+              return { hasAccess: true, subscriptionStatus: 'active', nextRenewalDate, currentPlan };
             }
           }
         } catch (error) {

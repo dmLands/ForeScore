@@ -25,6 +25,12 @@ interface SubscriptionAccess {
   trialEndsAt?: string;
   nextRenewalDate?: string;
   subscriptionStatus?: string;
+  currentPlan?: {
+    name: string;
+    amount: number;
+    interval: string;
+    planKey: string;
+  };
 }
 
 interface SubscriptionPlans {
@@ -248,6 +254,25 @@ export default function ManageSubscription() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
+                {/* Current Plan Information */}
+                {currentAccessInfo.currentPlan && (
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-medium text-blue-900">Current Plan</h4>
+                        <p className="text-sm text-blue-700">{currentAccessInfo.currentPlan.name}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold text-blue-900" data-testid="text-current-plan-cost">
+                          ${(currentAccessInfo.currentPlan.amount / 100).toFixed(2)}
+                        </p>
+                        <p className="text-sm text-blue-600">per {currentAccessInfo.currentPlan.interval}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Next Billing Date */}
                 <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
                   <div>
                     <h4 className="font-medium text-green-900">Next Billing Date</h4>
@@ -261,18 +286,55 @@ export default function ManageSubscription() {
                   </div>
                 </div>
                 
+                {/* All Available Plans */}
                 {plans && (
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <h4 className="font-medium text-gray-900">Monthly Plan</h4>
-                      <p className="text-2xl font-bold text-gray-900">${(plans.monthly.amount / 100).toFixed(2)}</p>
-                      <p className="text-sm text-gray-600">per month</p>
-                    </div>
-                    <div className="bg-green-50 border border-green-200 p-4 rounded-lg">
-                      <h4 className="font-medium text-green-900">Annual Plan</h4>
-                      <p className="text-2xl font-bold text-green-900">${(plans.annual.amount / 100).toFixed(2)}</p>
-                      <p className="text-sm text-green-600">per year</p>
-                      <Badge className="mt-1 bg-green-100 text-green-800">Best Value</Badge>
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-3">All Available Plans</h4>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className={`p-4 rounded-lg border ${
+                        currentAccessInfo.currentPlan?.planKey === 'monthly' 
+                          ? 'bg-blue-50 border-blue-200' 
+                          : 'bg-gray-50 border-gray-200'
+                      }`}>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className={`font-medium ${
+                              currentAccessInfo.currentPlan?.planKey === 'monthly' 
+                                ? 'text-blue-900' 
+                                : 'text-gray-900'
+                            }`}>Monthly Plan</h4>
+                            <p className="text-2xl font-bold text-gray-900">${(plans.monthly.amount / 100).toFixed(2)}</p>
+                            <p className="text-sm text-gray-600">per month</p>
+                          </div>
+                          {currentAccessInfo.currentPlan?.planKey === 'monthly' && (
+                            <Badge className="bg-blue-100 text-blue-800">Current</Badge>
+                          )}
+                        </div>
+                      </div>
+                      <div className={`p-4 rounded-lg border ${
+                        currentAccessInfo.currentPlan?.planKey === 'annual' 
+                          ? 'bg-blue-50 border-blue-200' 
+                          : 'bg-green-50 border-green-200'
+                      }`}>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h4 className={`font-medium ${
+                              currentAccessInfo.currentPlan?.planKey === 'annual' 
+                                ? 'text-blue-900' 
+                                : 'text-green-900'
+                            }`}>Annual Plan</h4>
+                            <p className="text-2xl font-bold text-gray-900">${(plans.annual.amount / 100).toFixed(2)}</p>
+                            <p className="text-sm text-gray-600">per year</p>
+                            <div className="flex items-center space-x-2 mt-1">
+                              {currentAccessInfo.currentPlan?.planKey === 'annual' ? (
+                                <Badge className="bg-blue-100 text-blue-800">Current</Badge>
+                              ) : (
+                                <Badge className="bg-green-100 text-green-800">Best Value</Badge>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}

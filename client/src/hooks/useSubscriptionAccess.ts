@@ -9,6 +9,12 @@ interface SubscriptionAccess {
   trialEndsAt?: string;
   nextRenewalDate?: string;
   subscriptionStatus?: string;
+  currentPlan?: {
+    name: string;
+    amount: number;
+    interval: string;
+    planKey: string;
+  };
 }
 
 export function useSubscriptionAccess() {

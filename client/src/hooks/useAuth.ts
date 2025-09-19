@@ -8,6 +8,12 @@ interface SubscriptionAccess {
   trialEndsAt?: string;
   nextRenewalDate?: string;
   subscriptionStatus?: string;
+  currentPlan?: {
+    name: string;
+    amount: number;
+    interval: string;
+    planKey: string;
+  };
 }
 
 // Admin authorization - check if user email is in admin list

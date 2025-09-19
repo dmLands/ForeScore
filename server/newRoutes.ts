@@ -2311,12 +2311,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // User export endpoint (admin) - extracts all user data with exportable fields
+  // User export endpoint (admin) - extracts all user data with live subscription status
   app.get('/api/admin/export-users', isAuthenticated, requireAdmin, async (req, res) => {
     try {
       console.log('Admin user export requested by user:', (req as any).user?.claims?.sub);
       
-      // Extract all users with requested fields including subscription status
+      // Extract all users with basic info
       const allUsers = await db
         .select({
           id: users.id,
@@ -2324,35 +2324,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
           lastName: users.lastName,
           email: users.email,
           authMethod: users.authMethod,
-          subscriptionStatus: users.subscriptionStatus,
-          trialEndsAt: users.trialEndsAt,
-          subscriptionEndsAt: users.subscriptionEndsAt,
           createdAt: users.createdAt
         })
         .from(users);
       
-      console.log(`Found ${allUsers.length} users for export`);
+      console.log(`Found ${allUsers.length} users for export - fetching live subscription data...`);
 
-      // Format for CSV export with subscription information
-      const csvData = allUsers.map(user => {
-        // Format subscription status for display
+      // Format for CSV export with live subscription information
+      const csvData = await Promise.all(allUsers.map(async (user) => {
+        // Get live subscription status for each user
         let subscriptionDisplay = 'No Subscription';
-        if (user.subscriptionStatus === 'trialing' && user.trialEndsAt) {
-          const trialEnd = new Date(user.trialEndsAt);
-          const now = new Date();
-          if (now < trialEnd) {
-            subscriptionDisplay = `Trial (ends ${trialEnd.toLocaleDateString()})`;
-          } else {
-            subscriptionDisplay = 'Trial Expired';
+        let nextRenewal = '';
+        
+        try {
+          const accessInfo = await stripeService.hasAccess(user.id);
+          
+          if (accessInfo.subscriptionStatus === 'active') {
+            subscriptionDisplay = 'Active';
+            if (accessInfo.nextRenewalDate) {
+              nextRenewal = new Date(accessInfo.nextRenewalDate).toLocaleDateString();
+            }
+          } else if (accessInfo.subscriptionStatus === 'trialing') {
+            if (accessInfo.trialEndsAt) {
+              const trialEnd = new Date(accessInfo.trialEndsAt);
+              subscriptionDisplay = `Trial (ends ${trialEnd.toLocaleDateString()})`;
+            } else {
+              subscriptionDisplay = 'Trial';
+            }
+          } else if (!accessInfo.hasAccess) {
+            // Check the reason to determine status
+            if (accessInfo.reason?.includes('Trial expired')) {
+              subscriptionDisplay = 'Trial Expired';
+            } else if (accessInfo.reason?.includes('Payment required')) {
+              subscriptionDisplay = 'Payment Required';
+            } else {
+              subscriptionDisplay = 'No Subscription';
+            }
           }
-        } else if (user.subscriptionStatus === 'active') {
-          subscriptionDisplay = 'Active';
-        } else if (user.subscriptionStatus === 'canceled') {
-          subscriptionDisplay = 'Canceled';
-        } else if (user.subscriptionStatus === 'past_due') {
-          subscriptionDisplay = 'Past Due';
-        } else if (user.subscriptionStatus) {
-          subscriptionDisplay = user.subscriptionStatus.charAt(0).toUpperCase() + user.subscriptionStatus.slice(1);
+        } catch (error) {
+          console.error(`Error fetching subscription for user ${user.id}:`, error);
+          subscriptionDisplay = 'Status Check Failed';
         }
         
         return {
@@ -2361,9 +2372,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'Email Address': user.email || '',
           'Auth Method': user.authMethod || '',
           'Subscription Status': subscriptionDisplay,
+          'Next Renewal': nextRenewal,
           'Created At': user.createdAt?.toISOString() || ''
         };
-      });
+      }));
 
       // Set headers for CSV download
       const format = req.query.format || 'json';

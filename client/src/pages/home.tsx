@@ -1104,13 +1104,14 @@ export default function Home() {
     const fbtValueNum = parseFloat(fbtValue) || 0;
     const has2916Values = pointValueNum > 0 || fbtValueNum > 0;
     
-    // BBB game detection
-    const isBBBGame = selectedPointsGame.gameType === 'bbb';
+    // BBB game detection - check if BBB game exists, not if it's currently selected
+    const isBBBGameSelected = selectedPointsGame.gameType === 'bbb';
+    const hasBBBGameAvailable = !!selectedBBBGame;
     const bbbPointValueNum = parseFloat(bbbPointValue) || 0;
     const bbbFbtValueNum = parseFloat(bbbFbtValue) || 0;
     const hasBBBValues = bbbPointValueNum > 0 || bbbFbtValueNum > 0;
     
-    // Auto-populate multiSelectGames when games have valid values
+    // Auto-populate multiSelectGames when games have valid values AND user hasn't made manual selections
     if ((isCardsActive || has2916Values || hasBBBValues) && multiSelectGames.length === 0) {
       const autoGames: string[] = [];
       
@@ -1118,17 +1119,28 @@ export default function Home() {
         autoGames.push('cards');
       }
       
-      if (isBBBGame && hasBBBValues) {  // BBB game with values set
+      // Prioritize BBB games if BBB game is currently selected
+      if (isBBBGameSelected && hasBBBValues) {
         if (bbbPointValueNum > 0) autoGames.push('bbb-points');
         if (bbbFbtValueNum > 0) autoGames.push('bbb-fbt');
-      } else if (has2916Values) {  // Regular 2/9/16 game with values set
+      } 
+      // Otherwise add regular 2/9/16 games if they have values
+      else if (has2916Values) {
         if (pointValueNum > 0) autoGames.push('points');
         if (fbtValueNum > 0) autoGames.push('fbt');
       }
       
       if (autoGames.length > 0) {
+        console.log('AUTO-POPULATION: Setting multiSelectGames to:', autoGames);
+        console.log('AUTO-POPULATION: Current state -', {
+          isBBBGameSelected,
+          hasBBBGameAvailable,
+          hasBBBValues,
+          has2916Values,
+          isCardsActive,
+          currentMultiSelectLength: multiSelectGames.length
+        });
         setMultiSelectGames(autoGames);
-        console.log('Auto-populated multiSelectGames:', autoGames);
       }
     }
   }, [selectedGroup, selectedGame, selectedPointsGame, safeGameState, pointValue, fbtValue, bbbPointValue, bbbFbtValue, multiSelectGames.length]);
@@ -5069,6 +5081,10 @@ export default function Home() {
               
               <Button 
                 onClick={async () => {
+                  console.log('Save button clicked with temp selections:', tempSelectedGames);
+                  console.log('selectedBBBGame exists:', !!selectedBBBGame);
+                  console.log('BBB values:', { bbbPointValue, bbbFbtValue });
+                  
                   setMultiSelectGames(tempSelectedGames);
                   setShowPayoutModal(false);
                   

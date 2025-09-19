@@ -1017,9 +1017,13 @@ export default function Home() {
         setFbtValue(savedCombinedResults.fbtValue.toFixed(2));
       }
     } else {
-      // No saved results - ensure UI starts in "no selection" state
-      setMultiSelectGames([]);
-      console.log('No saved combined results - cleared selection state');
+      // FIX: Only clear selection state if there are no current manual selections
+      // This prevents clearing BBB selections that user just made
+      if (multiSelectGames.length === 0) {
+        console.log('No saved combined results and no current selections - maintaining clear state');
+      } else {
+        console.log('No saved combined results but user has current selections - preserving them:', multiSelectGames);
+      }
     }
   }, [savedCombinedResults]);
 
@@ -1131,16 +1135,8 @@ export default function Home() {
       }
       
       if (autoGames.length > 0) {
-        console.log('AUTO-POPULATION: Setting multiSelectGames to:', autoGames);
-        console.log('AUTO-POPULATION: Current state -', {
-          isBBBGameSelected,
-          hasBBBGameAvailable,
-          hasBBBValues,
-          has2916Values,
-          isCardsActive,
-          currentMultiSelectLength: multiSelectGames.length
-        });
         setMultiSelectGames(autoGames);
+        console.log('Auto-populated multiSelectGames:', autoGames);
       }
     }
   }, [selectedGroup, selectedGame, selectedPointsGame, safeGameState, pointValue, fbtValue, bbbPointValue, bbbFbtValue, multiSelectGames.length]);
@@ -5081,10 +5077,6 @@ export default function Home() {
               
               <Button 
                 onClick={async () => {
-                  console.log('Save button clicked with temp selections:', tempSelectedGames);
-                  console.log('selectedBBBGame exists:', !!selectedBBBGame);
-                  console.log('BBB values:', { bbbPointValue, bbbFbtValue });
-                  
                   setMultiSelectGames(tempSelectedGames);
                   setShowPayoutModal(false);
                   

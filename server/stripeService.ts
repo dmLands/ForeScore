@@ -214,13 +214,21 @@ export class StripeService {
           console.log(`trial_end: ${sub.trial_end}`);
           console.log(`cancel_at_period_end: ${sub.cancel_at_period_end}`);
           
-          // Use current_period_end for renewal date, fallback to trial_end if in trial
-          const renewalTimestamp = sub.current_period_end || sub.trial_end;
-          if (renewalTimestamp) {
-            nextRenewalDate = new Date(renewalTimestamp * 1000);
-            console.log(`Next renewal date: ${nextRenewalDate} (from ${sub.current_period_end ? 'current_period_end' : 'trial_end'})`);
+          // For active subscriptions, only use current_period_end
+          if (sub.status === 'active') {
+            if (sub.current_period_end) {
+              nextRenewalDate = new Date(sub.current_period_end * 1000);
+              console.log(`Next renewal date: ${nextRenewalDate} (from current_period_end)`);
+            } else {
+              console.log('WARNING: Active subscription missing current_period_end - this may indicate a Stripe configuration issue');
+              // For active subscriptions without current_period_end, don't show trial_end as it's misleading
+            }
+          } else if (sub.status === 'trialing' && sub.trial_end) {
+            // Only use trial_end for subscriptions still in trial
+            nextRenewalDate = new Date(sub.trial_end * 1000);
+            console.log(`Trial end date: ${nextRenewalDate} (from trial_end)`);
           } else {
-            console.log('No renewal date found in Stripe subscription');
+            console.log(`No renewal date found for subscription status: ${sub.status}`);
           }
           
           // Extract current plan information
@@ -292,8 +300,12 @@ export class StripeService {
               let nextRenewalDate: Date | undefined;
               let currentPlan: any = undefined;
               
-              if ((stripeSubscription as any).current_period_end) {
-                nextRenewalDate = new Date((stripeSubscription as any).current_period_end * 1000);
+              const sub = stripeSubscription as any;
+              if (sub.current_period_end) {
+                nextRenewalDate = new Date(sub.current_period_end * 1000);
+                console.log(`Trial-to-paid conversion: Next renewal date: ${nextRenewalDate}`);
+              } else {
+                console.log('WARNING: Trial-to-paid conversion missing current_period_end');
               }
               
               // Extract current plan information

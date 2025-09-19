@@ -214,42 +214,8 @@ export class StripeService {
           console.log(`trial_end: ${sub.trial_end}`);
           console.log(`cancel_at_period_end: ${sub.cancel_at_period_end}`);
           
-          // For active subscriptions, only use current_period_end
-          if (sub.status === 'active') {
-            if (sub.current_period_end) {
-              nextRenewalDate = new Date(sub.current_period_end * 1000);
-              console.log(`Next renewal date: ${nextRenewalDate} (from current_period_end)`);
-            } else {
-              console.log('WARNING: Active subscription missing current_period_end - trying upcoming invoice fallback');
-              // Fallback: get next invoice date when current_period_end is missing
-              try {
-                const upcomingInvoice = await (stripe.invoices as any).upcoming({
-                  customer: stripeSubscription.customer as string,
-                  subscription: stripeSubscription.id,
-                });
-                
-                if (upcomingInvoice.next_payment_attempt) {
-                  nextRenewalDate = new Date(upcomingInvoice.next_payment_attempt * 1000);
-                  console.log(`Next renewal date: ${nextRenewalDate} (from upcoming invoice next_payment_attempt)`);
-                } else if (upcomingInvoice.lines?.data?.[0]?.period?.end) {
-                  nextRenewalDate = new Date(upcomingInvoice.lines.data[0].period.end * 1000);
-                  console.log(`Next renewal date: ${nextRenewalDate} (from upcoming invoice period end)`);
-                } else {
-                  console.log('No renewal date found in upcoming invoice either');
-                }
-              } catch (error) {
-                console.error('Error fetching upcoming invoice:', error);
-              }
-            }
-          } else if (sub.status === 'trialing' && sub.trial_end) {
-            // Only use trial_end for subscriptions still in trial
-            nextRenewalDate = new Date(sub.trial_end * 1000);
-            console.log(`Trial end date: ${nextRenewalDate} (from trial_end)`);
-          } else {
-            console.log(`No renewal date found for subscription status: ${sub.status}`);
-          }
-          
-          // Extract current plan information
+          // First extract current plan information to know the billing interval
+          let planInterval = 'month'; // default
           if (stripeSubscription.items?.data?.[0]?.price) {
             const price = stripeSubscription.items.data[0].price;
             const priceId = price.id;
@@ -264,7 +230,8 @@ export class StripeService {
                   interval: plan.interval,
                   planKey: planKey,
                 };
-                console.log(`Found matching plan: ${planKey} - ${plan.name}`);
+                planInterval = plan.interval;
+                console.log(`Found matching plan: ${planKey} - ${plan.name}, interval: ${planInterval}`);
                 break;
               }
             }
@@ -274,6 +241,47 @@ export class StripeService {
             }
           } else {
             console.log('No subscription items or price found in Stripe subscription');
+          }
+          
+          // Now calculate renewal date based on plan interval
+          if (sub.status === 'active') {
+            if (sub.current_period_end) {
+              nextRenewalDate = new Date(sub.current_period_end * 1000);
+              console.log(`Next renewal date: ${nextRenewalDate} (from current_period_end)`);
+            } else {
+              console.log(`WARNING: Active subscription missing current_period_end - calculating from subscription created date using ${planInterval} interval`);
+              // Fallback: Calculate next renewal based on subscription creation and interval
+              try {
+                const subscriptionCreated = new Date(stripeSubscription.created * 1000);
+                const currentTime = new Date();
+                
+                // Calculate next renewal date based on creation date and interval
+                let nextBillingDate = new Date(subscriptionCreated);
+                
+                if (planInterval === 'month') {
+                  // Add months until we get to a future date
+                  while (nextBillingDate <= currentTime) {
+                    nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
+                  }
+                } else if (planInterval === 'year') {
+                  // Add years until we get to a future date
+                  while (nextBillingDate <= currentTime) {
+                    nextBillingDate.setFullYear(nextBillingDate.getFullYear() + 1);
+                  }
+                }
+                
+                nextRenewalDate = nextBillingDate;
+                console.log(`Calculated next renewal date: ${nextRenewalDate} (based on ${planInterval}ly billing from ${subscriptionCreated})`);
+              } catch (error) {
+                console.error('Error calculating next renewal date:', error);
+              }
+            }
+          } else if (sub.status === 'trialing' && sub.trial_end) {
+            // Only use trial_end for subscriptions still in trial
+            nextRenewalDate = new Date(sub.trial_end * 1000);
+            console.log(`Trial end date: ${nextRenewalDate} (from trial_end)`);
+          } else {
+            console.log(`No renewal date found for subscription status: ${sub.status}`);
           }
         } catch (error) {
           console.error('Error fetching subscription details from Stripe:', error);
@@ -329,7 +337,7 @@ export class StripeService {
                 console.log('WARNING: Trial-to-paid conversion missing current_period_end - trying upcoming invoice fallback');
                 // Fallback: get next invoice date when current_period_end is missing
                 try {
-                  const upcomingInvoice = await (stripe.invoices as any).upcoming({
+                  const upcomingInvoice = await (stripe.invoices as any).retrieveUpcoming({
                     customer: stripeSubscription.customer as string,
                     subscription: stripeSubscription.id,
                   });

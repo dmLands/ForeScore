@@ -431,27 +431,61 @@ export class StripeService {
   // Trials are now properly handled during initial subscription creation
   
   /**
-   * Update subscription status in database based on Stripe data
+   * Update subscription status in database using canonical Stripe schema
    */
   private async updateSubscriptionStatus(subscription: Stripe.Subscription): Promise<void> {
     const userId = subscription.metadata.userId;
     if (!userId) return;
     
-    const updateData: any = {
-      subscriptionStatus: subscription.status,
+    console.log(`Webhook: Updating subscription ${subscription.id} for user ${userId}`);
+    console.log(`Status: ${subscription.status}, current_period_end: ${subscription.current_period_end}, trial_end: ${subscription.trial_end}`);
+    
+    // Extract canonical Stripe subscription data
+    const stripeSubscriptionData = {
+      userId: userId,
+      stripeSubscriptionId: subscription.id,
+      stripeCustomerId: subscription.customer as string,
+      stripePriceId: subscription.items.data[0]?.price.id || '',
+      status: subscription.status as 'trialing' | 'active' | 'canceled' | 'incomplete' | 'past_due' | 'unpaid' | 'paused',
+      currentPeriodStart: subscription.current_period_start ? new Date(subscription.current_period_start * 1000) : null,
+      currentPeriodEnd: subscription.current_period_end ? new Date(subscription.current_period_end * 1000) : null,
+      trialStart: subscription.trial_start ? new Date(subscription.trial_start * 1000) : null,
+      trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
+      cancelAt: subscription.cancel_at ? new Date(subscription.cancel_at * 1000) : null,
+      cancelAtPeriodEnd: subscription.cancel_at_period_end ? 1 : 0,
+      latestInvoiceId: subscription.latest_invoice as string || null,
+      collectionMethod: subscription.collection_method as 'charge_automatically' | 'send_invoice',
     };
     
-    // Set trial end date if in trial
-    if (subscription.status === 'trialing' && subscription.trial_end) {
-      updateData.trialEndsAt = new Date(subscription.trial_end * 1000);
+    try {
+      // Upsert into the canonical stripeSubscriptions table
+      await storage.upsertStripeSubscription(stripeSubscriptionData);
+      console.log(`✅ Webhook: Successfully synced subscription data to canonical table`);
+      
+      // Also update legacy user fields for backward compatibility (temporary)
+      const legacyUpdateData: any = {
+        stripeCustomerId: subscription.customer as string,
+        stripeSubscriptionId: subscription.id,
+        subscriptionStatus: subscription.status,
+      };
+      
+      // Set trial end date if in trial
+      if (subscription.status === 'trialing' && subscription.trial_end) {
+        legacyUpdateData.trialEndsAt = new Date(subscription.trial_end * 1000);
+      }
+      
+      // Set subscription end date if canceled
+      if (subscription.status === 'canceled' && subscription.ended_at) {
+        legacyUpdateData.subscriptionEndsAt = new Date(subscription.ended_at * 1000);
+      }
+      
+      await storage.updateUserSubscription(userId, legacyUpdateData);
+      console.log(`✅ Webhook: Updated legacy user subscription fields for backward compatibility`);
+      
+    } catch (error) {
+      console.error(`❌ Webhook: Failed to update subscription data:`, error);
+      throw error;
     }
-    
-    // Set subscription end date if canceled
-    if (subscription.status === 'canceled' && subscription.ended_at) {
-      updateData.subscriptionEndsAt = new Date(subscription.ended_at * 1000);
-    }
-    
-    await storage.updateUserSubscription(userId, updateData);
   }
   
   /**

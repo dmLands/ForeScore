@@ -4149,34 +4149,6 @@ export default function Home() {
 
                           return hasValidPayouts && (
                             <>
-                              {/* Dynamic BBB Scores Section - Only show scores for selected mode */}
-                              {bbbPayoutMode === 'points' && (
-                                <div className="mt-6">
-                                  <h4 className="text-md font-semibold text-gray-800 mb-3">BBB Points Scores</h4>
-                                  <div className="space-y-2">
-                                    {[...selectedGroup.players]
-                                      .sort((a, b) => (totalPoints[b.id] || 0) - (totalPoints[a.id] || 0))
-                                      .map((player) => (
-                                      <div key={player.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                        <div className="flex items-center gap-3">
-                                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold`}
-                                               style={{ backgroundColor: player.color }}>
-                                            {player.initials}
-                                          </div>
-                                          <span className="font-medium text-gray-800">{player.name}</span>
-                                        </div>
-                                        <div className="text-right">
-                                          <p className="text-lg font-bold text-gray-800">
-                                            {totalPoints[player.id] || 0}
-                                          </p>
-                                          <p className="text-xs text-gray-600">points</p>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-
                               {/* Payout Results */}
                               <div className="mt-6">
                                 <h4 className="text-md font-semibold text-gray-800 mb-3">
@@ -4217,6 +4189,34 @@ export default function Home() {
                                     })}
                                 </div>
                               </div>
+
+                              {/* Dynamic BBB Scores Section - Show scores after payouts */}
+                              {bbbPayoutMode === 'points' && (
+                                <div className="mt-4">
+                                  <h4 className="text-md font-semibold text-gray-800 mb-3">BBB Points Scores</h4>
+                                  <div className="space-y-2">
+                                    {[...selectedGroup.players]
+                                      .sort((a, b) => (totalPoints[b.id] || 0) - (totalPoints[a.id] || 0))
+                                      .map((player) => (
+                                      <div key={player.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                        <div className="flex items-center gap-3">
+                                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold`}
+                                               style={{ backgroundColor: player.color }}>
+                                            {player.initials}
+                                          </div>
+                                          <span className="font-medium text-gray-800">{player.name}</span>
+                                        </div>
+                                        <div className="text-right">
+                                          <p className="text-lg font-bold text-gray-800">
+                                            {totalPoints[player.id] || 0}
+                                          </p>
+                                          <p className="text-xs text-gray-600">points</p>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
 
                               {bbbPayoutMode === 'fbt' && (
                                 <div className="mt-4">

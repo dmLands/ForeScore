@@ -220,8 +220,26 @@ export class StripeService {
               nextRenewalDate = new Date(sub.current_period_end * 1000);
               console.log(`Next renewal date: ${nextRenewalDate} (from current_period_end)`);
             } else {
-              console.log('WARNING: Active subscription missing current_period_end - this may indicate a Stripe configuration issue');
-              // For active subscriptions without current_period_end, don't show trial_end as it's misleading
+              console.log('WARNING: Active subscription missing current_period_end - trying upcoming invoice fallback');
+              // Fallback: get next invoice date when current_period_end is missing
+              try {
+                const upcomingInvoice = await (stripe.invoices as any).upcoming({
+                  customer: stripeSubscription.customer as string,
+                  subscription: stripeSubscription.id,
+                });
+                
+                if (upcomingInvoice.next_payment_attempt) {
+                  nextRenewalDate = new Date(upcomingInvoice.next_payment_attempt * 1000);
+                  console.log(`Next renewal date: ${nextRenewalDate} (from upcoming invoice next_payment_attempt)`);
+                } else if (upcomingInvoice.lines?.data?.[0]?.period?.end) {
+                  nextRenewalDate = new Date(upcomingInvoice.lines.data[0].period.end * 1000);
+                  console.log(`Next renewal date: ${nextRenewalDate} (from upcoming invoice period end)`);
+                } else {
+                  console.log('No renewal date found in upcoming invoice either');
+                }
+              } catch (error) {
+                console.error('Error fetching upcoming invoice:', error);
+              }
             }
           } else if (sub.status === 'trialing' && sub.trial_end) {
             // Only use trial_end for subscriptions still in trial
@@ -308,7 +326,26 @@ export class StripeService {
                 nextRenewalDate = new Date(sub.current_period_end * 1000);
                 console.log(`Trial-to-paid conversion: Next renewal date: ${nextRenewalDate}`);
               } else {
-                console.log('WARNING: Trial-to-paid conversion missing current_period_end');
+                console.log('WARNING: Trial-to-paid conversion missing current_period_end - trying upcoming invoice fallback');
+                // Fallback: get next invoice date when current_period_end is missing
+                try {
+                  const upcomingInvoice = await (stripe.invoices as any).upcoming({
+                    customer: stripeSubscription.customer as string,
+                    subscription: stripeSubscription.id,
+                  });
+                  
+                  if (upcomingInvoice.next_payment_attempt) {
+                    nextRenewalDate = new Date(upcomingInvoice.next_payment_attempt * 1000);
+                    console.log(`Trial-to-paid conversion: Next renewal date: ${nextRenewalDate} (from upcoming invoice next_payment_attempt)`);
+                  } else if (upcomingInvoice.lines?.data?.[0]?.period?.end) {
+                    nextRenewalDate = new Date(upcomingInvoice.lines.data[0].period.end * 1000);
+                    console.log(`Trial-to-paid conversion: Next renewal date: ${nextRenewalDate} (from upcoming invoice period end)`);
+                  } else {
+                    console.log('Trial-to-paid conversion: No renewal date found in upcoming invoice either');
+                  }
+                } catch (error) {
+                  console.error('Trial-to-paid conversion: Error fetching upcoming invoice:', error);
+                }
               }
               
               // Extract current plan information

@@ -4177,8 +4177,49 @@ export default function Home() {
                                 </div>
                               )}
 
+                              {/* Payout Results */}
+                              <div className="mt-6">
+                                <h4 className="text-md font-semibold text-gray-800 mb-3">
+                                  {bbbPayoutMode === 'points' ? 'Points Payouts' : 'FBT Payouts'}
+                                </h4>
+                                <div className="space-y-2">
+                                  {[...selectedGroup.players]
+                                    .sort((a, b) => {
+                                      const payoutA = bbbPayoutMode === 'points' ? (bbbPointsPayouts[a.id] || 0) : (bbbFbtPayouts[a.id] || 0);
+                                      const payoutB = bbbPayoutMode === 'points' ? (bbbPointsPayouts[b.id] || 0) : (bbbFbtPayouts[b.id] || 0);
+                                      return payoutB - payoutA;
+                                    })
+                                    .map((player) => {
+                                      const netAmount = bbbPayoutMode === 'points' ? (bbbPointsPayouts[player.id] || 0) : (bbbFbtPayouts[player.id] || 0);
+                                      const isEven = Math.abs(netAmount) < 0.01;
+                                      
+                                      return (
+                                        <div key={player.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg" data-testid={`bbb-${bbbPayoutMode}-payout-${player.id}`}>
+                                          <div className="flex items-center gap-3">
+                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold`}
+                                                 style={{ backgroundColor: player.color }}>
+                                              {player.initials}
+                                            </div>
+                                            <span className="font-medium text-gray-800">{player.name}</span>
+                                          </div>
+                                          <div className="text-right">
+                                            <div className={`text-lg font-bold ${
+                                              isEven ? 'text-gray-800' : 
+                                              netAmount > 0 ? 'text-emerald-600' : 'text-red-600'
+                                            }`}>
+                                              {isEven ? '$0.00' : 
+                                               netAmount > 0 ? `+$${netAmount.toFixed(2)}` : 
+                                               `-$${Math.abs(netAmount).toFixed(2)}`}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                </div>
+                              </div>
+
                               {bbbPayoutMode === 'fbt' && (
-                                <div className="mt-6">
+                                <div className="mt-4">
                                   <h4 className="text-md font-semibold text-gray-800 mb-3">BBB FBT Scores</h4>
                                   <div className="space-y-2">
                                     {[...selectedGroup.players]
@@ -4235,47 +4276,6 @@ export default function Home() {
                                     </>
                                   )}
                                 </p>
-                              </div>
-
-                              {/* Payout Results */}
-                              <div className="mt-4">
-                                <h4 className="text-md font-semibold text-gray-800 mb-3">
-                                  {bbbPayoutMode === 'points' ? 'Points Payouts' : 'FBT Payouts'}
-                                </h4>
-                                <div className="space-y-2">
-                                  {[...selectedGroup.players]
-                                    .sort((a, b) => {
-                                      const payoutA = bbbPayoutMode === 'points' ? (bbbPointsPayouts[a.id] || 0) : (bbbFbtPayouts[a.id] || 0);
-                                      const payoutB = bbbPayoutMode === 'points' ? (bbbPointsPayouts[b.id] || 0) : (bbbFbtPayouts[b.id] || 0);
-                                      return payoutB - payoutA;
-                                    })
-                                    .map((player) => {
-                                      const netAmount = bbbPayoutMode === 'points' ? (bbbPointsPayouts[player.id] || 0) : (bbbFbtPayouts[player.id] || 0);
-                                      const isEven = Math.abs(netAmount) < 0.01;
-                                      
-                                      return (
-                                        <div key={player.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg" data-testid={`bbb-${bbbPayoutMode}-payout-${player.id}`}>
-                                          <div className="flex items-center gap-3">
-                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold`}
-                                                 style={{ backgroundColor: player.color }}>
-                                              {player.initials}
-                                            </div>
-                                            <span className="font-medium text-gray-800">{player.name}</span>
-                                          </div>
-                                          <div className="text-right">
-                                            <div className={`text-lg font-bold ${
-                                              isEven ? 'text-gray-800' : 
-                                              netAmount > 0 ? 'text-emerald-600' : 'text-red-600'
-                                            }`}>
-                                              {isEven ? '$0.00' : 
-                                               netAmount > 0 ? `+$${netAmount.toFixed(2)}` : 
-                                               `-$${Math.abs(netAmount).toFixed(2)}`}
-                                            </div>
-                                          </div>
-                                        </div>
-                                      );
-                                    })}
-                                </div>
                               </div>
                             </>
                           );

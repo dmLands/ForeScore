@@ -174,7 +174,7 @@ export class StripeService {
   }
   
   /**
-   * Check if user has access (active subscription or in trial)
+   * Check if user has access using canonical Stripe subscription data (no API calls)
    */
   async hasAccess(userId: string): Promise<{ 
     hasAccess: boolean; 
@@ -194,202 +194,89 @@ export class StripeService {
       return { hasAccess: false, reason: 'User not found' };
     }
     
-    // Check subscription status
-    if (user.subscriptionStatus === 'active') {
-      // For active subscriptions, fetch next renewal date and plan info from Stripe
-      let nextRenewalDate: Date | undefined;
-      let currentPlan: any = undefined;
-      
-      if (user.stripeSubscriptionId) {
-        try {
-          console.log(`Fetching Stripe subscription details for user ${userId}, subscription: ${user.stripeSubscriptionId}`);
-          const stripeSubscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
-          
-          // Cast to any to access Stripe properties properly
-          const sub = stripeSubscription as any;
-          console.log(`Stripe subscription status: ${sub.status}`);
-          console.log(`current_period_end: ${sub.current_period_end}`);
-          console.log(`trial_end: ${sub.trial_end}`);
-          console.log(`cancel_at_period_end: ${sub.cancel_at_period_end}`);
-          
-          // First extract current plan information to know the billing interval
-          let planInterval = 'month'; // default
-          if (stripeSubscription.items?.data?.[0]?.price) {
-            const price = stripeSubscription.items.data[0].price;
-            const priceId = price.id;
-            console.log(`Subscription price ID: ${priceId}`);
-            
-            // Find matching plan in our SUBSCRIPTION_PLANS
-            for (const [planKey, plan] of Object.entries(SUBSCRIPTION_PLANS)) {
-              if (plan.priceId === priceId) {
-                currentPlan = {
-                  name: plan.name,
-                  amount: plan.amount,
-                  interval: plan.interval,
-                  planKey: planKey,
-                };
-                planInterval = plan.interval;
-                console.log(`Found matching plan: ${planKey} - ${plan.name}, interval: ${planInterval}`);
-                break;
-              }
-            }
-            
-            if (!currentPlan) {
-              console.log(`No matching plan found for price ID: ${priceId}`);
-            }
-          } else {
-            console.log('No subscription items or price found in Stripe subscription');
-          }
-          
-          // Now calculate renewal date based on plan interval
-          if (sub.status === 'active') {
-            if (sub.current_period_end) {
-              nextRenewalDate = new Date(sub.current_period_end * 1000);
-              console.log(`Next renewal date: ${nextRenewalDate} (from current_period_end)`);
-            } else {
-              console.log(`WARNING: Active subscription missing current_period_end - calculating from subscription created date using ${planInterval} interval`);
-              // Fallback: Calculate next renewal based on subscription creation and interval
-              try {
-                const subscriptionCreated = new Date(stripeSubscription.created * 1000);
-                const currentTime = new Date();
-                
-                // Calculate next renewal date based on creation date and interval
-                let nextBillingDate = new Date(subscriptionCreated);
-                
-                if (planInterval === 'month') {
-                  // Add months until we get to a future date
-                  while (nextBillingDate <= currentTime) {
-                    nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
-                  }
-                } else if (planInterval === 'year') {
-                  // Add years until we get to a future date
-                  while (nextBillingDate <= currentTime) {
-                    nextBillingDate.setFullYear(nextBillingDate.getFullYear() + 1);
-                  }
-                }
-                
-                nextRenewalDate = nextBillingDate;
-                console.log(`Calculated next renewal date: ${nextRenewalDate} (based on ${planInterval}ly billing from ${subscriptionCreated})`);
-              } catch (error) {
-                console.error('Error calculating next renewal date:', error);
-              }
-            }
-          } else if (sub.status === 'trialing' && sub.trial_end) {
-            // Only use trial_end for subscriptions still in trial
-            nextRenewalDate = new Date(sub.trial_end * 1000);
-            console.log(`Trial end date: ${nextRenewalDate} (from trial_end)`);
-          } else {
-            console.log(`No renewal date found for subscription status: ${sub.status}`);
-          }
-        } catch (error) {
-          console.error('Error fetching subscription details from Stripe:', error);
+    // Get canonical subscription data from our database (webhook-synced)
+    const subscription = await storage.getStripeSubscription(userId);
+    
+    if (!subscription) {
+      // No subscription found - check legacy user fields for backward compatibility
+      if (user.subscriptionStatus === 'trialing' && user.trialEndsAt) {
+        const now = new Date();
+        const trialEnd = new Date(user.trialEndsAt);
+        if (now < trialEnd) {
+          console.log(`✅ User ${userId} has access: Legacy trial (ends ${trialEnd})`);
+          return { hasAccess: true, trialEndsAt: trialEnd, subscriptionStatus: 'trialing' };
         }
       }
+      console.log(`❌ User ${userId} has no subscription record`);
+      return { hasAccess: false, reason: 'No subscription' };
+    }
+    
+    console.log(`📋 Subscription status for user ${userId}: ${subscription.status}`);
+    
+    // Extract plan information
+    let currentPlan: any = undefined;
+    if (subscription.stripePriceId) {
+      for (const [planKey, plan] of Object.entries(SUBSCRIPTION_PLANS)) {
+        if (plan.priceId === subscription.stripePriceId) {
+          currentPlan = {
+            name: plan.name,
+            amount: plan.amount,
+            interval: plan.interval,
+            planKey: planKey,
+          };
+          console.log(`📦 Found plan: ${plan.name} (${planKey})`);
+          break;
+        }
+      }
+    }
+    
+    // Check subscription status
+    if (subscription.status === 'active') {
+      const nextRenewalDate = subscription.currentPeriodEnd || undefined;
+      console.log(`✅ User ${userId} has active subscription (next renewal: ${nextRenewalDate})`);
       
-      const result = { 
+      return { 
         hasAccess: true, 
         subscriptionStatus: 'active',
         nextRenewalDate,
         currentPlan
       };
-      
-      console.log('Returning subscription status:', JSON.stringify(result, null, 2));
-      return result;
     }
     
-    // Don't allow access for incomplete subscriptions
-    if (user.subscriptionStatus === 'incomplete') {
-      return { hasAccess: false, reason: 'Payment required' };
-    }
-    
-    // Check if in trial period
-    if (user.subscriptionStatus === 'trialing' && user.trialEndsAt) {
-      const now = new Date();
-      const trialEnd = new Date(user.trialEndsAt);
-      
-      if (now < trialEnd) {
-        return { hasAccess: true, trialEndsAt: trialEnd, subscriptionStatus: 'trialing' };
+    if (subscription.status === 'trialing') {
+      const trialEnd = subscription.trialEnd;
+      if (trialEnd && new Date() < trialEnd) {
+        console.log(`✅ User ${userId} is in trial (ends ${trialEnd})`);
+        return { 
+          hasAccess: true, 
+          trialEndsAt: trialEnd, 
+          subscriptionStatus: 'trialing',
+          currentPlan
+        };
       } else {
-        // Trial expired - check if Stripe subscription has been activated
-        try {
-          if (user.stripeSubscriptionId) {
-            const stripeSubscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
-            
-            // If Stripe shows subscription is active, update our records and grant access
-            if (stripeSubscription.status === 'active') {
-              console.log(`Converting user ${userId} from trial to active subscription`);
-              await storage.updateUserSubscription(userId, {
-                subscriptionStatus: 'active',
-                trialEndsAt: undefined, // Clear trial data when converting to paid
-              });
-              
-              // Include next renewal date and plan info
-              let nextRenewalDate: Date | undefined;
-              let currentPlan: any = undefined;
-              
-              const sub = stripeSubscription as any;
-              if (sub.current_period_end) {
-                nextRenewalDate = new Date(sub.current_period_end * 1000);
-                console.log(`Trial-to-paid conversion: Next renewal date: ${nextRenewalDate}`);
-              } else {
-                console.log('WARNING: Trial-to-paid conversion missing current_period_end - trying upcoming invoice fallback');
-                // Fallback: get next invoice date when current_period_end is missing
-                try {
-                  const upcomingInvoice = await (stripe.invoices as any).retrieveUpcoming({
-                    customer: stripeSubscription.customer as string,
-                    subscription: stripeSubscription.id,
-                  });
-                  
-                  if (upcomingInvoice.next_payment_attempt) {
-                    nextRenewalDate = new Date(upcomingInvoice.next_payment_attempt * 1000);
-                    console.log(`Trial-to-paid conversion: Next renewal date: ${nextRenewalDate} (from upcoming invoice next_payment_attempt)`);
-                  } else if (upcomingInvoice.lines?.data?.[0]?.period?.end) {
-                    nextRenewalDate = new Date(upcomingInvoice.lines.data[0].period.end * 1000);
-                    console.log(`Trial-to-paid conversion: Next renewal date: ${nextRenewalDate} (from upcoming invoice period end)`);
-                  } else {
-                    console.log('Trial-to-paid conversion: No renewal date found in upcoming invoice either');
-                  }
-                } catch (error) {
-                  console.error('Trial-to-paid conversion: Error fetching upcoming invoice:', error);
-                }
-              }
-              
-              // Extract current plan information
-              if (stripeSubscription.items?.data?.[0]?.price) {
-                const price = stripeSubscription.items.data[0].price;
-                const priceId = price.id;
-                
-                // Find matching plan in our SUBSCRIPTION_PLANS
-                for (const [planKey, plan] of Object.entries(SUBSCRIPTION_PLANS)) {
-                  if (plan.priceId === priceId) {
-                    currentPlan = {
-                      name: plan.name,
-                      amount: plan.amount,
-                      interval: plan.interval,
-                      planKey: planKey,
-                    };
-                    break;
-                  }
-                }
-              }
-              
-              const result = { hasAccess: true, subscriptionStatus: 'active', nextRenewalDate, currentPlan };
-              console.log('Returning trial-to-paid conversion result:', JSON.stringify(result, null, 2));
-              return result;
-            }
-          }
-        } catch (error) {
-          console.error('Error checking Stripe subscription status:', error);
-        }
-        
-        // Trial truly expired without payment - gracefully handle
-        await storage.updateUserSubscription(userId, {
-          subscriptionStatus: 'past_due',
-        });
-        return { hasAccess: false, reason: 'Trial expired - please update payment' };
+        console.log(`❌ User ${userId} trial has expired`);
+        return { hasAccess: false, reason: 'Trial expired' };
       }
     }
     
+    // Handle other subscription statuses
+    if (subscription.status === 'incomplete') {
+      console.log(`❌ User ${userId} has incomplete subscription - payment required`);
+      return { hasAccess: false, reason: 'Payment required' };
+    }
+    
+    if (subscription.status === 'canceled') {
+      console.log(`❌ User ${userId} subscription is canceled`);
+      return { hasAccess: false, reason: 'Subscription canceled' };
+    }
+    
+    if (subscription.status === 'past_due') {
+      console.log(`❌ User ${userId} subscription is past due`);
+      return { hasAccess: false, reason: 'Payment failed' };
+    }
+    
+    // Default: no access
+    console.log(`❌ User ${userId} subscription status '${subscription.status}' - no access`);
     return { hasAccess: false, reason: 'No active subscription' };
   }
   

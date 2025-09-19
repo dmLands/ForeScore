@@ -5083,10 +5083,25 @@ export default function Home() {
                   // V6.5: Trigger calculation with saveResults=true
                   if (tempSelectedGames.length > 0 && selectedGroup?.id) {
                     try {
-                      // Use appropriate values based on game types in temp selection
+                      // FIX: Determine correct game IDs and values based on selected games
                       const hasBBBGames = tempSelectedGames.some(game => game.startsWith('bbb-'));
+                      const has2916Games = tempSelectedGames.some(game => ['points', 'fbt'].includes(game));
+                      
+                      // Use appropriate values based on game types in temp selection
                       const savePointValue = hasBBBGames ? parseFloat(bbbPointValue) : parseFloat(pointValue);
                       const saveFbtValue = hasBBBGames ? parseFloat(bbbFbtValue) : parseFloat(fbtValue);
+                      
+                      // Use BBB game ID if BBB games are selected, otherwise use 2/9/16 game ID
+                      let correctPointsGameId = null;
+                      if (hasBBBGames && has2916Games) {
+                        // If both types are selected, we need to handle combination differently
+                        // For now, prioritize the BBB game for the main calculation
+                        correctPointsGameId = selectedBBBGame?.id || selectedPointsGame?.id;
+                      } else if (hasBBBGames) {
+                        correctPointsGameId = selectedBBBGame?.id;
+                      } else if (has2916Games) {
+                        correctPointsGameId = selectedPointsGame?.id;
+                      }
                       
                       const response = await fetch('/api/calculate-combined-games', {
                         method: 'POST',
@@ -5095,7 +5110,7 @@ export default function Home() {
                         body: JSON.stringify({
                           groupId: selectedGroup.id,
                           gameStateId: selectedGame?.id,
-                          pointsGameId: selectedPointsGame?.id,
+                          pointsGameId: correctPointsGameId,
                           selectedGames: tempSelectedGames,
                           pointValue: savePointValue,
                           fbtValue: saveFbtValue,

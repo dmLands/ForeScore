@@ -5017,7 +5017,7 @@ export default function Home() {
               )}
 
               {/* BBB Points Game Option */}
-              {selectedBBBGame && parseFloat(bbbPointValue) > 0 && (
+              {selectedBBBGame && parseFloat(bbbPointValue) > 0 && selectedBBBGame.holes && Object.keys(selectedBBBGame.holes).length > 0 && (
                 <Button 
                   variant={tempSelectedGames.includes('bbb-points') ? 'default' : 'outline'}
                   className={`w-full justify-start h-auto p-3 ${
@@ -5046,7 +5046,7 @@ export default function Home() {
               )}
 
               {/* BBB FBT Game Option */}
-              {selectedBBBGame && parseFloat(bbbFbtValue) > 0 && (
+              {selectedBBBGame && parseFloat(bbbFbtValue) > 0 && selectedBBBGame.holes && Object.keys(selectedBBBGame.holes).length > 0 && (
                 <Button 
                   variant={tempSelectedGames.includes('bbb-fbt') ? 'default' : 'outline'}
                   className={`w-full justify-start h-auto p-3 ${

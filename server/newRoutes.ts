@@ -153,6 +153,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/subscription/status', isAuthenticated, async (req: any, res) => {
     try {
+      // Force browser to always fetch fresh subscription data (no caching)
+      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      
       const userId = req.user.claims.sub;
       const access = await stripeService.hasAccess(userId);
       res.json(access);

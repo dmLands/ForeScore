@@ -204,15 +204,20 @@ export class StripeService {
       
       if (user.stripeSubscriptionId) {
         try {
+          console.log(`Fetching Stripe subscription details for user ${userId}, subscription: ${user.stripeSubscriptionId}`);
           const stripeSubscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
+          console.log(`Stripe subscription status: ${stripeSubscription.status}, current_period_end: ${(stripeSubscription as any).current_period_end}`);
+          
           if ((stripeSubscription as any).current_period_end) {
             nextRenewalDate = new Date((stripeSubscription as any).current_period_end * 1000);
+            console.log(`Next renewal date: ${nextRenewalDate}`);
           }
           
           // Extract current plan information
           if (stripeSubscription.items?.data?.[0]?.price) {
             const price = stripeSubscription.items.data[0].price;
             const priceId = price.id;
+            console.log(`Subscription price ID: ${priceId}`);
             
             // Find matching plan in our SUBSCRIPTION_PLANS
             for (const [planKey, plan] of Object.entries(SUBSCRIPTION_PLANS)) {
@@ -223,9 +228,16 @@ export class StripeService {
                   interval: plan.interval,
                   planKey: planKey,
                 };
+                console.log(`Found matching plan: ${planKey} - ${plan.name}`);
                 break;
               }
             }
+            
+            if (!currentPlan) {
+              console.log(`No matching plan found for price ID: ${priceId}`);
+            }
+          } else {
+            console.log('No subscription items or price found in Stripe subscription');
           }
         } catch (error) {
           console.error('Error fetching subscription details from Stripe:', error);
@@ -260,8 +272,10 @@ export class StripeService {
             
             // If Stripe shows subscription is active, update our records and grant access
             if (stripeSubscription.status === 'active') {
+              console.log(`Converting user ${userId} from trial to active subscription`);
               await storage.updateUserSubscription(userId, {
                 subscriptionStatus: 'active',
+                trialEndsAt: undefined, // Clear trial data when converting to paid
               });
               
               // Include next renewal date and plan info

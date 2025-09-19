@@ -209,6 +209,8 @@ export default function Home() {
     changeGroup, 
     selectedGame, 
     changeGame,
+    changeSubGame,
+    selectedSubGame,
     isRestoring 
   } = useTabPersistence(payoutDataReady);
   
@@ -240,7 +242,6 @@ export default function Home() {
   const [showAboutForescore, setShowAboutForescore] = useState(false);
   
   // Games tab submenu state
-  const [selectedSubGame, setSelectedSubGame] = useState<'cards' | 'points' | 'bbb'>('cards');
   const [showGamesOverlay, setShowGamesOverlay] = useState(false);
 
   // V6.5: Save point/FBT values to server
@@ -1191,7 +1192,7 @@ export default function Home() {
     onSuccess: (group: Group) => {
       changeGroup(group);
       changeTab('games');
-      setSelectedSubGame('points');
+      changeSubGame('bbb');
       setShowJoinDialog(false);
       setJoinCode("");
       queryClient.invalidateQueries({ queryKey: ['/api/groups'] });
@@ -1274,7 +1275,7 @@ export default function Home() {
       setShowCreateGameDialog(false);
       setNewGameName("");
       changeTab('games');
-      setSelectedSubGame('points');
+      changeSubGame('bbb');
       queryClient.invalidateQueries({ queryKey: ['/api/groups', selectedGroup?.id, 'games'] });
       queryClient.invalidateQueries({ queryKey: ['/api/game-state', selectedGroup?.id] });
       queryClient.refetchQueries({ queryKey: ['/api/groups', selectedGroup?.id, 'games'] });
@@ -1325,7 +1326,7 @@ export default function Home() {
       setShowCreateGameDialog(false);
       setNewGameName("");
       changeTab('games');
-      setSelectedSubGame('points');
+      changeSubGame('bbb');
       queryClient.invalidateQueries({ queryKey: ['/api/groups'] });
       queryClient.invalidateQueries({ queryKey: ['/api/groups', group.id, 'games'] });
       queryClient.invalidateQueries({ queryKey: ['/api/game-state', group.id] });
@@ -1718,7 +1719,7 @@ export default function Home() {
                                 onClick={() => {
                                   changeGame(game);
                                   changeTab('games');
-                                  setSelectedSubGame('points');
+                                  changeSubGame('bbb');
                                 }}
                                 size="sm"
                                 variant="outline"
@@ -5334,7 +5335,7 @@ export default function Home() {
                   className="w-full flex items-center gap-3 p-3 rounded-md hover:bg-gray-50 transition-colors text-left"
                   onClick={() => {
                     changeTab('games');
-                    setSelectedSubGame('bbb');
+                    changeSubGame('bbb');
                     setShowGamesOverlay(false);
                   }}
                 >
@@ -5350,7 +5351,7 @@ export default function Home() {
                   className="w-full flex items-center gap-3 p-3 rounded-md hover:bg-gray-50 transition-colors text-left"
                   onClick={() => {
                     changeTab('games');
-                    setSelectedSubGame('points');
+                    changeSubGame('points');
                     setShowGamesOverlay(false);
                   }}
                 >
@@ -5366,7 +5367,7 @@ export default function Home() {
                   className="w-full flex items-center gap-3 p-3 rounded-md hover:bg-gray-50 transition-colors text-left"
                   onClick={() => {
                     changeTab('games');
-                    setSelectedSubGame('cards');
+                    changeSubGame('cards');
                     setShowGamesOverlay(false);
                   }}
                 >

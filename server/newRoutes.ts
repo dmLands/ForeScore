@@ -544,6 +544,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json({ 
           userId,
           currentTab: 'groups',
+          selectedSubGame: 'bbb',
           createdAt: new Date(),
           updatedAt: new Date()
         });
@@ -557,13 +558,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/user/preferences', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims?.sub || req.user.id;
-      const { currentTab, selectedGroupId, selectedGameId } = req.body;
+      const { currentTab, selectedGroupId, selectedGameId, selectedSubGame } = req.body;
       
       // Validate currentTab value
       if (currentTab) {
         const validTabs = ['groups', 'games', 'scoreboard', 'rules'];
         if (!validTabs.includes(currentTab)) {
           return res.status(400).json({ message: 'Invalid tab value' });
+        }
+      }
+      
+      // Validate selectedSubGame value
+      if (selectedSubGame) {
+        const validSubGames = ['cards', 'points', 'bbb'];
+        if (!validSubGames.includes(selectedSubGame)) {
+          return res.status(400).json({ message: 'Invalid sub game value' });
         }
       }
       
@@ -579,6 +588,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (currentTab !== undefined) updateData.currentTab = currentTab;
       if (selectedGroupId !== undefined) updateData.selectedGroupId = selectedGroupId;
       if (selectedGameId !== undefined) updateData.selectedGameId = selectedGameId;
+      if (selectedSubGame !== undefined) updateData.selectedSubGame = selectedSubGame;
       
       if (existing) {
         // Update existing preferences
@@ -597,7 +607,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             userId,
             currentTab: currentTab || 'groups',
             selectedGroupId,
-            selectedGameId
+            selectedGameId,
+            selectedSubGame: selectedSubGame || 'bbb'
           })
           .returning();
         

@@ -22,6 +22,7 @@ interface UserPreferences {
   currentTab: TabType;
   selectedGroupId?: string;
   selectedGameId?: string;
+  selectedSubGame?: 'cards' | 'points' | 'bbb';
   userId: string;
   createdAt?: Date;
   updatedAt?: Date;
@@ -110,6 +111,7 @@ export function useTabPersistence(payoutDataReady?: boolean) {
     currentTab: TabType;
     selectedGroupId?: string;
     selectedGameId?: string;
+    selectedSubGame?: 'cards' | 'points' | 'bbb';
   }>) => {
     if (!user) return;
 
@@ -146,6 +148,11 @@ export function useTabPersistence(payoutDataReady?: boolean) {
     saveState({ selectedGameId: newGame?.id || undefined });
   }, [saveState]);
 
+  const changeSubGame = useCallback((newSubGame: 'cards' | 'points' | 'bbb') => {
+    writeLS({ selectedSubGame: newSubGame });
+    saveState({ selectedSubGame: newSubGame });
+  }, [saveState]);
+
   return {
     currentTab,
     changeTab,
@@ -153,6 +160,8 @@ export function useTabPersistence(payoutDataReady?: boolean) {
     changeGroup,
     selectedGame,
     changeGame,
+    changeSubGame,
+    selectedSubGame: preferences?.selectedSubGame || 'bbb',
     // Gate the UI purely on whether the initial restore finished.
     isRestoring: !isInitialized,
   };

@@ -6,6 +6,8 @@ interface SubscriptionAccess {
   hasAccess: boolean;
   reason?: string;
   trialEndsAt?: string;
+  nextRenewalDate?: string;
+  subscriptionStatus?: string;
 }
 
 // Admin authorization - check if user email is in admin list

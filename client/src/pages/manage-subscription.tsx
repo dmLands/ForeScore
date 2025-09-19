@@ -23,6 +23,8 @@ interface SubscriptionAccess {
   hasAccess: boolean;
   reason?: string;
   trialEndsAt?: string;
+  nextRenewalDate?: string;
+  subscriptionStatus?: string;
 }
 
 interface SubscriptionPlans {
@@ -150,9 +152,15 @@ export default function ManageSubscription() {
           badge: <Badge className="bg-blue-100 text-blue-800">Free Trial</Badge>
         };
       case 'active':
+        const nextRenewal = currentAccessInfo?.nextRenewalDate 
+          ? formatDate(currentAccessInfo.nextRenewalDate)
+          : null;
+        
         return {
           title: 'Subscription Active',
-          description: 'Your ForeScore subscription is active and ready to use',
+          description: nextRenewal 
+            ? `Your ForeScore subscription is active. Next billing: ${nextRenewal}`
+            : 'Your ForeScore subscription is active and ready to use',
           badge: <Badge className="bg-green-100 text-green-800">Active</Badge>
         };
       case 'expired':
@@ -225,6 +233,53 @@ export default function ManageSubscription() {
           </CardHeader>
           
         </Card>
+
+        {/* Billing Information Card - Active Subscriptions Only */}
+        {currentAccessInfo?.hasAccess && statusInfo.status === 'active' && currentAccessInfo.nextRenewalDate && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Calendar className="w-5 h-5 text-green-600" />
+                <span>Billing Information</span>
+              </CardTitle>
+              <CardDescription>
+                Your subscription and billing details
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <div>
+                    <h4 className="font-medium text-green-900">Next Billing Date</h4>
+                    <p className="text-sm text-green-700">Your subscription will automatically renew on this date</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-bold text-green-900" data-testid="text-next-renewal">
+                      {formatDate(currentAccessInfo.nextRenewalDate)}
+                    </p>
+                    <p className="text-sm text-green-600">Auto-renewal enabled</p>
+                  </div>
+                </div>
+                
+                {plans && (
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h4 className="font-medium text-gray-900">Monthly Plan</h4>
+                      <p className="text-2xl font-bold text-gray-900">${(plans.monthly.amount / 100).toFixed(2)}</p>
+                      <p className="text-sm text-gray-600">per month</p>
+                    </div>
+                    <div className="bg-green-50 border border-green-200 p-4 rounded-lg">
+                      <h4 className="font-medium text-green-900">Annual Plan</h4>
+                      <p className="text-2xl font-bold text-green-900">${(plans.annual.amount / 100).toFixed(2)}</p>
+                      <p className="text-sm text-green-600">per year</p>
+                      <Badge className="mt-1 bg-green-100 text-green-800">Best Value</Badge>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Actions Card */}
         <Card>

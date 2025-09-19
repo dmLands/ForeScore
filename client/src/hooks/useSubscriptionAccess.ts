@@ -7,6 +7,8 @@ interface SubscriptionAccess {
   hasAccess: boolean;
   reason?: string;
   trialEndsAt?: string;
+  nextRenewalDate?: string;
+  subscriptionStatus?: string;
 }
 
 export function useSubscriptionAccess() {

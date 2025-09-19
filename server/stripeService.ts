@@ -178,7 +178,7 @@ export class StripeService {
   /**
    * Check if user has access (active subscription or in trial)
    */
-  async hasAccess(userId: string): Promise<{ hasAccess: boolean; reason?: string; trialEndsAt?: Date }> {
+  async hasAccess(userId: string): Promise<{ hasAccess: boolean; reason?: string; trialEndsAt?: Date; nextRenewalDate?: Date; subscriptionStatus?: string }> {
     const user = await storage.getUser(userId);
     if (!user) {
       return { hasAccess: false, reason: 'User not found' };
@@ -186,7 +186,25 @@ export class StripeService {
     
     // Check subscription status
     if (user.subscriptionStatus === 'active') {
-      return { hasAccess: true };
+      // For active subscriptions, fetch next renewal date from Stripe
+      let nextRenewalDate: Date | undefined;
+      
+      if (user.stripeSubscriptionId) {
+        try {
+          const stripeSubscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
+          if ((stripeSubscription as any).current_period_end) {
+            nextRenewalDate = new Date((stripeSubscription as any).current_period_end * 1000);
+          }
+        } catch (error) {
+          console.error('Error fetching renewal date from Stripe:', error);
+        }
+      }
+      
+      return { 
+        hasAccess: true, 
+        subscriptionStatus: 'active',
+        nextRenewalDate 
+      };
     }
     
     // Don't allow access for incomplete subscriptions
@@ -200,7 +218,7 @@ export class StripeService {
       const trialEnd = new Date(user.trialEndsAt);
       
       if (now < trialEnd) {
-        return { hasAccess: true, trialEndsAt: trialEnd };
+        return { hasAccess: true, trialEndsAt: trialEnd, subscriptionStatus: 'trialing' };
       } else {
         // Trial expired - check if Stripe subscription has been activated
         try {
@@ -212,7 +230,14 @@ export class StripeService {
               await storage.updateUserSubscription(userId, {
                 subscriptionStatus: 'active',
               });
-              return { hasAccess: true };
+              
+              // Include next renewal date
+              let nextRenewalDate: Date | undefined;
+              if ((stripeSubscription as any).current_period_end) {
+                nextRenewalDate = new Date((stripeSubscription as any).current_period_end * 1000);
+              }
+              
+              return { hasAccess: true, subscriptionStatus: 'active', nextRenewalDate };
             }
           }
         } catch (error) {
@@ -256,8 +281,8 @@ export class StripeService {
         
       case 'invoice.payment_failed':
         const failedInvoice = event.data.object as Stripe.Invoice;
-        if (failedInvoice.subscription && typeof failedInvoice.subscription === 'string') {
-          const sub = await stripe.subscriptions.retrieve(failedInvoice.subscription);
+        if ((failedInvoice as any).subscription && typeof (failedInvoice as any).subscription === 'string') {
+          const sub = await stripe.subscriptions.retrieve((failedInvoice as any).subscription);
           await this.updateSubscriptionStatus(sub);
         }
         break;

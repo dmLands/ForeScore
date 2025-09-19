@@ -2316,7 +2316,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('Admin user export requested by user:', (req as any).user?.claims?.sub);
       
-      // Extract all users with requested fields
+      // Extract all users with requested fields including subscription status
       const allUsers = await db
         .select({
           id: users.id,
@@ -2324,20 +2324,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
           lastName: users.lastName,
           email: users.email,
           authMethod: users.authMethod,
+          subscriptionStatus: users.subscriptionStatus,
+          trialEndsAt: users.trialEndsAt,
+          subscriptionEndsAt: users.subscriptionEndsAt,
           createdAt: users.createdAt
         })
         .from(users);
       
       console.log(`Found ${allUsers.length} users for export`);
 
-      // Format for CSV export
-      const csvData = allUsers.map(user => ({
-        'First Name': user.firstName || '',
-        'Last Name': user.lastName || '',
-        'Email Address': user.email || '',
-        'Auth Method': user.authMethod || '',
-        'Created At': user.createdAt?.toISOString() || ''
-      }));
+      // Format for CSV export with subscription information
+      const csvData = allUsers.map(user => {
+        // Format subscription status for display
+        let subscriptionDisplay = 'No Subscription';
+        if (user.subscriptionStatus === 'trialing' && user.trialEndsAt) {
+          const trialEnd = new Date(user.trialEndsAt);
+          const now = new Date();
+          if (now < trialEnd) {
+            subscriptionDisplay = `Trial (ends ${trialEnd.toLocaleDateString()})`;
+          } else {
+            subscriptionDisplay = 'Trial Expired';
+          }
+        } else if (user.subscriptionStatus === 'active') {
+          subscriptionDisplay = 'Active';
+        } else if (user.subscriptionStatus === 'canceled') {
+          subscriptionDisplay = 'Canceled';
+        } else if (user.subscriptionStatus === 'past_due') {
+          subscriptionDisplay = 'Past Due';
+        } else if (user.subscriptionStatus) {
+          subscriptionDisplay = user.subscriptionStatus.charAt(0).toUpperCase() + user.subscriptionStatus.slice(1);
+        }
+        
+        return {
+          'First Name': user.firstName || '',
+          'Last Name': user.lastName || '',
+          'Email Address': user.email || '',
+          'Auth Method': user.authMethod || '',
+          'Subscription Status': subscriptionDisplay,
+          'Created At': user.createdAt?.toISOString() || ''
+        };
+      });
 
       // Set headers for CSV download
       const format = req.query.format || 'json';

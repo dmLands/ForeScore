@@ -13,6 +13,7 @@ interface UserData {
   'Last Name': string;
   'Email Address': string;
   'Auth Method': string;
+  'Subscription Status': string;
   'Created At': string;
 }
 
@@ -263,6 +264,7 @@ export default function AdminPage() {
                     <TableHead>Last Name</TableHead>
                     <TableHead>Email Address</TableHead>
                     <TableHead>Auth Method</TableHead>
+                    <TableHead>Subscription Status</TableHead>
                     <TableHead>Created At</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -293,6 +295,25 @@ export default function AdminPage() {
                       <TableCell>
                         <Badge variant={user['Auth Method'] === 'local' ? 'default' : 'secondary'}>
                           {user['Auth Method']}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant={
+                            user['Subscription Status'].includes('Active') ? 'default' :
+                            user['Subscription Status'].includes('Trial') ? 'secondary' :
+                            user['Subscription Status'].includes('Expired') || user['Subscription Status'].includes('Past Due') ? 'destructive' :
+                            'outline'
+                          }
+                          className={`text-xs ${
+                            user['Subscription Status'].includes('Active') ? 'bg-green-100 text-green-800' :
+                            user['Subscription Status'].includes('Trial') ? 'bg-blue-100 text-blue-800' :
+                            user['Subscription Status'].includes('Expired') || user['Subscription Status'].includes('Past Due') ? 'bg-red-100 text-red-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}
+                          data-testid={`badge-subscription-${index}`}
+                        >
+                          {user['Subscription Status']}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm text-gray-600">

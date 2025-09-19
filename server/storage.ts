@@ -1,4 +1,4 @@
-import { users, groups, gameStates, pointsGames, roomStates, combinedPayoutResults, type User, type UpsertUser, type Group, type InsertGroup, type GameState, type InsertGameState, type Player, type Card, type CustomCard, type CardAssignment, type CardValues, type PointsGame, type InsertPointsGame, type RoomState, type InsertRoomState, type CombinedPayoutResult, type InsertCombinedPayoutResult } from "@shared/schema";
+import { users, groups, gameStates, pointsGames, roomStates, combinedPayoutResults, stripeSubscriptions, type User, type UpsertUser, type Group, type InsertGroup, type GameState, type InsertGameState, type Player, type Card, type CustomCard, type CardAssignment, type CardValues, type PointsGame, type InsertPointsGame, type RoomState, type InsertRoomState, type CombinedPayoutResult, type InsertCombinedPayoutResult, type StripeSubscription, type InsertStripeSubscription } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, lt, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -9,8 +9,14 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   createLocalUser(user: { email: string; firstName: string; lastName: string; passwordHash: string; authMethod: string }): Promise<User>;
-  // Subscription methods for V7.0
-  updateUserSubscription(userId: string, data: { stripeCustomerId?: string; stripeSubscriptionId?: string; subscriptionStatus?: string; trialEndsAt?: Date; subscriptionEndsAt?: Date }): Promise<User | undefined>;
+  // Legacy subscription methods for V7.0 (deprecated - use Stripe subscription methods below)
+  updateUserSubscription(userId: string, data: { stripeCustomerId?: string; stripeSubscriptionId?: string; subscriptionStatus?: 'trialing' | 'active' | 'canceled' | 'incomplete' | 'past_due' | null; trialEndsAt?: Date; subscriptionEndsAt?: Date }): Promise<User | undefined>;
+  
+  // Stripe Subscriptions (V8.0 - canonical Stripe schema)
+  getStripeSubscription(userId: string): Promise<StripeSubscription | undefined>;
+  getStripeSubscriptionByStripeId(stripeSubscriptionId: string): Promise<StripeSubscription | undefined>;
+  upsertStripeSubscription(subscription: InsertStripeSubscription): Promise<StripeSubscription>;
+  updateStripeSubscription(stripeSubscriptionId: string, updates: Partial<InsertStripeSubscription>): Promise<StripeSubscription | undefined>;
   
   // Groups
   getGroups(): Promise<Group[]>;
@@ -94,14 +100,49 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  // Subscription methods for V7.0
-  async updateUserSubscription(userId: string, data: { stripeCustomerId?: string; stripeSubscriptionId?: string; subscriptionStatus?: string; trialEndsAt?: Date; subscriptionEndsAt?: Date }): Promise<User | undefined> {
+  // Legacy subscription methods for V7.0 (deprecated)
+  async updateUserSubscription(userId: string, data: { stripeCustomerId?: string; stripeSubscriptionId?: string; subscriptionStatus?: 'trialing' | 'active' | 'canceled' | 'incomplete' | 'past_due' | null; trialEndsAt?: Date; subscriptionEndsAt?: Date }): Promise<User | undefined> {
     const [user] = await db
       .update(users)
       .set({ ...data, updatedAt: new Date() })
       .where(eq(users.id, userId))
       .returning();
     return user;
+  }
+  
+  // Stripe Subscriptions (V8.0 - canonical Stripe schema)
+  async getStripeSubscription(userId: string): Promise<StripeSubscription | undefined> {
+    const [subscription] = await db.select().from(stripeSubscriptions).where(eq(stripeSubscriptions.userId, userId));
+    return subscription;
+  }
+
+  async getStripeSubscriptionByStripeId(stripeSubscriptionId: string): Promise<StripeSubscription | undefined> {
+    const [subscription] = await db.select().from(stripeSubscriptions).where(eq(stripeSubscriptions.stripeSubscriptionId, stripeSubscriptionId));
+    return subscription;
+  }
+
+  async upsertStripeSubscription(subscription: InsertStripeSubscription): Promise<StripeSubscription> {
+    const [result] = await db
+      .insert(stripeSubscriptions)
+      .values(subscription)
+      .onConflictDoUpdate({
+        target: stripeSubscriptions.stripeSubscriptionId,
+        set: {
+          ...subscription,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return result;
+  }
+
+  async updateStripeSubscription(stripeSubscriptionId: string, updates: Partial<InsertStripeSubscription>): Promise<StripeSubscription | undefined> {
+    const [subscription] = await db
+      .update(stripeSubscriptions)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(stripeSubscriptions.stripeSubscriptionId, stripeSubscriptionId))
+      .returning();
+    return subscription;
   }
   
   // Clean up old data on startup (older than 7 days)

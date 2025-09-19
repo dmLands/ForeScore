@@ -287,3 +287,32 @@ export const insertPasswordResetTokenSchema = createInsertSchema(passwordResetTo
 export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
 export type InsertPasswordResetToken = z.infer<typeof insertPasswordResetTokenSchema>;
 
+// Stripe Subscriptions Table - Canonical Stripe Schema Alignment
+export const stripeSubscriptions = pgTable("stripe_subscriptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  stripeSubscriptionId: varchar("stripe_subscription_id").notNull().unique(),
+  stripeCustomerId: varchar("stripe_customer_id").notNull(),
+  stripePriceId: varchar("stripe_price_id").notNull(),
+  status: varchar("status").$type<'trialing' | 'active' | 'canceled' | 'incomplete' | 'past_due' | 'unpaid' | 'paused'>().notNull(),
+  currentPeriodStart: timestamp("current_period_start"),
+  currentPeriodEnd: timestamp("current_period_end"),
+  trialStart: timestamp("trial_start"),
+  trialEnd: timestamp("trial_end"),
+  cancelAt: timestamp("cancel_at"),
+  cancelAtPeriodEnd: integer("cancel_at_period_end").notNull().default(0),
+  latestInvoiceId: varchar("latest_invoice_id"),
+  collectionMethod: varchar("collection_method").$type<'charge_automatically' | 'send_invoice'>().default('charge_automatically'),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertStripeSubscriptionSchema = createInsertSchema(stripeSubscriptions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type StripeSubscription = typeof stripeSubscriptions.$inferSelect;
+export type InsertStripeSubscription = z.infer<typeof insertStripeSubscriptionSchema>;
+

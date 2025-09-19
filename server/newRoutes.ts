@@ -1970,6 +1970,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const { groupId, gameStateId, pointsGameId, selectedGames, pointValue, fbtValue, saveResults = false } = req.body;
+      
+      // DEBUG: Log what we're receiving
+      console.log('🔍 CALCULATE-COMBINED-GAMES REQUEST:', {
+        groupId,
+        gameStateId,
+        pointsGameId,
+        selectedGames,
+        pointValue,
+        fbtValue,
+        saveResults
+      });
+      
       if (!selectedGames || selectedGames.length === 0) {
         return res.status(400).json({ message: 'No games selected' });
       }
@@ -1977,6 +1989,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const group = await storage.getGroup(groupId);
       const gameState = gameStateId ? await storage.getGameStateById(gameStateId) : null;
       const pointsGame = pointsGameId ? await storage.getPointsGame(pointsGameId) : null;
+      
+      // DEBUG: Log what data we found
+      console.log('🔍 DATA AVAILABLE:', {
+        hasGroup: !!group,
+        hasGameState: !!gameState,
+        hasPointsGame: !!pointsGame,
+        pointsGameType: pointsGame?.gameType,
+        pointsGameName: pointsGame?.name
+      });
       if (!group) return res.status(404).json({ message: 'Group not found' });
 
       const nets: Record<string, number>[] = [];

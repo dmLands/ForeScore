@@ -1094,14 +1094,24 @@ export default function Home() {
     const fbtValueNum = parseFloat(fbtValue) || 0;
     const has2916Values = pointValueNum > 0 || fbtValueNum > 0;
     
+    // BBB game detection
+    const isBBBGame = selectedPointsGame.gameType === 'bbb';
+    const bbbPointValueNum = parseFloat(bbbPointValue) || 0;
+    const bbbFbtValueNum = parseFloat(bbbFbtValue) || 0;
+    const hasBBBValues = bbbPointValueNum > 0 || bbbFbtValueNum > 0;
+    
     // Auto-populate multiSelectGames when games have valid values
-    if ((isCardsActive || has2916Values) && multiSelectGames.length === 0) {
+    if ((isCardsActive || has2916Values || hasBBBValues) && multiSelectGames.length === 0) {
       const autoGames: string[] = [];
       
       if (isCardsActive) {
         autoGames.push('cards');
       }
-      if (has2916Values) {  // Show combined tile when values are set
+      
+      if (isBBBGame && hasBBBValues) {  // BBB game with values set
+        if (bbbPointValueNum > 0) autoGames.push('bbb-points');
+        if (bbbFbtValueNum > 0) autoGames.push('bbb-fbt');
+      } else if (has2916Values) {  // Regular 2/9/16 game with values set
         if (pointValueNum > 0) autoGames.push('points');
         if (fbtValueNum > 0) autoGames.push('fbt');
       }
@@ -1111,7 +1121,7 @@ export default function Home() {
         console.log('Auto-populated multiSelectGames:', autoGames);
       }
     }
-  }, [selectedGroup, selectedGame, selectedPointsGame, safeGameState, pointValue, fbtValue, multiSelectGames.length]);
+  }, [selectedGroup, selectedGame, selectedPointsGame, safeGameState, pointValue, fbtValue, bbbPointValue, bbbFbtValue, multiSelectGames.length]);
 
   // Now update the payoutDataReady state reactively
   const newPayoutDataReady = calculatePayoutDataReady();

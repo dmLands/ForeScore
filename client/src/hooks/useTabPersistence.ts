@@ -153,6 +153,19 @@ export function useTabPersistence(payoutDataReady?: boolean) {
     saveState({ selectedSubGame: newSubGame });
   }, [saveState]);
 
+  // V8.2: Force selectedSubGame to 'bbb' if it's 'cards' (placeholder mode) or undefined
+  const normalizedSelectedSubGame = (() => {
+    const pref = preferences?.selectedSubGame;
+    if (pref === 'cards' || !pref) {
+      // Auto-save normalized value to prevent getting stuck on cards again
+      if (preferences && user) {
+        saveState({ selectedSubGame: 'bbb' });
+      }
+      return 'bbb';
+    }
+    return pref;
+  })();
+
   return {
     currentTab,
     changeTab,
@@ -161,7 +174,7 @@ export function useTabPersistence(payoutDataReady?: boolean) {
     selectedGame,
     changeGame,
     changeSubGame,
-    selectedSubGame: preferences?.selectedSubGame || 'bbb',
+    selectedSubGame: normalizedSelectedSubGame,
     // Gate the UI purely on whether the initial restore finished.
     isRestoring: !isInitialized,
   };

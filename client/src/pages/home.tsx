@@ -3108,6 +3108,10 @@ export default function Home() {
         
         // Show overlay for Games tab to allow submenu selection
         if (tab === 'games') {
+          // V8.2: Defensively ensure we're on BBB if stuck on cards placeholder
+          if (selectedSubGame === 'cards') {
+            changeSubGame('bbb');
+          }
           setShowGamesOverlay(true);
         }
         
@@ -3914,17 +3918,13 @@ export default function Home() {
                 
                 <button
                   data-testid="button-game-cards"
-                  className="w-full flex items-center gap-3 p-3 rounded-md hover:bg-gray-50 transition-colors text-left"
-                  onClick={() => {
-                    changeTab('games');
-                    changeSubGame('cards');
-                    setShowGamesOverlay(false);
-                  }}
+                  className="w-full flex items-center gap-3 p-3 rounded-md bg-gray-100 opacity-50 transition-colors text-left cursor-not-allowed"
+                  disabled
                 >
-                  <Layers className="h-5 w-5 text-gray-600" />
+                  <Layers className="h-5 w-5 text-gray-400" />
                   <div>
-                    <div className="font-medium text-gray-900">Cards</div>
-                    <div className="text-sm text-gray-500">Don't be an animal!</div>
+                    <div className="font-medium text-gray-500">Cards</div>
+                    <div className="text-sm text-gray-400">Coming soon...</div>
                   </div>
                 </button>
               </div>

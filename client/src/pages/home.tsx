@@ -1831,7 +1831,7 @@ export default function Home() {
                 {selectedSubGame === 'cards' && (
                   <>
                     {/* Animal Game Header */}
-                    <div className="text-center mb-4">
+                    <div>
                       <h2 className="text-2xl font-bold text-emerald-600" data-testid="header-game-title">Animal</h2>
                     </div>
                   
@@ -3339,7 +3339,7 @@ export default function Home() {
         {currentTab === 'games' && selectedSubGame === 'points' && (
           <div className="p-4 space-y-4">
             {/* 2/9/16 Game Header */}
-            <div className="text-center mb-4">
+            <div>
               <h2 className="text-2xl font-bold text-emerald-600" data-testid="header-game-title">2/9/16</h2>
             </div>
             {selectedGroup ? (
@@ -3876,7 +3876,7 @@ export default function Home() {
         {currentTab === 'games' && selectedSubGame === 'bbb' && (
           <div className="p-4 space-y-4">
             {/* Bingo Bango Bongo Game Header */}
-            <div className="text-center mb-4">
+            <div>
               <h2 className="text-2xl font-bold text-emerald-600" data-testid="header-game-title">Bingo Bango Bongo</h2>
             </div>
             {selectedGroup ? (

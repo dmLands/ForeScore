@@ -1830,6 +1830,11 @@ export default function Home() {
                 {/* Cards Game Content */}
                 {selectedSubGame === 'cards' && (
                   <>
+                    {/* Animal Game Header */}
+                    <div className="text-center mb-4">
+                      <h2 className="text-2xl font-bold text-emerald-600" data-testid="header-game-title">Animal</h2>
+                    </div>
+                  
                     {/* Game Selection or Start */}
                     {!selectedGame ? (
                   <Card className="mb-4">
@@ -3333,6 +3338,10 @@ export default function Home() {
         {/* Games Tab Content (Conditional based on submenu) */}
         {currentTab === 'games' && selectedSubGame === 'points' && (
           <div className="p-4 space-y-4">
+            {/* 2/9/16 Game Header */}
+            <div className="text-center mb-4">
+              <h2 className="text-2xl font-bold text-emerald-600" data-testid="header-game-title">2/9/16</h2>
+            </div>
             {selectedGroup ? (
               <>
                 {/* Points Game Selection or Creation */}
@@ -3866,6 +3875,10 @@ export default function Home() {
         {/* BBB Game Tab */}
         {currentTab === 'games' && selectedSubGame === 'bbb' && (
           <div className="p-4 space-y-4">
+            {/* Bingo Bango Bongo Game Header */}
+            <div className="text-center mb-4">
+              <h2 className="text-2xl font-bold text-emerald-600" data-testid="header-game-title">Bingo Bango Bongo</h2>
+            </div>
             {selectedGroup ? (
               <>
                 {/* BBB Game Selection or Creation */}

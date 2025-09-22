@@ -3,8 +3,19 @@ import { registerRoutes } from "./newRoutes.js";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: false, limit: '50mb' }));
+// Exclude Stripe webhook path from JSON parsing to preserve raw body for signature verification
+app.use((req, res, next) => {
+  if (req.path === '/api/webhooks/stripe') {
+    return next();
+  }
+  express.json({ limit: '50mb' })(req, res, next);
+});
+app.use((req, res, next) => {
+  if (req.path === '/api/webhooks/stripe') {
+    return next();
+  }
+  express.urlencoded({ extended: false, limit: '50mb' })(req, res, next);
+});
 
 app.use((req, res, next) => {
   const start = Date.now();

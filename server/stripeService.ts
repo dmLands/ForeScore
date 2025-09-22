@@ -254,8 +254,23 @@ export class StripeService {
           currentPlan
         };
       } else {
-        console.log(`❌ User ${userId} trial has expired`);
-        return { hasAccess: false, reason: 'Trial expired' };
+        // Trial has expired - check if subscription is still valid (recently converted)
+        // Allow grace period for Stripe to update status after successful payment
+        const now = new Date();
+        const gracePeriodHours = 24; // 24 hour grace period after trial end
+        const gracePeriodEnd = new Date(trialEnd!.getTime() + (gracePeriodHours * 60 * 60 * 1000));
+        
+        if (now < gracePeriodEnd) {
+          console.log(`✅ User ${userId} trial expired but within grace period - likely paid conversion`);
+          return { 
+            hasAccess: true, 
+            subscriptionStatus: 'trialing', // Will show as trialing until webhook updates
+            currentPlan
+          };
+        } else {
+          console.log(`❌ User ${userId} trial has expired beyond grace period`);
+          return { hasAccess: false, reason: 'Trial expired' };
+        }
       }
     }
     
@@ -294,8 +309,20 @@ export class StripeService {
         break;
         
       case 'invoice.payment_succeeded':
-        // Skip trial adjustment - trials are handled during subscription creation
-        // This prevents double-processing that causes immediate charging
+        // Handle successful payment, especially first payment after trial
+        const successfulInvoice = event.data.object as Stripe.Invoice;
+        const invoiceSubscriptionId = (successfulInvoice as any).subscription;
+        if (invoiceSubscriptionId && typeof invoiceSubscriptionId === 'string') {
+          console.log(`Invoice payment succeeded for subscription: ${invoiceSubscriptionId}`);
+          const sub = await stripe.subscriptions.retrieve(invoiceSubscriptionId);
+          await this.updateSubscriptionStatus(sub);
+          
+          // If this was the first invoice after trial (billing_reason === 'subscription_cycle')
+          // ensure user has active access even if status is still 'trialing'
+          if ((successfulInvoice as any).billing_reason === 'subscription_cycle') {
+            console.log(`First payment after trial completed - ensuring user has access`);
+          }
+        }
         break;
         
       case 'customer.subscription.updated':

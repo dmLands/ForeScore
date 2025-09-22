@@ -22,7 +22,6 @@ interface UserPreferences {
   currentTab: TabType;
   selectedGroupId?: string;
   selectedGameId?: string;
-  selectedSubGame?: 'cards' | 'points' | 'bbb';
   userId: string;
   createdAt?: Date;
   updatedAt?: Date;
@@ -111,7 +110,6 @@ export function useTabPersistence(payoutDataReady?: boolean) {
     currentTab: TabType;
     selectedGroupId?: string;
     selectedGameId?: string;
-    selectedSubGame?: 'cards' | 'points' | 'bbb';
   }>) => {
     if (!user) return;
 
@@ -148,24 +146,6 @@ export function useTabPersistence(payoutDataReady?: boolean) {
     saveState({ selectedGameId: newGame?.id || undefined });
   }, [saveState]);
 
-  const changeSubGame = useCallback((newSubGame: 'cards' | 'points' | 'bbb') => {
-    writeLS({ selectedSubGame: newSubGame });
-    saveState({ selectedSubGame: newSubGame });
-  }, [saveState]);
-
-  // V8.2: Force selectedSubGame to 'bbb' if it's 'cards' (placeholder mode) or undefined
-  const normalizedSelectedSubGame = (() => {
-    const pref = preferences?.selectedSubGame;
-    if (pref === 'cards' || !pref) {
-      // Auto-save normalized value to prevent getting stuck on cards again
-      if (preferences && user) {
-        saveState({ selectedSubGame: 'bbb' });
-      }
-      return 'bbb';
-    }
-    return pref;
-  })();
-
   return {
     currentTab,
     changeTab,
@@ -173,8 +153,6 @@ export function useTabPersistence(payoutDataReady?: boolean) {
     changeGroup,
     selectedGame,
     changeGame,
-    changeSubGame,
-    selectedSubGame: normalizedSelectedSubGame,
     // Gate the UI purely on whether the initial restore finished.
     isRestoring: !isInitialized,
   };

@@ -209,8 +209,6 @@ export default function Home() {
     changeGroup, 
     selectedGame, 
     changeGame,
-    changeSubGame,
-    selectedSubGame,
     isRestoring 
   } = useTabPersistence(payoutDataReady);
   
@@ -242,6 +240,7 @@ export default function Home() {
   const [showAboutForescore, setShowAboutForescore] = useState(false);
   
   // Games tab submenu state
+  const [selectedSubGame, setSelectedSubGame] = useState<'cards' | 'points' | 'bbb'>('cards');
   const [showGamesOverlay, setShowGamesOverlay] = useState(false);
 
   // V6.5: Save point/FBT values to server
@@ -1192,7 +1191,7 @@ export default function Home() {
     onSuccess: (group: Group) => {
       changeGroup(group);
       changeTab('games');
-      changeSubGame('bbb');
+      setSelectedSubGame('points');
       setShowJoinDialog(false);
       setJoinCode("");
       queryClient.invalidateQueries({ queryKey: ['/api/groups'] });
@@ -1275,7 +1274,7 @@ export default function Home() {
       setShowCreateGameDialog(false);
       setNewGameName("");
       changeTab('games');
-      changeSubGame('bbb');
+      setSelectedSubGame('points');
       queryClient.invalidateQueries({ queryKey: ['/api/groups', selectedGroup?.id, 'games'] });
       queryClient.invalidateQueries({ queryKey: ['/api/game-state', selectedGroup?.id] });
       queryClient.refetchQueries({ queryKey: ['/api/groups', selectedGroup?.id, 'games'] });
@@ -1326,7 +1325,7 @@ export default function Home() {
       setShowCreateGameDialog(false);
       setNewGameName("");
       changeTab('games');
-      changeSubGame('bbb');
+      setSelectedSubGame('points');
       queryClient.invalidateQueries({ queryKey: ['/api/groups'] });
       queryClient.invalidateQueries({ queryKey: ['/api/groups', group.id, 'games'] });
       queryClient.invalidateQueries({ queryKey: ['/api/game-state', group.id] });
@@ -1719,7 +1718,7 @@ export default function Home() {
                                 onClick={() => {
                                   changeGame(game);
                                   changeTab('games');
-                                  changeSubGame('bbb');
+                                  setSelectedSubGame('points');
                                 }}
                                 size="sm"
                                 variant="outline"
@@ -1815,12 +1814,24 @@ export default function Home() {
           </div>
         )}
 
-        {/* Cards Game Tab - Simplified */}
-        {currentTab === 'games' && selectedSubGame === 'cards' && (
+        {/* Games Tab - Submenu Structure */}
+        {currentTab === 'games' && (
           <div className="p-4 space-y-4">
-            {selectedGroup ? (
+            {/* Game Content - Direct rendering based on selectedSubGame */}
+            {!selectedGroup ? (
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <Layers className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-gray-500">Select a group from the Groups tab to start playing</p>
+                </CardContent>
+              </Card>
+            ) : (
               <>
-                {!selectedGame ? (
+                {/* Cards Game Content */}
+                {selectedSubGame === 'cards' && (
+                  <>
+                    {/* Game Selection or Start */}
+                    {!selectedGame ? (
                   <Card className="mb-4">
                     <CardContent className="p-4">
                       <div className="text-center">
@@ -1854,29 +1865,1467 @@ export default function Home() {
                   </Card>
                 ) : null}
 
-                {/* Simplified Cards Game Content */}
+                {/* Card Selection */}
                 {selectedGame && (
                   <Card className="mb-4">
                     <CardContent className="p-4">
-                      <h3 className="text-lg font-semibold text-gray-800 mb-4">Cards Game: {selectedGame.name}</h3>
-                      <p className="text-gray-600 mb-4">Cards game functionality will be restored in a future update.</p>
-                      <div className="text-center py-8">
-                        <div className="text-gray-400 mb-2">
-                          <Layers className="h-12 w-12 mx-auto" />
+                      <h3 className="text-lg font-semibold text-gray-800 mb-4">Select Card to Assign</h3>
+                      
+                      <div className="grid grid-cols-2 gap-3 mb-4">
+                        {(() => {
+                          // Create array of all available cards (default + custom)
+                          const defaultCards = ['camel', 'fish', 'roadrunner', 'ghost', 'skunk', 'snake', 'yeti'];
+                          const customCardNames = selectedGroup.customCards?.map(card => card.name.toLowerCase()) || [];
+                          const allCardTypes = [...defaultCards, ...customCardNames];
+                          
+                          return allCardTypes.map(cardType => {
+                            // Get current game value first, then fallback to custom card default value
+                            let value = selectedGame.cardValues[cardType as keyof typeof selectedGame.cardValues];
+                            if (value === undefined) {
+                              const customCard = selectedGroup.customCards?.find(c => c.name.toLowerCase() === cardType);
+                              value = customCard ? selectedGame.cardValues[customCard.name.toLowerCase()] ?? customCard.value : 2;
+                            }
+                          const getCardDisplay = (type: string) => {
+                            const cardMap: Record<string, { emoji: string; name: string; color: string }> = {
+                              camel: { emoji: '🐪', name: 'Camel', color: 'bg-gray-50 border-gray-200 hover:bg-gray-100' },
+                              fish: { emoji: '🐟', name: 'Fish', color: 'bg-gray-50 border-gray-200 hover:bg-gray-100' },
+                              roadrunner: { emoji: '🐦', name: 'Roadrunner', color: 'bg-gray-50 border-gray-200 hover:bg-gray-100' },
+                              ghost: { emoji: '👻', name: 'Ghost', color: 'bg-gray-50 border-gray-200 hover:bg-gray-100' },
+                              skunk: { emoji: '🦨', name: 'Skunk', color: 'bg-gray-50 border-gray-200 hover:bg-gray-100' },
+                              snake: { emoji: '🐍', name: 'Snake', color: 'bg-gray-50 border-gray-200 hover:bg-gray-100' },
+                              yeti: { emoji: '🌲', name: 'Yeti', color: 'bg-gray-50 border-gray-200 hover:bg-gray-100' }
+                            };
+                            
+                            // Check if it's a custom card
+                            const customCard = selectedGroup.customCards?.find(c => c.name.toLowerCase() === type);
+                            if (customCard) {
+                              return { 
+                                emoji: customCard.emoji, 
+                                name: customCard.name, 
+                                color: 'bg-gray-50 border-gray-200 hover:bg-gray-100' 
+                              };
+                            }
+                            
+                            return cardMap[type] || { emoji: '🎴', name: type.charAt(0).toUpperCase() + type.slice(1), color: 'bg-gray-50 border-gray-200 hover:bg-gray-100' };
+                          };
+                          
+                          const cardDisplay = getCardDisplay(cardType);
+                          // Find which player has this card assigned - use fresh game state
+                          const assignedPlayer = gameState && selectedGroup ? 
+                            selectedGroup.players.find(player => 
+                              safeGameState.playerCards[player.id]?.some(card => {
+                                if (card.type === cardType) return true;
+                                if (card.type === 'custom' && card.name && card.name.toLowerCase() === cardType.toLowerCase()) return true;
+                                return false;
+                              })
+                            ) : null;
+                          
+                          const isAssigned = !!assignedPlayer;
+                          
+                          return (
+                            <Card 
+                              key={cardType} 
+                              className={`transition-colors border-2 cursor-pointer ${
+                                isAssigned 
+                                  ? 'bg-amber-50 border-amber-300 hover:bg-amber-100' 
+                                  : cardDisplay.color
+                              }`}
+                              onClick={() => handleCardTypeSelect(cardType as any)}
+                            >
+                              <CardContent className="p-4 text-center">
+                                <div className="text-3xl mb-2">{cardDisplay.emoji}</div>
+                                <p className="text-xs font-medium text-gray-700">{cardDisplay.name}</p>
+                                <p className="text-xs text-gray-500">${(() => {
+                                  // Use fresh game state from groupGames query, not selectedGame state
+                                  const freshGame = groupGames?.find(g => g.id === selectedGame?.id);
+                                  return freshGame?.cardValues?.[cardType] || selectedGame?.cardValues?.[cardType] || value || 2;
+                                })()}</p>
+                                {isAssigned ? (
+                                  <div className="mt-2">
+                                    <div 
+                                      className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-semibold mx-auto mb-1"
+                                      style={{ backgroundColor: assignedPlayer?.color }}
+                                    >
+                                      {assignedPlayer?.initials}
+                                    </div>
+                                    <p className="text-xs text-gray-600">{assignedPlayer?.name}</p>
+                                  </div>
+                                ) : (
+                                  <p className="text-xs text-gray-400 mt-2">Available</p>
+                                )}
+                              </CardContent>
+                            </Card>
+                          );
+                          });
+                        })()}
+                      </div>
+
+                      <p className="text-sm text-gray-600 text-center">Click a card above to assign it to a player</p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Card Values - Only show for selected game */}
+                {selectedGame && (
+                  <Card>
+                    <CardContent className="p-4">
+                      {/* Create Custom Card Button */}
+                      <div className="mb-4 pb-4 border-b border-gray-200">
+                        <Button 
+                          onClick={() => setShowCreateCardDialog(true)}
+                          className="w-full bg-emerald-500 hover:bg-emerald-600 text-white"
+                        >
+                          <Plus className="mr-2 h-4 w-4" />
+                          Create Custom Card
+                        </Button>
+                      </div>
+                      
+                      <h3 className="text-lg font-semibold text-gray-800 mb-3">Card Values for {selectedGame.name}</h3>
+                    
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">🐪</span>
+                          <span className="font-medium text-gray-800">Camel</span>
                         </div>
-                        <p className="text-gray-600">Cards game under maintenance</p>
+                        <div className="flex items-center gap-2">
+                          {camelAutosave.status === "saving" && (
+                            <div className="w-3 h-3 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+                          )}
+                          {camelAutosave.status === "saved" && (
+                            <span className="text-green-600 text-xs">✓</span>
+                          )}
+                          {camelAutosave.status === "error" && (
+                            <span className="text-red-600 text-xs">✗</span>
+                          )}
+                          {camelAutosave.status === "idle" && <div className="w-3"></div>}
+                          <span className="text-gray-500">$</span>
+                          <Input
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            value={camelAutosave.value.value?.toString() ?? "2"}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/[^0-9]/g, '');
+                              camelAutosave.update({ value: parseInt(value) || 0 });
+                            }}
+                            className="w-16 text-center font-semibold"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">🐟</span>
+                          <span className="font-medium text-gray-800">Fish</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {fishAutosave.status === "saving" && (
+                            <div className="w-3 h-3 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+                          )}
+                          {fishAutosave.status === "saved" && (
+                            <span className="text-green-600 text-xs">✓</span>
+                          )}
+                          {fishAutosave.status === "error" && (
+                            <span className="text-red-600 text-xs">✗</span>
+                          )}
+                          {fishAutosave.status === "idle" && <div className="w-3"></div>}
+                          <span className="text-gray-500">$</span>
+                          <Input
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            value={fishAutosave.value.value?.toString() ?? "2"}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/[^0-9]/g, '');
+                              fishAutosave.update({ value: parseInt(value) || 0 });
+                            }}
+                            className="w-16 text-center font-semibold"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">🐦</span>
+                          <span className="font-medium text-gray-800">Roadrunner</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {roadrunnerAutosave.status === "saving" && (
+                            <div className="w-3 h-3 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+                          )}
+                          {roadrunnerAutosave.status === "saved" && (
+                            <span className="text-green-600 text-xs">✓</span>
+                          )}
+                          {roadrunnerAutosave.status === "error" && (
+                            <span className="text-red-600 text-xs">✗</span>
+                          )}
+                          {roadrunnerAutosave.status === "idle" && <div className="w-3"></div>}
+                          <span className="text-gray-500">$</span>
+                          <Input
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            value={roadrunnerAutosave.value.value?.toString() ?? "2"}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/[^0-9]/g, '');
+                              roadrunnerAutosave.update({ value: parseInt(value) || 0 });
+                            }}
+                            className="w-16 text-center font-semibold"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">👻</span>
+                          <span className="font-medium text-gray-800">Ghost</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {ghostAutosave.status === "saving" && (
+                            <div className="w-3 h-3 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+                          )}
+                          {ghostAutosave.status === "saved" && (
+                            <span className="text-green-600 text-xs">✓</span>
+                          )}
+                          {ghostAutosave.status === "error" && (
+                            <span className="text-red-600 text-xs">✗</span>
+                          )}
+                          {ghostAutosave.status === "idle" && <div className="w-3"></div>}
+                          <span className="text-gray-500">$</span>
+                          <Input
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            value={ghostAutosave.value.value?.toString() ?? "2"}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/[^0-9]/g, '');
+                              ghostAutosave.update({ value: parseInt(value) || 0 });
+                            }}
+                            className="w-16 text-center font-semibold"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">🦨</span>
+                          <span className="font-medium text-gray-800">Skunk</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {skunkAutosave.status === "saving" && (
+                            <div className="w-3 h-3 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+                          )}
+                          {skunkAutosave.status === "saved" && (
+                            <span className="text-green-600 text-xs">✓</span>
+                          )}
+                          {skunkAutosave.status === "error" && (
+                            <span className="text-red-600 text-xs">✗</span>
+                          )}
+                          {skunkAutosave.status === "idle" && <div className="w-3"></div>}
+                          <span className="text-gray-500">$</span>
+                          <Input
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            value={skunkAutosave.value.value?.toString() ?? "2"}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/[^0-9]/g, '');
+                              skunkAutosave.update({ value: parseInt(value) || 0 });
+                            }}
+                            className="w-16 text-center font-semibold"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">🐍</span>
+                          <span className="font-medium text-gray-800">Snake</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {snakeAutosave.status === "saving" && (
+                            <div className="w-3 h-3 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+                          )}
+                          {snakeAutosave.status === "saved" && (
+                            <span className="text-green-600 text-xs">✓</span>
+                          )}
+                          {snakeAutosave.status === "error" && (
+                            <span className="text-red-600 text-xs">✗</span>
+                          )}
+                          {snakeAutosave.status === "idle" && <div className="w-3"></div>}
+                          <span className="text-gray-500">$</span>
+                          <Input
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            value={snakeAutosave.value.value?.toString() ?? "2"}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/[^0-9]/g, '');
+                              snakeAutosave.update({ value: parseInt(value) || 0 });
+                            }}
+                            className="w-16 text-center font-semibold"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">🌲</span>
+                          <span className="font-medium text-gray-800">Yeti</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {yetiAutosave.status === "saving" && (
+                            <div className="w-3 h-3 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+                          )}
+                          {yetiAutosave.status === "saved" && (
+                            <span className="text-green-600 text-xs">✓</span>
+                          )}
+                          {yetiAutosave.status === "error" && (
+                            <span className="text-red-600 text-xs">✗</span>
+                          )}
+                          {yetiAutosave.status === "idle" && <div className="w-3"></div>}
+                          <span className="text-gray-500">$</span>
+                          <Input
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            value={yetiAutosave.value.value?.toString() ?? "2"}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/[^0-9]/g, '');
+                              yetiAutosave.update({ value: parseInt(value) || 0 });
+                            }}
+                            className="w-16 text-center font-semibold"
+                          />
+                        </div>
+                      </div>
+                      
+                      {/* Custom Cards with Individual Autosave */}
+                      {selectedGroup?.customCards && selectedGroup.customCards.length > 0 && selectedGroup.customCards.map((customCard, index) => {
+                        const customAutosave = getCustomCardAutosave(index);
+                        
+                        if (!customAutosave || index >= 3) return null; // Support up to 3 custom cards
+                        
+                        return (
+                          <div key={customCard.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                            <div className="flex items-center gap-2">
+                              <span className="text-2xl">{customCard.emoji}</span>
+                              <span className="font-medium text-gray-800">{customCard.name}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {customAutosave.status === "saving" && (
+                                <div className="w-3 h-3 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+                              )}
+                              {customAutosave.status === "saved" && (
+                                <span className="text-green-600 text-xs">✓</span>
+                              )}
+                              {customAutosave.status === "error" && (
+                                <span className="text-red-600 text-xs">✗</span>
+                              )}
+                              {customAutosave.status === "idle" && <div className="w-3"></div>}
+                              <span className="text-gray-500">$</span>
+                              <Input
+                                type="text"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                value={customAutosave.value.value?.toString() ?? customCard.value.toString()}
+                                onChange={(e) => {
+                                  const value = e.target.value.replace(/[^0-9]/g, '');
+                                  customAutosave.update({ value: parseInt(value) || 0 });
+                                }}
+                                className="w-16 text-center font-semibold"
+                              />
+
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => deleteCustomCardMutation.mutate(customCard.id)}
+                                disabled={deleteCustomCardMutation.isPending}
+                                className="p-1 h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                              >
+                                🗑️
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* 9. 🎴 CARD GAME PAYOUTS */}
+                {selectedGame && gameState && (
+                  <Card className="mb-4 card-interactive hover-lift fade-in">
+                    <CardContent className="p-4">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-4">🎴 Card Game Payouts</h3>
+                      <div className="space-y-3">
+                        {selectedGroup.players.map((player) => {
+                          const playerCards = gameState?.playerCards[player.id] || [];
+                          
+                          // Get server-calculated payout for this player
+                          const playerPayout = payoutData?.cardGame?.payouts?.find((p: any) => p.playerId === player.id);
+                          const netAmount = playerPayout?.netPayout || 0;
+                          const isReceiving = netAmount > 0;
+
+                          return (
+                            <div key={player.id} className="p-4 bg-gray-50 rounded-lg border hover-lift color-transition stagger-1">
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-3">
+                                  <div 
+                                    className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-semibold"
+                                    style={{ backgroundColor: player.color }}
+                                  >
+                                    {player.initials}
+                                  </div>
+                                  <div>
+                                    <h4 className="font-semibold text-gray-800">{player.name}</h4>
+                                    <p className="text-sm text-gray-600">{playerCards.length} cards</p>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  {payoutQuery.isLoading ? (
+                                    <p className="text-sm text-gray-500">Loading...</p>
+                                  ) : !payoutData ? (
+                                    <p className="text-sm text-gray-500">No data</p>
+                                  ) : (
+                                    <>
+                                      <p className={`text-lg font-bold ${Math.abs(netAmount) < 0.01 ? 'text-gray-600' : isReceiving ? 'text-green-600' : 'text-red-600'}`}>
+                                        ${Math.abs(netAmount).toFixed(2)}
+                                      </p>
+                                      <p className="text-xs text-gray-500">
+                                        {Math.abs(netAmount) < 0.01 ? 'Even' : isReceiving ? 'Receives' : 'Pays'}
+                                      </p>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              <div className="flex flex-wrap gap-2">
+                                {playerCards.map((card: GameCard, index: number) => (
+                                  <Badge 
+                                    key={`${card.id}-${index}`}
+                                    variant="outline" 
+                                    className="px-3 py-1 text-sm font-medium bg-gray-100 text-gray-800 border-gray-200"
+                                  >
+                                    <span className="mr-1">{card.type === 'custom' ? card.emoji : getCardEmoji(card.type)}</span>
+                                    {(() => {
+                                      // Always use current game state values first
+                                      if (card.type === 'custom' && card.name) {
+                                        const customCard = selectedGroup?.customCards?.find(c => c.name.toLowerCase() === card.name?.toLowerCase());
+                                        if (customCard) {
+                                          const customCardKey = customCard.name.toLowerCase();
+                                          const value = gameState?.cardValues[customCardKey] ?? customCard.value;
+                                          return `$${value}`;
+                                        }
+                                      } else {
+                                        const value = gameState?.cardValues[card.type as keyof typeof gameState.cardValues];
+                                        if (value !== undefined) {
+                                          return `$${value}`;
+                                        }
+                                      }
+                                      return '$2';
+                                    })()}
+                                  </Badge>
+                                ))}
+                                {playerCards.length === 0 && (
+                                  <span className="text-gray-400 text-sm">No cards assigned</span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Card History */}
+                {gameState && safeGameState.cardHistory?.length > 0 && (
+                  <Card className="mb-4">
+                    <CardContent className="p-4">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-3">Card History</h3>
+                      <div className="space-y-2">
+                        {(() => {
+                          // For standard cards, group by type to show assignment flows
+                          // For custom cards, show each assignment individually (no grouping)
+                          const standardCardTypes = ['camel', 'fish', 'roadrunner', 'ghost', 'skunk', 'snake', 'yeti'];
+                          
+                          const cardGroups = safeGameState.cardHistory.reduce((groups: Record<string, any[]>, entry) => {
+                            const cardType = entry.cardType.toLowerCase();
+                            
+                            // For standard cards, group by type
+                            if (standardCardTypes.includes(cardType)) {
+                              if (!groups[cardType]) {
+                                groups[cardType] = [];
+                              }
+                              groups[cardType].push(entry);
+                            } else {
+                              // For custom cards, group by cardId to show progression
+                              const groupKey = entry.cardId;
+                              if (!groups[groupKey]) {
+                                groups[groupKey] = [];
+                              }
+                              groups[groupKey].push(entry);
+                            }
+                            return groups;
+                          }, {});
+
+                          return Object.entries(cardGroups).map(([groupKey, assignments]) => {
+                            const assignment = assignments[0]; // Get the first assignment for display info
+                            const cardType = assignment.cardType.toLowerCase();
+                            const isCustomCard = !standardCardTypes.includes(cardType);
+                            
+                            return (
+                              <div key={groupKey} className="p-3 bg-gray-50 rounded-lg">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <span className="text-xl">
+                                    {cardType === 'camel' ? '🐪' :
+                                     cardType === 'fish' ? '🐟' :
+                                     cardType === 'roadrunner' ? '🐦' :
+                                     cardType === 'ghost' ? '👻' :
+                                     cardType === 'skunk' ? '🦨' :
+                                     cardType === 'snake' ? '🐍' :
+                                     cardType === 'yeti' ? '🌲' :
+                                     assignment.cardEmoji || '🎴'}
+                                  </span>
+                                  <span className="font-medium text-gray-800 capitalize">
+                                    {assignment.cardName || assignment.cardType}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2 flex-wrap ml-8">
+                                  {assignments.map((assignment, index) => (
+                                    <div key={index} className="flex items-center gap-2">
+                                      <span className="px-2 py-1 bg-white rounded border text-gray-700 text-sm">
+                                        {assignment.playerName}
+                                      </span>
+                                      {index < assignments.length - 1 && (
+                                        <span className="text-gray-400">→</span>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          });
+                        })()}
                       </div>
                     </CardContent>
                   </Card>
                 )}
               </>
-            ) : (
+            )}
+                  </>
+                )}
+          </div>
+        )}
+
+        {/* Scoreboard Tab */}
+        {currentTab === 'scoreboard' && (
+          <div className="p-4">
+            {!selectedGroup ? (
               <Card>
                 <CardContent className="p-6 text-center">
-                  <Layers className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-500">Select a group from the Groups tab to start playing</p>
+                  <Trophy className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-gray-500">Select a group from the Groups tab to view scoreboard</p>
                 </CardContent>
               </Card>
+            ) : (
+              <>
+                {!selectedGame ? (
+                  <Card>
+                    <CardContent className="p-6 text-center">
+                      <Trophy className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                      <p className="text-gray-500">Select a game to see the scoreboard</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <>
+
+                    {/* 1. 💰 WHO OWES WHO - COMBINED */}
+                    {(() => {
+                      const isCardsActive = selectedGame && safeGameState && safeGameState.cardHistory?.length > 0;
+                      const hasPayoutValues = (parseFloat(pointValue) > 0) || (parseFloat(fbtValue) > 0);
+                      
+                      // FIX: Show when cards are active OR when 2/9/16 values are set (regardless of scores)
+                      return isCardsActive || (selectedPointsGame && hasPayoutValues);
+                    })() && (
+                      <Card className="mb-4 card-interactive hover-lift">
+                        <CardContent className="p-4">
+                          <div className="mb-4">
+                            <h3 className="text-lg font-semibold text-gray-800 mb-2">💰 Who Owes Who</h3>
+                            <div className="text-sm text-gray-600">
+                              Calculate combined payouts across games
+                            </div>
+                          </div>
+                          
+                          {/* Calculate Payouts Button or Results */}
+                          {multiSelectGames.length === 0 ? (
+                            <Button 
+                              onClick={() => {
+                                setTempSelectedGames([]); // Reset temp selection
+                                setShowPayoutModal(true);
+                              }}
+                              className="w-full btn-interactive btn-bouncy bg-emerald-500 hover:bg-emerald-600 text-white"
+                            >
+                              Calculate Payouts
+                            </Button>
+                          ) : (
+                            <div className="space-y-4">
+                              {/* Edit Payouts Button */}
+                              <div className="flex justify-between items-center">
+                                <h4 className="text-md font-semibold text-gray-700">Combined Settlement</h4>
+                                <Button 
+                                  onClick={() => {
+                                    setTempSelectedGames(multiSelectGames); // Set current selection as temp
+                                    setShowPayoutModal(true);
+                                  }}
+                                  variant="outline"
+                                  size="sm"
+                                  className="btn-interactive hover-lift border-emerald-500 text-emerald-600 hover:bg-emerald-50"
+                                >
+                                  Edit Payouts
+                                </Button>
+                              </div>
+                              
+                              {/* Selected Games Display */}
+                              <div className="flex flex-wrap gap-2 mb-4">
+                                {(() => {
+                                  // Check if games are actually active, not just selected
+                                  const isCardsActive = selectedGame && safeGameState && safeGameState.cardHistory?.length > 0;
+                                  const hasPointsValues = parseFloat(pointValue) > 0;
+                                  const hasFbtValues = parseFloat(fbtValue) > 0;
+                                  const hasBBBPointsValues = parseFloat(bbbPointValue) > 0;
+                                  const hasBBBFbtValues = parseFloat(bbbFbtValue) > 0;
+
+                                  return (
+                                    <>
+                                      {multiSelectGames.includes('cards') && isCardsActive && (
+                                        <div className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium fade-in">
+                                          🎴 Card Game
+                                        </div>
+                                      )}
+                                      {multiSelectGames.includes('points') && selectedPointsGame && hasPointsValues && (
+                                        <div className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium fade-in stagger-1">
+                                          🎯 2/9/16 Points
+                                        </div>
+                                      )}
+                                      {multiSelectGames.includes('fbt') && selectedPointsGame && hasFbtValues && (
+                                        <div className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium fade-in stagger-2">
+                                          ⛳ 2/9/16 FBT
+                                        </div>
+                                      )}
+                                      {multiSelectGames.includes('bbb-points') && selectedBBBGame && hasBBBPointsValues && (
+                                        <div className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium fade-in stagger-3">
+                                          🎲 BBB Points
+                                        </div>
+                                      )}
+                                      {multiSelectGames.includes('bbb-fbt') && selectedBBBGame && hasBBBFbtValues && (
+                                        <div className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-medium fade-in stagger-4">
+                                          🏌️ BBB FBT
+                                        </div>
+                                      )}
+                                    </>
+                                  );
+                                })()}
+                              </div>
+                              
+                              {(() => {
+                                // Use server-side combined games calculation
+                                if (!combinedGamesResult || !(combinedGamesResult as any).success) {
+                                  return (
+                                    <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                      <p className="text-gray-800">Calculating combined payouts...</p>
+                                    </div>
+                                  );
+                                }
+
+                                // For Cards Game only, use cardGameDetails to generate transactions
+                                let transactions = (combinedGamesResult as any).transactions || [];
+                                
+                                // Debug logs removed
+                                
+                                if (multiSelectGames.length === 1 && multiSelectGames.includes('cards') && 
+                                    (combinedGamesResult as any).cardGameDetails?.payouts) {
+                                  // Generate card game transactions from the card game payouts
+                                  const cardPayouts = (combinedGamesResult as any).cardGameDetails.payouts;
+                                  const debtors = cardPayouts.filter((p: any) => p.netPayout < 0);
+                                  const creditors = cardPayouts.filter((p: any) => p.netPayout > 0).sort((a: any, b: any) => b.netPayout - a.netPayout);
+                                  
+                                  transactions = [];
+                                  
+                                  for (const debtor of debtors) {
+                                    let remainingDebt = Math.abs(debtor.netPayout);
+                                    
+                                    for (const creditor of creditors) {
+                                      if (remainingDebt <= 0.01) break;
+                                      
+                                      let availableCredit = creditor.netPayout;
+                                      // Check if this creditor has already been paid by other debtors
+                                      const alreadyReceived = transactions
+                                        .filter((t: any) => t.to === creditor.playerId)
+                                        .reduce((sum: number, t: any) => sum + t.amount, 0);
+                                      availableCredit -= alreadyReceived;
+                                      
+                                      if (availableCredit > 0.01) {
+                                        const paymentAmount = Math.min(remainingDebt, availableCredit);
+                                        transactions.push({
+                                          from: debtor.playerId,
+                                          fromName: debtor.playerName,
+                                          to: creditor.playerId,
+                                          toName: creditor.playerName,
+                                          amount: paymentAmount
+                                        });
+                                        remainingDebt -= paymentAmount;
+                                      }
+                                    }
+                                  }
+                                }
+
+                                if (transactions.length === 0) {
+                                  return (
+                                    <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                      <p className="text-gray-800">All players are even across selected games - no payments needed!</p>
+                                    </div>
+                                  );
+                                }
+
+                                return (
+                                  <div className="space-y-2">
+                                    {transactions.map((transaction: any, index: number) => (
+                                      <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                        <div className="flex items-center gap-3">
+                                          <div className="text-sm">
+                                            <span className="font-medium text-red-600">{transaction.fromName}</span>
+                                            <span className="text-gray-600"> owes </span>
+                                            <span className="font-medium text-green-600">{transaction.toName}</span>
+                                          </div>
+                                        </div>
+                                        <div className="text-right">
+                                          <p className="text-lg font-bold text-black">${transaction.amount.toFixed(2)}</p>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                );
+                              })()}
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* 2. 🎯 WHO OWES WHO - BBB GAMES */}
+                    {(() => {
+                      const bbbPointValueNum = parseFloat(bbbPointValue) || 0;
+                      const bbbFbtValueNum = parseFloat(bbbFbtValue) || 0;
+                      const hasBBBPayoutValues = (bbbPointValueNum > 0) || (bbbFbtValueNum > 0);
+                      const showBBBWhoOwesWho = selectedBBBGame && hasBBBPayoutValues;
+                      
+                      return showBBBWhoOwesWho;
+                    })() && (
+                      <Card className="mb-4">
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold text-gray-800">🎯 BBB - Who Owes Who</h3>
+                            <Select value={bbbPayoutMode} onValueChange={(value: 'points' | 'fbt' | 'both') => setBBBPayoutMode(value)}>
+                              <SelectTrigger className="w-32">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="points">Points Only</SelectItem>
+                                <SelectItem value="fbt">FBT Only</SelectItem>
+                                <SelectItem value="both">Both</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-4">
+                            {bbbPayoutMode === 'points' ? 'Points-based settlement from BBB games only.' :
+                             bbbPayoutMode === 'fbt' ? 'FBT settlement from BBB games only.' :
+                             'Combined settlement for Points + FBT from BBB games only.'}
+                          </p>
+                          
+                          {(() => {
+                            const getTransactionsForBBBMode = () => {
+                              const bbbPointValueNum = parseFloat(bbbPointValue);
+                              const bbbFbtValueNum = parseFloat(bbbFbtValue);
+                              
+                              if (bbbPayoutMode === 'points' && selectedBBBPointsPayouts?.transactions) {
+                                return selectedBBBPointsPayouts.transactions;
+                              }
+                              
+                              if (bbbPayoutMode === 'fbt' && selectedBBBFbtPayouts?.transactions) {
+                                return selectedBBBFbtPayouts.transactions;
+                              }
+                              
+                              if (bbbPayoutMode === 'both') {
+                                const combinedPayouts: Record<string, number> = {};
+                                
+                                selectedGroup.players.forEach(player => {
+                                  combinedPayouts[player.id] = 0;
+                                });
+                                
+                                if (bbbPointValueNum > 0 && selectedBBBPointsPayouts?.payouts) {
+                                  selectedGroup.players.forEach(player => {
+                                    combinedPayouts[player.id] += selectedBBBPointsPayouts.payouts[player.id] || 0;
+                                  });
+                                }
+                                
+                                if (bbbFbtValueNum > 0 && selectedBBBFbtPayouts?.payouts) {
+                                  selectedGroup.players.forEach(player => {
+                                    combinedPayouts[player.id] += selectedBBBFbtPayouts.payouts[player.id] || 0;
+                                  });
+                                }
+                                
+                                const players = selectedGroup.players.map(p => ({
+                                  playerId: p.id,
+                                  playerName: p.name,
+                                  netPayout: combinedPayouts[p.id] || 0
+                                }));
+                                
+                                const debtors = players.filter(p => p.netPayout < -0.01);
+                                const creditors = players.filter(p => p.netPayout > 0.01);
+                                const transactions = [];
+                                
+                                for (const debtor of debtors) {
+                                  let remainingDebt = Math.abs(debtor.netPayout);
+                                  
+                                  for (const creditor of creditors) {
+                                    if (remainingDebt <= 0.01) break;
+                                    
+                                    let availableCredit = creditor.netPayout;
+                                    const alreadyReceived = transactions
+                                      .filter((t) => t.to === creditor.playerId)
+                                      .reduce((sum, t) => sum + t.amount, 0);
+                                    availableCredit -= alreadyReceived;
+                                    
+                                    if (availableCredit > 0.01) {
+                                      const paymentAmount = Math.min(remainingDebt, availableCredit);
+                                      transactions.push({
+                                        from: debtor.playerId,
+                                        fromName: debtor.playerName,
+                                        to: creditor.playerId,
+                                        toName: creditor.playerName,
+                                        amount: paymentAmount
+                                      });
+                                      remainingDebt -= paymentAmount;
+                                    }
+                                  }
+                                }
+                                
+                                return transactions;
+                              }
+                              
+                              return [];
+                            };
+                            
+                            const transactions = getTransactionsForBBBMode();
+
+                            if (transactions.length === 0) {
+                              return (
+                                <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                  <p className="text-gray-800">All players are even - no payments needed!</p>
+                                </div>
+                              );
+                            }
+
+                            return (
+                              <div className="space-y-2">
+                                {transactions.map((transaction, index) => (
+                                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                    <div className="flex items-center gap-3">
+                                      <div className="text-sm">
+                                        <span className="font-medium text-red-600">{transaction.fromName}</span>
+                                        <span className="text-gray-600"> owes </span>
+                                        <span className="font-medium text-green-600">{transaction.toName}</span>
+                                      </div>
+                                    </div>
+                                    <div className="text-right">
+                                      <p className="text-lg font-bold text-black">${transaction.amount.toFixed(2)}</p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          })()}
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* 3. & 4. 🎯 BBB POINTS ONLY PAYOUTS & ⛳ BBB FBT ONLY PAYOUTS */}
+                    {(() => {
+                      const bbbPointValueNum = parseFloat(bbbPointValue) || 0;
+                      const bbbFbtValueNum = parseFloat(bbbFbtValue) || 0;
+                      
+                      if (!selectedBBBGame || (bbbPointValueNum <= 0 && bbbFbtValueNum <= 0)) return null;
+
+                      const bbbPointsPayouts: Record<string, number> = {};
+                      const bbbFbtPayouts: Record<string, number> = {};
+                      
+                      selectedGroup.players.forEach(player => {
+                        bbbPointsPayouts[player.id] = 0;
+                        bbbFbtPayouts[player.id] = 0;
+                      });
+
+                      if (bbbPointValueNum > 0 && selectedBBBPointsPayouts?.payouts) {
+                        selectedGroup.players.forEach(player => {
+                          bbbPointsPayouts[player.id] = selectedBBBPointsPayouts.payouts[player.id] || 0;
+                        });
+                      }
+
+                      if (bbbFbtValueNum > 0 && selectedBBBFbtPayouts?.payouts) {
+                        selectedGroup.players.forEach(player => {
+                          bbbFbtPayouts[player.id] = selectedBBBFbtPayouts.payouts[player.id] || 0;
+                        });
+                      }
+
+                      return (
+                        <>
+                          {bbbPointValueNum > 0 && (
+                            <Card className="mb-4">
+                              <CardContent className="p-4">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-3">🎯 BBB Points Only Payouts</h3>
+                                <div className="space-y-2">
+                                  {[...selectedGroup.players]
+                                    .sort((a, b) => {
+                                      const payoutA = bbbPointsPayouts[a.id] || 0;
+                                      const payoutB = bbbPointsPayouts[b.id] || 0;
+                                      return payoutB - payoutA;
+                                    })
+                                    .map((player) => {
+                                      const netAmount = bbbPointsPayouts[player.id] || 0;
+                                      const isEven = Math.abs(netAmount) < 0.01;
+                                      const payout = {
+                                        amount: Math.abs(netAmount),
+                                        type: netAmount >= 0 ? 'receives' : 'pays'
+                                      };
+                                      
+                                      return (
+                                        <div key={player.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                          <div className="flex items-center gap-3">
+                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold`}
+                                                 style={{ backgroundColor: player.color }}>
+                                              {player.initials}
+                                            </div>
+                                            <span className="font-medium text-gray-800">{player.name}</span>
+                                          </div>
+                                          <div className="text-right">
+                                            <p className={`text-lg font-bold ${isEven ? 'text-gray-600' : payout.type === 'receives' ? 'text-green-600' : 'text-red-600'}`}>
+                                              ${payout.amount.toFixed(2)}
+                                            </p>
+                                            <p className="text-xs text-gray-600">
+                                              {isEven ? 'Even' : payout.type === 'receives' ? 'Receives' : 'Pays'}
+                                            </p>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          )}
+
+                          {bbbFbtValueNum > 0 && (
+                            <Card className="mb-4">
+                              <CardContent className="p-4">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-3">⛳ BBB FBT Only Payouts</h3>
+                                <div className="space-y-2">
+                                  {[...selectedGroup.players]
+                                    .sort((a, b) => {
+                                      const payoutA = bbbFbtPayouts[a.id] || 0;
+                                      const payoutB = bbbFbtPayouts[b.id] || 0;
+                                      return payoutB - payoutA;
+                                    })
+                                    .map((player) => {
+                                      const netAmount = bbbFbtPayouts[player.id] || 0;
+                                      const isEven = Math.abs(netAmount) < 0.01;
+                                      const payout = {
+                                        amount: Math.abs(netAmount),
+                                        type: netAmount >= 0 ? 'receives' : 'pays'
+                                      };
+                                      
+                                      return (
+                                        <div key={player.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                          <div className="flex items-center gap-3">
+                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold`}
+                                                 style={{ backgroundColor: player.color }}>
+                                              {player.initials}
+                                            </div>
+                                            <span className="font-medium text-gray-800">{player.name}</span>
+                                          </div>
+                                          <div className="text-right">
+                                            <p className={`text-lg font-bold ${isEven ? 'text-gray-600' : payout.type === 'receives' ? 'text-green-600' : 'text-red-600'}`}>
+                                              ${payout.amount.toFixed(2)}
+                                            </p>
+                                            <p className="text-xs text-gray-600">
+                                              {isEven ? 'Even' : payout.type === 'receives' ? 'Receives' : 'Pays'}
+                                            </p>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          )}
+                        </>
+                      );
+                    })()}
+
+                    {/* 5. 🎯 WHO OWES WHO - 2/9/16 GAMES */}
+                    {(() => {
+                      const hasPayoutValues = (parseFloat(pointValue) > 0) || (parseFloat(fbtValue) > 0);
+                      const show2916WhoOwesWho = selectedPointsGame && hasPayoutValues;
+                      
+                      return show2916WhoOwesWho;
+                    })() && (
+                      <Card className="mb-4">
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold text-gray-800">🎯 2/9/16 - Who Owes Who</h3>
+                            <Select value={combinedPayoutMode} onValueChange={(value: 'points' | 'fbt' | 'both') => setCombinedPayoutMode(value)}>
+                              <SelectTrigger className="w-32">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="points">Points Only</SelectItem>
+                                <SelectItem value="fbt">FBT Only</SelectItem>
+                                <SelectItem value="both">Both</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-4">
+                            {combinedPayoutMode === 'points' ? 'Points-based settlement from 2/9/16 games only.' :
+                             combinedPayoutMode === 'fbt' ? 'FBT settlement from 2/9/16 games only.' :
+                             'Combined settlement for Points + FBT from 2/9/16 games only.'}
+                          </p>
+                          
+                          {(() => {
+                            // Use individual payout results for 2/9/16 games only (no cards)
+                            const getTransactionsForMode = () => {
+                              const pointValueNum = parseFloat(pointValue);
+                              const fbtValueNum = parseFloat(fbtValue);
+                              
+                              // For Points Only mode, use selectedPointsPayouts
+                              if (combinedPayoutMode === 'points' && selectedPointsPayouts?.transactions) {
+                                return selectedPointsPayouts.transactions;
+                              }
+                              
+                              // For FBT Only mode, use selectedFbtPayouts
+                              if (combinedPayoutMode === 'fbt' && selectedFbtPayouts?.transactions) {
+                                return selectedFbtPayouts.transactions;
+                              }
+                              
+                              // For Both mode, use the pointsFbtCombinedResult for points+fbt only
+                              if (combinedPayoutMode === 'both' && pointsFbtCombinedResult?.success) {
+                                return pointsFbtCombinedResult.transactions;
+                              }
+                              
+                              return [];
+                            };
+                            
+                            const transactions = getTransactionsForMode();
+
+                            if (transactions.length === 0) {
+                              return (
+                                <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                  <p className="text-gray-800">All players are even - no payments needed!</p>
+                                </div>
+                              );
+                            }
+
+                            return (
+                              <div className="space-y-2">
+                                {transactions.map((transaction: any, index: number) => (
+                                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                    <div className="flex items-center gap-3">
+                                      <div className="text-sm">
+                                        <span className="font-medium text-red-600">{transaction.fromName}</span>
+                                        <span className="text-gray-600"> owes </span>
+                                        <span className="font-medium text-green-600">{transaction.toName}</span>
+                                      </div>
+                                    </div>
+                                    <div className="text-right">
+                                      <p className="text-lg font-bold text-black">${transaction.amount.toFixed(2)}</p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          })()}
+                        </CardContent>
+                      </Card>
+                    )}
+
+
+                    {(() => {
+                      // Determine which games are active
+                      const isCardsActive = selectedGame && gameState && gameState.cardHistory?.length > 0;
+                      const is2916Active = selectedPointsGame && 
+                        Object.values(selectedPointsGame.holes || {}).some(hole => 
+                          Object.values(hole as Record<string, any>).some((strokes: any) => strokes > 0)
+                        );
+                      const hasPayoutValues = (parseFloat(pointValue) > 0) || (parseFloat(fbtValue) > 0);
+
+                      return (
+                        <>
+                          {/* WHO OWES WHO - CARD GAME */}
+                          {isCardsActive && !(is2916Active && hasPayoutValues) && (
+                            <Card className="mb-4 card-interactive hover-lift fade-in">
+                              <CardContent className="p-4">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-3">Who Owes Who - Cards</h3>
+                                <div className="space-y-2">
+                                  {(() => {
+                                    // Use server-side payout calculations
+                                    const paymentMatrix = payoutData?.whoOwesWho || [];
+
+                                    return paymentMatrix.length > 0 ? (
+                                      <>
+                                        {paymentMatrix.map((payment: any, index: number) => (
+                                          <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                            <div className="flex items-center gap-3">
+                                              <div className="text-sm">
+                                                <span className="font-medium text-red-600">{payment.fromName}</span>
+                                                <span className="text-gray-600"> owes </span>
+                                                <span className="font-medium text-green-600">{payment.toName}</span>
+                                              </div>
+                                            </div>
+                                            <div className="text-right">
+                                              <p className="text-lg font-bold text-black">${payment.amount.toFixed(2)}</p>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </>
+                                    ) : (
+                                      <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                                        <p className="text-sm text-green-800">All players are even - no payments needed!</p>
+                                      </div>
+                                    );
+                                  })()}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          )}
+
+                        </>
+                      );
+                    })()}
+
+                    {/* 6. & 7. 🎯 POINTS ONLY PAYOUTS - 2/9/16 GAMES & ⛳ FBT ONLY PAYOUTS - 2/9/16 GAMES */}
+                    {(() => {
+                      const pointValueNum = parseFloat(pointValue) || 0;
+                      const fbtValueNum = parseFloat(fbtValue) || 0;
+                      
+                      // FIX: Always show when selectedPointsGame exists and ANY value > 0, regardless of scores
+                      if (!selectedPointsGame || (pointValueNum <= 0 && fbtValueNum <= 0)) return null;
+
+                      // Calculate total points for Points tile
+                      const totalPoints: Record<string, number> = {};
+                      selectedGroup.players.forEach(player => {
+                        totalPoints[player.id] = 0;
+                        Object.values(selectedPointsGame?.points || {}).forEach(holePoints => {
+                          totalPoints[player.id] += holePoints[player.id] || 0;
+                        });
+                      });
+
+                      // Get payouts from server-side APIs
+                      const pointsPayouts: Record<string, number> = {};
+                      const fbtPayouts: Record<string, number> = {};
+                      
+                      // Initialize with zeros
+                      selectedGroup.players.forEach(player => {
+                        pointsPayouts[player.id] = 0;
+                        fbtPayouts[player.id] = 0;
+                      });
+
+                      // Get Points payouts from API
+                      if (pointValueNum > 0 && selectedPointsPayouts?.payouts) {
+                        selectedGroup.players.forEach(player => {
+                          pointsPayouts[player.id] = selectedPointsPayouts.payouts[player.id] || 0;
+                        });
+                      }
+
+                      // Get FBT payouts from API
+                      if (fbtValueNum > 0 && selectedFbtPayouts?.payouts) {
+                        selectedGroup.players.forEach(player => {
+                          fbtPayouts[player.id] = selectedFbtPayouts.payouts[player.id] || 0;
+                        });
+                      }
+
+                      return (
+                        <>
+                          {/* 6. Points Only Tile - ALWAYS SHOW */}
+                          <Card className="mb-4">
+                            <CardContent className="p-4">
+                              <h3 className="text-lg font-semibold text-gray-800 mb-3">🎯 2/9/16 – Points Only</h3>
+                              <div className="space-y-2">
+                                {[...selectedGroup.players]
+                                  .sort((a, b) => {
+                                    const payoutA = pointsPayouts[a.id] || 0;
+                                    const payoutB = pointsPayouts[b.id] || 0;
+                                    return payoutB - payoutA; // Most profitable first
+                                  })
+                                  .map((player) => {
+                                    const netAmount = pointsPayouts[player.id] || 0;
+                                    const isEven = Math.abs(netAmount) < 0.01;
+                                    const payout = {
+                                      amount: Math.abs(netAmount),
+                                      type: netAmount >= 0 ? 'receives' : 'pays'
+                                    };
+                                    
+                                    return (
+                                      <div key={player.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                        <div className="flex items-center gap-3">
+                                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold`}
+                                               style={{ backgroundColor: player.color }}>
+                                            {player.initials}
+                                          </div>
+                                          <span className="font-medium text-gray-800">{player.name}</span>
+                                        </div>
+                                        <div className="text-right">
+                                          <p className={`text-lg font-bold ${isEven ? 'text-gray-600' : payout.type === 'receives' ? 'text-green-600' : 'text-red-600'}`}>
+                                            ${payout.amount.toFixed(2)}
+                                          </p>
+                                          <p className="text-xs text-gray-600">
+                                            {isEven ? 'Even' : payout.type === 'receives' ? 'Receives' : 'Pays'}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                              </div>
+                            </CardContent>
+                          </Card>
+
+                          {/* 7. FBT Only Tile - ALWAYS SHOW */}
+                          <Card className="mb-4">
+                            <CardContent className="p-4">
+                              <h3 className="text-lg font-semibold text-gray-800 mb-3">⛳ 2/9/16 – FBT Only</h3>
+                              <div className="space-y-2">
+                                {[...selectedGroup.players]
+                                  .sort((a, b) => {
+                                    const payoutA = fbtPayouts[a.id] || 0;
+                                    const payoutB = fbtPayouts[b.id] || 0;
+                                    return payoutB - payoutA; // Most profitable first
+                                  })
+                                  .map((player) => {
+                                    const netAmount = fbtPayouts[player.id] || 0;
+                                    const isEven = Math.abs(netAmount) < 0.01;
+                                    const payout = {
+                                      amount: Math.abs(netAmount),
+                                      type: netAmount >= 0 ? 'receives' : 'pays'
+                                    };
+                                    
+                                    return (
+                                      <div key={player.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                        <div className="flex items-center gap-3">
+                                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold`}
+                                               style={{ backgroundColor: player.color }}>
+                                            {player.initials}
+                                          </div>
+                                          <span className="font-medium text-gray-800">{player.name}</span>
+                                        </div>
+                                        <div className="text-right">
+                                          <p className={`text-lg font-bold ${isEven ? 'text-gray-600' : payout.type === 'receives' ? 'text-green-600' : 'text-red-600'}`}>
+                                            ${payout.amount.toFixed(2)}
+                                          </p>
+                                          <p className="text-xs text-gray-600">
+                                            {isEven ? 'Even' : payout.type === 'receives' ? 'Receives' : 'Pays'}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </>
+                      );
+                    })()}
+
+                    {/* 3. & 4. 🎯 BBB POINTS ONLY PAYOUTS & ⛳ BBB FBT ONLY PAYOUTS */}
+                    {(() => {
+                      const bbbPointValueNum = parseFloat(bbbPointValue) || 0;
+                      const bbbFbtValueNum = parseFloat(bbbFbtValue) || 0;
+                      
+                      // Show BBB tiles when BBB game exists and ANY value > 0
+                      if (!selectedBBBGame || (bbbPointValueNum <= 0 && bbbFbtValueNum <= 0)) return null;
+
+                      // Get BBB payouts from server-side APIs
+                      const bbbPointsPayouts: Record<string, number> = {};
+                      const bbbFbtPayouts: Record<string, number> = {};
+                      
+                      // Initialize with zeros
+                      selectedGroup.players.forEach(player => {
+                        bbbPointsPayouts[player.id] = 0;
+                        bbbFbtPayouts[player.id] = 0;
+                      });
+
+                      // Get BBB Points payouts from API
+                      if (bbbPointValueNum > 0 && selectedBBBPointsPayouts?.payouts) {
+                        selectedGroup.players.forEach(player => {
+                          bbbPointsPayouts[player.id] = selectedBBBPointsPayouts.payouts[player.id] || 0;
+                        });
+                      }
+
+                      // Get BBB FBT payouts from API
+                      if (bbbFbtValueNum > 0 && selectedBBBFbtPayouts?.payouts) {
+                        selectedGroup.players.forEach(player => {
+                          bbbFbtPayouts[player.id] = selectedBBBFbtPayouts.payouts[player.id] || 0;
+                        });
+                      }
+
+                      return (
+                        <>
+                          {/* BBB Points Only Tile */}
+                          {bbbPointValueNum > 0 && (
+                            <Card className="mb-4">
+                              <CardContent className="p-4">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-3">🎯 BBB Points Only Payouts</h3>
+                                <div className="space-y-2">
+                                  {[...selectedGroup.players]
+                                    .sort((a, b) => {
+                                      const payoutA = bbbPointsPayouts[a.id] || 0;
+                                      const payoutB = bbbPointsPayouts[b.id] || 0;
+                                      return payoutB - payoutA; // Most profitable first
+                                    })
+                                    .map((player) => {
+                                      const netAmount = bbbPointsPayouts[player.id] || 0;
+                                      const isEven = Math.abs(netAmount) < 0.01;
+                                      const payout = {
+                                        amount: Math.abs(netAmount),
+                                        type: netAmount >= 0 ? 'receives' : 'pays'
+                                      };
+                                      
+                                      return (
+                                        <div key={player.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                          <div className="flex items-center gap-3">
+                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold`}
+                                                 style={{ backgroundColor: player.color }}>
+                                              {player.initials}
+                                            </div>
+                                            <span className="font-medium text-gray-800">{player.name}</span>
+                                          </div>
+                                          <div className="text-right">
+                                            <p className={`text-lg font-bold ${isEven ? 'text-gray-600' : payout.type === 'receives' ? 'text-green-600' : 'text-red-600'}`}>
+                                              ${payout.amount.toFixed(2)}
+                                            </p>
+                                            <p className="text-xs text-gray-600">
+                                              {isEven ? 'Even' : payout.type === 'receives' ? 'Receives' : 'Pays'}
+                                            </p>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          )}
+
+                          {/* BBB FBT Only Tile */}
+                          {bbbFbtValueNum > 0 && (
+                            <Card className="mb-4">
+                              <CardContent className="p-4">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-3">⛳ BBB FBT Only Payouts</h3>
+                                <div className="space-y-2">
+                                  {[...selectedGroup.players]
+                                    .sort((a, b) => {
+                                      const payoutA = bbbFbtPayouts[a.id] || 0;
+                                      const payoutB = bbbFbtPayouts[b.id] || 0;
+                                      return payoutB - payoutA; // Most profitable first
+                                    })
+                                    .map((player) => {
+                                      const netAmount = bbbFbtPayouts[player.id] || 0;
+                                      const isEven = Math.abs(netAmount) < 0.01;
+                                      const payout = {
+                                        amount: Math.abs(netAmount),
+                                        type: netAmount >= 0 ? 'receives' : 'pays'
+                                      };
+                                      
+                                      return (
+                                        <div key={player.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                          <div className="flex items-center gap-3">
+                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold`}
+                                                 style={{ backgroundColor: player.color }}>
+                                              {player.initials}
+                                            </div>
+                                            <span className="font-medium text-gray-800">{player.name}</span>
+                                          </div>
+                                          <div className="text-right">
+                                            <p className={`text-lg font-bold ${isEven ? 'text-gray-600' : payout.type === 'receives' ? 'text-green-600' : 'text-red-600'}`}>
+                                              ${payout.amount.toFixed(2)}
+                                            </p>
+                                            <p className="text-xs text-gray-600">
+                                              {isEven ? 'Even' : payout.type === 'receives' ? 'Receives' : 'Pays'}
+                                            </p>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          )}
+                        </>
+                      );
+                    })()}
+
+                    {/* REMOVED - BBB duplicate section cleaned up */}
+
+                    {/* 8. 🎴 WHO OWES WHO - CARD GAME */}
+                    {(() => {
+                      const isCardsActive = selectedGame && gameState && gameState.cardHistory?.length > 0;
+                      return isCardsActive;
+                    })() && (
+                      <Card className="mb-4 card-interactive hover-lift fade-in">
+                        <CardContent className="p-4">
+                          <h3 className="text-lg font-semibold text-gray-800 mb-3">🎴 Who Owes Who - Card Game</h3>
+                          <div className="space-y-2">
+                            {(() => {
+                              // Use server-side whoOwesWho data for card game transactions
+                              const transactions = payoutData?.whoOwesWho || [];
+                              
+
+
+                              return transactions.length > 0 ? (
+                                <>
+                                  {transactions.map((transaction: any, index: number) => (
+                                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                      <div className="flex items-center gap-3">
+                                        <div className="text-sm">
+                                          <span className="font-medium text-red-600">{transaction.fromPlayerName || transaction.fromName || transaction.from}</span>
+                                          <span className="text-gray-600"> owes </span>
+                                          <span className="font-medium text-green-600">{transaction.toPlayerName || transaction.toName || transaction.to}</span>
+                                        </div>
+                                      </div>
+                                      <div className="text-right">
+                                        <p className="text-lg font-bold text-black">${transaction.amount.toFixed(2)}</p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </>
+                              ) : (
+                                <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                                  <p className="text-sm text-green-800">All players are even - no payments needed!</p>
+                                </div>
+                              );
+                            })()}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Card Game Payouts - MOVED TO BOTTOM */}
+                    <CardGamePayouts 
+                      selectedGroup={selectedGroup}
+                      gameState={gameState}
+                      payoutData={payoutData}
+                    />
+
+              </>
+            )}
+              </>
             )}
           </div>
         )}
@@ -3108,10 +4557,6 @@ export default function Home() {
         
         // Show overlay for Games tab to allow submenu selection
         if (tab === 'games') {
-          // V8.2: Defensively ensure we're on BBB if stuck on cards placeholder
-          if (selectedSubGame === 'cards') {
-            changeSubGame('bbb');
-          }
           setShowGamesOverlay(true);
         }
         
@@ -3889,7 +5334,7 @@ export default function Home() {
                   className="w-full flex items-center gap-3 p-3 rounded-md hover:bg-gray-50 transition-colors text-left"
                   onClick={() => {
                     changeTab('games');
-                    changeSubGame('bbb');
+                    setSelectedSubGame('bbb');
                     setShowGamesOverlay(false);
                   }}
                 >
@@ -3905,7 +5350,7 @@ export default function Home() {
                   className="w-full flex items-center gap-3 p-3 rounded-md hover:bg-gray-50 transition-colors text-left"
                   onClick={() => {
                     changeTab('games');
-                    changeSubGame('points');
+                    setSelectedSubGame('points');
                     setShowGamesOverlay(false);
                   }}
                 >
@@ -3918,13 +5363,17 @@ export default function Home() {
                 
                 <button
                   data-testid="button-game-cards"
-                  className="w-full flex items-center gap-3 p-3 rounded-md bg-gray-100 opacity-50 transition-colors text-left cursor-not-allowed"
-                  disabled
+                  className="w-full flex items-center gap-3 p-3 rounded-md hover:bg-gray-50 transition-colors text-left"
+                  onClick={() => {
+                    changeTab('games');
+                    setSelectedSubGame('cards');
+                    setShowGamesOverlay(false);
+                  }}
                 >
-                  <Layers className="h-5 w-5 text-gray-400" />
+                  <Layers className="h-5 w-5 text-gray-600" />
                   <div>
-                    <div className="font-medium text-gray-500">Cards</div>
-                    <div className="text-sm text-gray-400">Coming soon...</div>
+                    <div className="font-medium text-gray-900">Cards</div>
+                    <div className="text-sm text-gray-500">Don't be an animal!</div>
                   </div>
                 </button>
               </div>

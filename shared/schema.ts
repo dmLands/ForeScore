@@ -40,7 +40,6 @@ export const userPreferences = pgTable("user_preferences", {
   currentTab: varchar("current_tab").$type<'groups' | 'games' | 'scoreboard' | 'rules'>().default('groups'),
   selectedGroupId: varchar("selected_group_id"), // Persist selected group
   selectedGameId: varchar("selected_game_id"),   // Persist selected game
-  selectedSubGame: varchar("selected_sub_game").$type<'cards' | 'points' | 'bbb'>().default('bbb'), // Persist selected game tab
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

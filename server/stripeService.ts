@@ -476,9 +476,9 @@ export class StripeService {
           new Date(stripeSubscription.trial_start * 1000) : null,
         trialEnd: stripeSubscription.trial_end ? 
           new Date(stripeSubscription.trial_end * 1000) : null,
-        cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end || false,
-        canceledAt: stripeSubscription.canceled_at ? 
-          new Date(stripeSubscription.canceled_at * 1000) : null,
+        cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end ? 1 : 0,
+        cancelAt: stripeSubscription.cancel_at ? 
+          new Date(stripeSubscription.cancel_at * 1000) : null,
       };
 
       // Extract price ID from subscription items
@@ -488,6 +488,7 @@ export class StripeService {
       }
 
       // Store in canonical database structure
+      console.log('🔍 Subscription data being sent to database:', JSON.stringify(subscriptionData, null, 2));
       await storage.upsertStripeSubscription(subscriptionData);
       
       console.log(`✅ Successfully synced subscription data for user ${userId}`);

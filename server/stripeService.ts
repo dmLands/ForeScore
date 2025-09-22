@@ -488,7 +488,6 @@ export class StripeService {
       }
 
       // Store in canonical database structure
-      console.log('🔍 Subscription data being sent to database:', JSON.stringify(subscriptionData, null, 2));
       await storage.upsertStripeSubscription(subscriptionData);
       
       console.log(`✅ Successfully synced subscription data for user ${userId}`);

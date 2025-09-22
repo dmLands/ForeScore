@@ -195,6 +195,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Temporary test endpoint to check access (REMOVE IN PRODUCTION)
+  app.post('/api/test-access', async (req, res) => {
+    try {
+      const { userId } = req.body;
+      if (!userId) {
+        return res.status(400).json({ error: 'userId required' });
+      }
+
+      const hasAccess = await stripeService.hasAccess(userId);
+      const subscription = await storage.getStripeSubscription(userId);
+      
+      const result = { 
+        userId, 
+        hasAccess,
+        subscription: subscription ? {
+          status: subscription.status,
+          trialEnd: subscription.trialEnd,
+          currentPeriodEnd: subscription.currentPeriodEnd
+        } : null
+      };
+      
+      console.log('🧪 Test access result:', JSON.stringify(result, null, 2));
+      res.json(result);
+    } catch (error) {
+      console.error('Test access error:', error);
+      res.status(500).json({ error: 'Failed to check access' });
+    }
+  });
+
   // Temporary admin endpoint to sync all subscriptions (REMOVE IN PRODUCTION)
   app.post('/api/admin/sync-all-subscriptions', async (req, res) => {
     try {

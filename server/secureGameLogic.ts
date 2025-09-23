@@ -372,44 +372,44 @@ export function calculate2916Points(
       strokeGroups[sortedStrokes[2]].forEach(id => points[id] = 1); // Highest, total = 9
     }
   } else if (numPlayers === 4) {
-    // Four player rules - sum MUST = 16
+    // Four player rules - sum MUST = 16 (8 combinations, all whole numbers)
     if (sortedStrokes.length === 1) {
-      // All tied
+      // Combination 8 - All tied: Each player gets 4 points
       playerIds.forEach(id => points[id] = 4); // 4 + 4 + 4 + 4 = 16
     } else if (sortedStrokes.length === 2) {
       const firstGroupSize = strokeGroups[sortedStrokes[0]].length;
       if (firstGroupSize === 3) {
-        // Three tied for lowest, one highest
+        // Combination 6 – 3 Tied for Lowest Strokes, 1 Highest Strokes
         strokeGroups[sortedStrokes[0]].forEach(id => points[id] = 5); // 5 + 5 + 5 = 15
         strokeGroups[sortedStrokes[1]].forEach(id => points[id] = 1); // 1, total = 16
       } else if (firstGroupSize === 2) {
-        // Two tied for lowest, two tied for highest
-        strokeGroups[sortedStrokes[0]].forEach(id => points[id] = 5); // 5 + 5 = 10
-        strokeGroups[sortedStrokes[1]].forEach(id => points[id] = 3); // 3 + 3 = 6, total = 16
+        // Combination 2 - 2 Tied for Lowest, 2 tied for highest
+        strokeGroups[sortedStrokes[0]].forEach(id => points[id] = 6); // 6 + 6 = 12
+        strokeGroups[sortedStrokes[1]].forEach(id => points[id] = 2); // 2 + 2 = 4, total = 16
       } else {
-        // One lowest, three tied for highest
+        // Combination 7 – 1 Lowest Strokes 3 Tied for Highest Strokes
         strokeGroups[sortedStrokes[0]].forEach(id => points[id] = 7); // 7
         strokeGroups[sortedStrokes[1]].forEach(id => points[id] = 3); // 3 + 3 + 3 = 9, total = 16
       }
     } else if (sortedStrokes.length === 3) {
       if (strokeGroups[sortedStrokes[0]].length === 2) {
-        // Two tied for lowest, one middle, one highest
+        // Combination 3 - 2 Tied for Lowest Strokes, Different Highest Strokes
         strokeGroups[sortedStrokes[0]].forEach(id => points[id] = 6); // 6 + 6 = 12
         strokeGroups[sortedStrokes[1]].forEach(id => points[id] = 3); // 3
         strokeGroups[sortedStrokes[2]].forEach(id => points[id] = 1); // 1, total = 16
       } else if (strokeGroups[sortedStrokes[1]].length === 2) {
-        // One lowest, two tied for middle, one highest
+        // Combination 5 - 1 Lowest Strokes, 1 Highest Strokes, Two Middle Strokes Tie
         strokeGroups[sortedStrokes[0]].forEach(id => points[id] = 7); // 7
         strokeGroups[sortedStrokes[1]].forEach(id => points[id] = 4); // 4 + 4 = 8
         strokeGroups[sortedStrokes[2]].forEach(id => points[id] = 1); // 1, total = 16
       } else {
-        // One lowest, one middle, two tied for highest
-        strokeGroups[sortedStrokes[0]].forEach(id => points[id] = 8); // 8
+        // Combination 4 - Different Lowest Strokes, 2 Tied for Highest Strokes
+        strokeGroups[sortedStrokes[0]].forEach(id => points[id] = 7); // 7
         strokeGroups[sortedStrokes[1]].forEach(id => points[id] = 5); // 5
-        strokeGroups[sortedStrokes[2]].forEach(id => points[id] = 1.5); // 1.5 + 1.5 = 3, total = 16
+        strokeGroups[sortedStrokes[2]].forEach(id => points[id] = 2); // 2 + 2 = 4, total = 16
       }
     } else {
-      // All different - classic 6/4/2/0 doesn't sum to 16, need 7/5/3/1
+      // Combination 1 - All different
       strokeGroups[sortedStrokes[0]].forEach(id => points[id] = 7); // Lowest
       strokeGroups[sortedStrokes[1]].forEach(id => points[id] = 5); // Second
       strokeGroups[sortedStrokes[2]].forEach(id => points[id] = 3); // Third

@@ -4323,6 +4323,113 @@ export default function Home() {
             {/* Tutorial Section */}
             <Tutorial />
             
+            {/* BBB Game Rules */}
+            <Card>
+              <CardContent className="p-6">
+                <h2 className="text-lg font-bold text-gray-800 mb-4">🎲 Bingo Bango Bongo Rules</h2>
+                <div className="space-y-4 text-gray-600">
+                  <p className="leading-relaxed">
+                    Bingo Bango Bongo is a fun points-based game where players earn points by achieving three different objectives on each hole.
+                  </p>
+
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                      <span className="w-6 h-6 bg-emerald-500 text-white rounded-full flex items-center justify-center text-sm font-bold">1</span>
+                      How Points Are Awarded
+                    </h3>
+                    
+                    <div className="ml-4 space-y-3">
+                      <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <h4 className="font-medium text-gray-800 mb-2">🎯 Bingo - First on Green</h4>
+                        <p className="text-sm text-gray-600">The first player to hit their ball on the green, regardless of green-in-regulation. Distance doesn't matter, just first to reach the green.</p>
+                      </div>
+                      
+                      <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <h4 className="font-medium text-gray-800 mb-2">🎯 Bango - Closest to Pin</h4>
+                        <p className="text-sm text-gray-600">The player whose ball comes to rest closest to the hole before any other player holes out. One player can hit it to 2 feet from the fairway, but if someone else chips it to 1 foot, they win Bango.</p>
+                      </div>
+                      
+                      <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <h4 className="font-medium text-gray-800 mb-2">🎯 Bongo - First in Hole</h4>
+                        <p className="text-sm text-gray-600">The first person to hole out from anywhere on the course. If both players hole out simultaneously, it's still the first person to hole out that wins Bongo.</p>
+                      </div>
+                      
+                      <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                        <p className="text-sm text-gray-700">
+                          <strong>Tie-Breakers:</strong> Select "None" if there are any discrepancies or if the group decides to award a tie.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                      <span className="w-6 h-6 bg-emerald-500 text-white rounded-full flex items-center justify-center text-sm font-bold">2</span>
+                      Playing the Game
+                    </h3>
+                    <ol className="space-y-2 ml-8">
+                      <li className="flex items-start gap-2">
+                        <span className="text-gray-800 font-bold">1.</span>
+                        <span>After each hole, mark which player achieved each category (Bingo, Bango, Bongo)</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-gray-800 font-bold">2.</span>
+                        <span>Points are automatically calculated and added to the leaderboard</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-gray-800 font-bold">3.</span>
+                        <span>Check the Payouts tab to see money calculations</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-gray-800 font-bold">4.</span>
+                        <span>Play with other games simultaneously for maximum competition!</span>
+                      </li>
+                    </ol>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                      <span className="w-6 h-6 bg-emerald-500 text-white rounded-full flex items-center justify-center text-sm font-bold">3</span>
+                      2 Payout Systems - Points and FBT
+                    </h3>
+                    <p className="text-gray-600 mb-3">
+                      Bingo Bango Bongo includes two payout systems that run simultaneously - choose your preferred method:
+                    </p>
+                    
+                    <div className="space-y-4">
+                      <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <h4 className="font-medium text-gray-800 mb-2">Points System</h4>
+                        <ul className="space-y-1 text-sm text-gray-700">
+                          <li>• Each player pays/receives money based on point differences</li>
+                          <li>• Higher-scoring players receive from lower-scoring players</li>
+                          <li>• Set Point Value (e.g., $1.00 per point) to calculate amounts</li>
+                          <li>• Net result shows total amount each player owes or receives</li>
+                        </ul>
+                      </div>
+                      
+                      <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <h4 className="font-medium text-gray-800 mb-2">FBT System (Front/Back/Total)</h4>
+                        <ul className="space-y-1 text-sm text-gray-700">
+                          <li>• Winners determined by highest point count:</li>
+                          <li className="ml-4">- Front 9 (holes 1-9)</li>
+                          <li className="ml-4">- Back 9 (holes 10-18)</li>
+                          <li className="ml-4">- Total 18 holes</li>
+                          <li>• Winners receive FBT Value for each category won</li>
+                          <li>• Non-winners split the total cost equally</li>
+                        </ul>
+                      </div>
+                      
+                      <div className="p-3 bg-gray-50 rounded-lg">
+                        <p className="text-sm text-gray-600">
+                          <strong>Pro Tip:</strong> Both systems calculate simultaneously! Toggle between "Points" and "FBT" modes in the game to see both payout options, or check the Payouts tab to view them side by side.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
             {/* 2/9/16 Game Rules */}
             <Card>
               <CardContent className="p-6">

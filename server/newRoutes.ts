@@ -25,6 +25,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return requireSubscriptionAccess(req, res, next);
   };
 
+  // Offline sync endpoints
+  app.post('/api/offline-sync/card-assignment', isAuthenticated, subscriptionProtected, async (req, res) => {
+    try {
+      const { gameId, playerId, cardType, timestamp } = req.body;
+      const userId = (req as any).user?.claims?.sub;
+
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      // Validate game access
+      const gameState = await storage.getGameState(gameId);
+      if (!gameState) {
+        return res.status(404).json({ message: "Game not found" });
+      }
+
+      // Get group to verify user has access
+      const group = await storage.getGroup(gameState.groupId);
+      if (!group || group.createdBy !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      // Apply card assignment by updating game state
+      const updatedPlayerCards = { ...gameState.playerCards };
+      if (!updatedPlayerCards[playerId]) {
+        updatedPlayerCards[playerId] = [];
+      }
+      
+      // Add the card to player's cards
+      const cardToAdd = gameState.deck.find(card => card.type === cardType);
+      if (cardToAdd) {
+        updatedPlayerCards[playerId].push(cardToAdd);
+        
+        // Update card history
+        const updatedCardHistory = [...gameState.cardHistory, {
+          playerId,
+          cardType,
+          timestamp: new Date(timestamp),
+          assignedBy: userId
+        }];
+        
+        // Update game state
+        await storage.updateGameState(gameId, {
+          playerCards: updatedPlayerCards,
+          cardHistory: updatedCardHistory
+        });
+      }
+
+      res.json({ message: "Card assignment synced successfully" });
+    } catch (error) {
+      console.error('Error syncing card assignment:', error);
+      res.status(500).json({ message: "Failed to sync card assignment" });
+    }
+  });
+
+  app.post('/api/offline-sync/points-score', isAuthenticated, subscriptionProtected, async (req, res) => {
+    try {
+      const { gameId, playerId, hole, points, gameType, timestamp } = req.body;
+      const userId = (req as any).user?.claims?.sub;
+
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      // Find the points game
+      const pointsGames = await storage.getPointsGames(gameId, userId);
+      const pointsGame = pointsGames.find((pg: any) => 
+        pg.gameType === (gameType === 'bbb' ? 'bbb' : 'points')
+      );
+
+      if (!pointsGame) {
+        return res.status(404).json({ message: "Points game not found" });
+      }
+
+      // Update the score using existing method
+      await storage.updateHoleScores(pointsGame.id, hole, { [playerId]: 0 }, { [playerId]: points });
+
+      res.json({ message: "Points score synced successfully" });
+    } catch (error) {
+      console.error('Error syncing points score:', error);
+      res.status(500).json({ message: "Failed to sync points score" });
+    }
+  });
+
   // Auth routes - removed duplicate, using the one below
 
   // Local authentication routes

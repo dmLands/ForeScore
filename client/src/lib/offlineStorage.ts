@@ -76,7 +76,7 @@ class OfflineStorage {
       const store = transaction.objectStore(this.stores.scores);
       const index = store.index('synced');
       
-      const request = index.getAll(false);
+      const request = index.getAll(IDBKeyRange.only(false));
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     });

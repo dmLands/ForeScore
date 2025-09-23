@@ -49,7 +49,7 @@ export function useOfflineSync() {
       console.log(`Syncing ${unsyncedScores.length} offline scores...`);
       
       // Group scores by game and type for efficient syncing
-      const scoresByGame = unsyncedScores.reduce((acc, score) => {
+      const scoresByGame = unsyncedScores.reduce((acc: Record<string, any[]>, score: any) => {
         const key = `${score.gameId}-${score.type}`;
         if (!acc[key]) acc[key] = [];
         acc[key].push(score);

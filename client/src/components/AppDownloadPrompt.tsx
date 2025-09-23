@@ -1,7 +1,23 @@
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Download, Smartphone } from "lucide-react";
 
 export default function AppDownloadPrompt() {
+  const [isPWA, setIsPWA] = useState(false);
+
+  useEffect(() => {
+    // Detect if app is running in PWA mode
+    const checkPWAMode = () => {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+      const isWebkitStandalone = (window.navigator as any).standalone === true;
+      const isInWebAppiOS = window.navigator.userAgent.includes('Mobile') && !window.navigator.userAgent.includes('Safari');
+      
+      return isStandalone || isWebkitStandalone || isInWebAppiOS;
+    };
+
+    setIsPWA(checkPWAMode());
+  }, []);
+
   const handleDownloadClick = () => {
     // Show manual installation instructions
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
@@ -15,6 +31,11 @@ export default function AppDownloadPrompt() {
       alert('To install ForeScore:\n\n1. Look for the install icon (⊕) in your browser address bar\n2. Or go to browser menu → "Install ForeScore"\n3. Follow the prompts to install the app');
     }
   };
+
+  // Don't show prompt if already in PWA mode
+  if (isPWA) {
+    return null;
+  }
 
   return (
     <div className="mt-4 p-4 bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-lg">

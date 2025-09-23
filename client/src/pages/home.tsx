@@ -1670,6 +1670,9 @@ export default function Home() {
                 Create New Game
               </Button>
               
+              {/* Download App Prompt */}
+              <AppDownloadPrompt />
+              
             </div>
 
             {/* Selected Group Games */}

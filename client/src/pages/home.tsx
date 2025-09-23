@@ -1673,6 +1673,79 @@ export default function Home() {
               {/* Download App Prompt */}
               <AppDownloadPrompt />
               
+              {/* Game Selection Tiles */}
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">Choose Your Game</h3>
+                
+                {/* BBB (Bingo Bango Bongo) Game */}
+                <Card className="border-2 border-gray-200 bg-gradient-to-br from-gray-50 to-gray-50">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center text-white font-bold shadow-md">
+                        🎲
+                      </div>
+                      <CardTitle className="text-lg text-gray-900">Bingo Bango Bongo</CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <p className="text-sm text-gray-600 leading-relaxed">
+                      Earn up to 3 points on each hole - first on the green, closest to the pin, and first to hole out! Bing, Bang, and Go have fun with your friends! Includes three payout modes (Points or Front-Back-Total [FBT], or both).
+                    </p>
+                  </CardContent>
+                </Card>
+
+                {/* 2/9/16 Game */}
+                <Card className="border-2 border-gray-200 bg-gradient-to-br from-gray-50 to-gray-50">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold shadow-md">
+                        #
+                      </div>
+                      <CardTitle className="text-lg text-gray-900">2/9/16 Game</CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <p className="text-sm text-gray-600 leading-relaxed">
+                      The classic points game where players earn 2, 9, or 16 points (match play, threesomes, or foursomes) points per hole depending on performance. Includes three payout modes (Points or Front-Back-Total [FBT], or both).
+                    </p>
+                  </CardContent>
+                </Card>
+
+                {/* Card Game */}
+                <Card className="border-2 border-gray-200 bg-gradient-to-br from-gray-50 to-gray-50">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center text-white font-bold shadow-md">
+                        🃏
+                      </div>
+                      <CardTitle className="text-lg text-gray-900">Card Game</CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <p className="text-sm text-gray-600 leading-relaxed">
+                      Don't be an animal! Classic penalty cards game where players collect cards for golf mishaps, and payouts are automatically calculated to fairly reward those who stay out of trouble.
+                    </p>
+                  </CardContent>
+                </Card>
+
+                {/* Live Leaderboards */}
+                <Card className="border-2 border-gray-200 bg-gradient-to-br from-gray-50 to-gray-50">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center text-white font-bold shadow-md">
+                        💰
+                      </div>
+                      <CardTitle className="text-lg text-gray-900">Live Leaderboards</CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <p className="text-sm text-gray-600 leading-relaxed">
+                      Combine games and instantly calculate payouts with the fewest number of transactions. Money only changes hands once. Real-time leaderboards, and seamless hole-by-hole score tracking.
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+              
             </div>
 
             {/* Selected Group Games */}

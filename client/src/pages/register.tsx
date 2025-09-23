@@ -8,6 +8,7 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Link, useLocation } from "wouter";
 import { z } from "zod";
+import PWAInstallButton from "@/components/PWAInstallButton";
 
 const registerSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -189,6 +190,8 @@ export default function Register() {
               {registerMutation.isPending ? "Creating Account..." : "Create Account"}
             </Button>
           </form>
+          
+          <PWAInstallButton />
           
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">

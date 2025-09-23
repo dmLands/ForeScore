@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import AppDownloadPrompt from "@/components/AppDownloadPrompt";
 
 export default function Landing() {
   return (
@@ -57,6 +58,9 @@ export default function Landing() {
                   New Users Register Here
                 </button>
               </p>
+              
+              {/* Download App Prompt */}
+              <AppDownloadPrompt />
             </div>
 
             {/* Game descriptions with graphics */}

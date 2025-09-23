@@ -1,102 +1,39 @@
-import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Download, Smartphone, X } from "lucide-react";
-
-interface BeforeInstallPromptEvent extends Event {
-  prompt(): Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
-}
+import { Download, Smartphone } from "lucide-react";
 
 export default function AppDownloadPrompt() {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [dismissed, setDismissed] = useState(false);
-
-  useEffect(() => {
-    // Check if user has dismissed in this session
-    const dismissedInSession = sessionStorage.getItem('app-download-dismissed');
-    if (dismissedInSession) {
-      setDismissed(true);
-      return;
-    }
-
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    };
-  }, []);
-
-  const handleDownloadClick = async () => {
-    if (deferredPrompt) {
-      // Use browser's native install prompt
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      
-      if (outcome === 'accepted') {
-        console.log('User installed the app');
-        setDismissed(true);
-      }
-      
-      setDeferredPrompt(null);
+  const handleDownloadClick = () => {
+    // Show manual installation instructions
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isAndroid = /Android/.test(navigator.userAgent);
+    
+    if (isIOS) {
+      alert('To install ForeScore:\n\n1. Tap the Share button (□↗)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to install the app');
+    } else if (isAndroid) {
+      alert('To install ForeScore:\n\n1. Tap the menu (⋮) in your browser\n2. Tap "Install app" or "Add to Home screen"\n3. Follow the prompts to install');
     } else {
-      // Show manual installation instructions
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      const isAndroid = /Android/.test(navigator.userAgent);
-      
-      if (isIOS) {
-        alert('To install ForeScore:\n\n1. Tap the Share button (□↗)\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" to install the app');
-      } else if (isAndroid) {
-        alert('To install ForeScore:\n\n1. Tap the menu (⋮) in your browser\n2. Tap "Install app" or "Add to Home screen"\n3. Follow the prompts to install');
-      } else {
-        alert('To install ForeScore:\n\n1. Look for the install icon (⊕) in your browser address bar\n2. Or go to browser menu → "Install ForeScore"\n3. Follow the prompts to install the app');
-      }
+      alert('To install ForeScore:\n\n1. Look for the install icon (⊕) in your browser address bar\n2. Or go to browser menu → "Install ForeScore"\n3. Follow the prompts to install the app');
     }
   };
-
-  const handleDismiss = () => {
-    setDismissed(true);
-    sessionStorage.setItem('app-download-dismissed', 'true');
-  };
-
-  if (dismissed) {
-    return null;
-  }
 
   return (
-    <div className="mt-4 p-4 bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-lg relative">
-      <Button
-        onClick={handleDismiss}
-        size="sm"
-        variant="ghost"
-        className="absolute top-2 right-2 h-6 w-6 p-0 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-100"
-        data-testid="button-close-download"
-      >
-        <X className="h-4 w-4" />
-      </Button>
-      
-      <div className="pr-8">
-        <div className="flex items-center space-x-2 mb-2">
-          <Smartphone className="h-5 w-5 text-emerald-600" />
-          <h3 className="font-semibold text-emerald-900">Get the ForeScore App</h3>
-        </div>
-        <p className="text-sm text-emerald-700 mb-3">
-          Install ForeScore for faster access, offline scoring, and a native app experience.
-        </p>
-        <Button
-          onClick={handleDownloadClick}
-          size="sm"
-          className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium"
-          data-testid="button-download-app"
-        >
-          <Download className="h-4 w-4 mr-2" />
-          Download App
-        </Button>
+    <div className="mt-4 p-4 bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-lg">
+      <div className="flex items-center space-x-2 mb-2">
+        <Smartphone className="h-5 w-5 text-emerald-600" />
+        <h3 className="font-semibold text-emerald-900">Get the ForeScore App</h3>
       </div>
+      <p className="text-sm text-emerald-700 mb-3">
+        Install ForeScore for faster access, offline scoring, and a native app experience.
+      </p>
+      <Button
+        onClick={handleDownloadClick}
+        size="sm"
+        className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium"
+        data-testid="button-download-app"
+      >
+        <Download className="h-4 w-4 mr-2" />
+        Download App
+      </Button>
     </div>
   );
 }

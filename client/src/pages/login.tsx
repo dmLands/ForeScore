@@ -8,7 +8,7 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Link, useLocation } from "wouter";
 import { z } from "zod";
-import PWAInstallButton from "@/components/PWAInstallButton";
+import AppDownloadPrompt from "@/components/AppDownloadPrompt";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -140,7 +140,7 @@ export default function Login() {
             </Button>
           </form>
           
-          <PWAInstallButton />
+          <AppDownloadPrompt />
           
           <div className="mt-6 text-center space-y-2">
             <p className="text-sm text-gray-600">

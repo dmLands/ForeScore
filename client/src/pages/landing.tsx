@@ -61,6 +61,23 @@ export default function Landing() {
 
             {/* Game descriptions with graphics */}
             <div className="space-y-4">
+              {/* BBB (Bingo Bango Bongo) Game */}
+              <Card className="border-2 border-gray-200 bg-gradient-to-br from-gray-50 to-gray-50">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center text-white font-bold shadow-md">
+                      🎲
+                    </div>
+                    <CardTitle className="text-lg text-gray-900">Bingo Bango Bongo</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    Earn up to 3 points on each hole - first on the green, closest to the pin, and first to hole out! Bing, Bang, and Go have fun with your friends! Includes three payout modes (Points or Front-Back-Total [FBT], or both).
+                  </p>
+                </CardContent>
+              </Card>
+
               {/* 2/9/16 Game */}
               <Card className="border-2 border-gray-200 bg-gradient-to-br from-gray-50 to-gray-50">
                 <CardHeader className="pb-3">

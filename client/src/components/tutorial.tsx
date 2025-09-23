@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, Play, Users, Gamepad2, Trophy, Hash } from "lucide-react";
+import { ChevronLeft, ChevronRight, Play, Users, Gamepad2, Trophy, Hash, Dice6 } from "lucide-react";
 
 interface TutorialStep {
   id: number;
@@ -16,12 +16,12 @@ const tutorialSteps: TutorialStep[] = [
   {
     id: 1,
     title: "Welcome to ForeScore!",
-    content: "ForeScore adds fun competition to your golf rounds with two exciting game options! Play the Card penalty game for laughs when shots go wrong, or try the 2/9/16 points system for stroke-based competition. Both games make every hole more engaging!",
+    content: "ForeScore adds fun competition to your golf rounds with three exciting game options! Play Bingo Bango Bongo for hole-by-hole excitement, try the 2/9/16 points system for stroke-based competition, or enjoy the Card penalty game for laughs when shots go wrong. All games make every hole more engaging!",
     visual: (
       <div className="text-center p-6 bg-gray-50 rounded-lg border">
         <div className="text-6xl mb-4">⛳</div>
         <h3 className="text-xl font-bold text-gray-800">ForeScore</h3>
-        <p className="text-gray-600">Two Golf Competition Games</p>
+        <p className="text-gray-600">Three Golf Competition Games</p>
       </div>
     ),
   },
@@ -45,18 +45,25 @@ const tutorialSteps: TutorialStep[] = [
         </div>
       </div>
     ),
-    tip: "You can create multiple games per group and run both Card and 2/9/16 games simultaneously!"
+    tip: "You can create multiple games per group and run all three games simultaneously for maximum competition!"
   },
   {
     id: 3,
-    title: "2/9/16 Game with Three Payout Systems",
-    content: "ForeScore includes a stroke-based competition with three payout systems! Toggle between 'Points' (pay based on point differences), 'FBT' (winners for Front 9, Back 9, and Total), or both. All systems run simultaneously so you can choose your preferred payout method!",
+    title: "Points-Based Games: BBB and 2/9/16",
+    content: "ForeScore includes two exciting points-based competitions! Bingo Bango Bongo awards points for achieving objectives on each hole (Bingo-first on green, Bango-closest to pin, Bongo-first in hole), while 2/9/16 is stroke-based competition. Both offer 'Points' and 'FBT' payout systems that run simultaneously!",
     visual: (
       <div className="space-y-4">
-        <div className="text-center p-4 bg-gray-50 rounded-lg border">
-          <Hash className="h-8 w-8 text-gray-600 mx-auto mb-2" />
-          <p className="font-medium text-gray-800">2/9/16 Points Game</p>
-          <p className="text-sm text-gray-600">Three payout systems</p>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="text-center p-4 bg-gray-50 rounded-lg border">
+            <Dice6 className="h-8 w-8 text-gray-600 mx-auto mb-2" />
+            <p className="font-medium text-gray-800">BBB Game</p>
+            <p className="text-sm text-gray-600">Hole objectives</p>
+          </div>
+          <div className="text-center p-4 bg-gray-50 rounded-lg border">
+            <Hash className="h-8 w-8 text-gray-600 mx-auto mb-2" />
+            <p className="font-medium text-gray-800">2/9/16 Game</p>
+            <p className="text-sm text-gray-600">Stroke competition</p>
+          </div>
         </div>
         <div className="grid grid-cols-2 gap-2 text-xs">
           <div className="bg-gray-100 p-2 rounded text-center border">
@@ -70,7 +77,7 @@ const tutorialSteps: TutorialStep[] = [
         </div>
       </div>
     ),
-    tip: "Check the Payouts tab to see both payout systems side by side!"
+    tip: "Both games offer the same payout systems - check the Payouts tab to see all calculations side by side!"
   },
   {
     id: 4,
@@ -153,20 +160,20 @@ const tutorialSteps: TutorialStep[] = [
   {
     id: 7,
     title: "Ready to Enhance Your Golf Round!",
-    content: "You're all set! Create your first group and add excitement to your golf round with ForeScore's two game options. Whether you want penalty-based laughs or stroke competition, these games will make every hole more engaging!",
+    content: "You're all set! Create your first group and add excitement to your golf round with ForeScore's three game options. Whether you want hole-by-hole objectives with BBB, stroke-based competition with 2/9/16, or penalty-based laughs with Cards, these games will make every hole more engaging!",
     visual: (
       <div className="text-center p-6 bg-gray-50 rounded-lg border">
         <Trophy className="h-12 w-12 text-gray-600 mx-auto mb-4" />
         <h3 className="text-xl font-bold text-gray-800 mb-2">Enjoy Your Round!</h3>
         <p className="text-gray-600">Make every hole more fun</p>
         <div className="flex justify-center gap-4 mt-4">
-          <div className="text-2xl">🐪</div>
-          <div className="text-2xl">🐟</div>
+          <div className="text-2xl">🎲</div>
           <div className="text-2xl">#</div>
+          <div className="text-2xl">🐪</div>
         </div>
       </div>
     ),
-    tip: "Pro tip: Card penalty game and 2/9/16 can run simultaneously to add multiple layers of competition to your round!"
+    tip: "Pro tip: All three games can run simultaneously to add multiple layers of competition to your round!"
   }
 ];
 

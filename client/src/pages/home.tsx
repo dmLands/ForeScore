@@ -14,6 +14,7 @@ import { Plus, Users, Gamepad2, BookOpen, ChevronRight, Edit, Layers, Trophy, Ar
 import { CreateGroupModal } from "@/components/create-group-modal";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { Tutorial } from "@/components/tutorial";
+import PWAInstallButton from "@/components/PWAInstallButton";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useGameState } from "@/hooks/use-game-state";
@@ -5501,6 +5502,11 @@ export default function Home() {
           </div>
         </>
       )}
+
+      {/* PWA Install Button - Floating Action Button */}
+      <div className="fixed bottom-24 right-4 z-50" data-testid="button-install-home">
+        <PWAInstallButton />
+      </div>
     </div>
   );
 }

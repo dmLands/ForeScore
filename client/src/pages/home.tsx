@@ -15,6 +15,7 @@ import { CreateGroupModal } from "@/components/create-group-modal";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { Tutorial } from "@/components/tutorial";
 import AppDownloadPrompt from "@/components/AppDownloadPrompt";
+import OfflineIndicator from "@/components/OfflineIndicator";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useGameState } from "@/hooks/use-game-state";
@@ -5507,6 +5508,9 @@ export default function Home() {
       <div className="fixed bottom-24 right-4 z-50" data-testid="button-install-home">
         <AppDownloadPrompt />
       </div>
+      
+      {/* Offline Indicator */}
+      <OfflineIndicator />
     </div>
   );
 }

@@ -58,12 +58,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (cardToAdd) {
         updatedPlayerCards[playerId].push(cardToAdd);
         
-        // Update card history
+        // Get player and card details for proper CardAssignment record
+        const group = await storage.getGroup(gameState.groupId);
+        const player = group?.players.find(p => p.id === playerId);
+        const cardValue = gameState.cardValues[cardType as keyof typeof gameState.cardValues] || 2;
+        
+        // Update card history with proper CardAssignment structure
         const updatedCardHistory = [...gameState.cardHistory, {
-          playerId,
+          cardId: cardToAdd.id,
           cardType,
-          timestamp: new Date(timestamp),
-          assignedBy: userId
+          cardName: cardToAdd.name || cardType,
+          cardEmoji: cardToAdd.emoji,
+          cardValue,
+          playerId,
+          playerName: player?.name || 'Unknown',
+          playerColor: player?.color || '#000000',
+          timestamp: new Date(timestamp).toISOString()
         }];
         
         // Update game state

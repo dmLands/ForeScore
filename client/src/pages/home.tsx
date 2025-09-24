@@ -3941,9 +3941,19 @@ export default function Home() {
                         <div className="space-y-4">
                           {/* First On (Bingo) - Player Buttons */}
                           <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700">
-                              🥇 First On
-                            </label>
+                            <div className="flex items-center justify-between">
+                              <label className="text-sm font-medium text-gray-700">
+                                🥇 First On
+                              </label>
+                              <Button
+                                variant={bbbHoleData.firstOn === 'none' ? "default" : "outline"}
+                                onClick={() => setBBBHoleData(prev => ({ ...prev, firstOn: 'none' }))}
+                                className={`px-2 py-1 text-xs h-6 ${bbbHoleData.firstOn === 'none' ? '' : 'text-gray-500'}`}
+                                data-testid="button-first-on-none"
+                              >
+                                None
+                              </Button>
+                            </div>
                             <div className="flex flex-wrap gap-2">
                               {selectedGroup.players.map(player => (
                                 <Button
@@ -3957,22 +3967,24 @@ export default function Home() {
                                   {player.name}
                                 </Button>
                               ))}
-                              <Button
-                                variant={bbbHoleData.firstOn === 'none' ? "default" : "outline"}
-                                onClick={() => setBBBHoleData(prev => ({ ...prev, firstOn: 'none' }))}
-                                className={`p-2 text-sm ${bbbHoleData.firstOn === 'none' ? '' : 'text-gray-500'}`}
-                                data-testid="button-first-on-none"
-                              >
-                                None
-                              </Button>
                             </div>
                           </div>
 
                           {/* Closest To (Bango) - Player Buttons */}
                           <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700">
-                              🎯 Closest To
-                            </label>
+                            <div className="flex items-center justify-between">
+                              <label className="text-sm font-medium text-gray-700">
+                                🎯 Closest To
+                              </label>
+                              <Button
+                                variant={bbbHoleData.closestTo === 'none' ? "default" : "outline"}
+                                onClick={() => setBBBHoleData(prev => ({ ...prev, closestTo: 'none' }))}
+                                className={`px-2 py-1 text-xs h-6 ${bbbHoleData.closestTo === 'none' ? '' : 'text-gray-500'}`}
+                                data-testid="button-closest-to-none"
+                              >
+                                None
+                              </Button>
+                            </div>
                             <div className="flex flex-wrap gap-2">
                               {selectedGroup.players.map(player => (
                                 <Button
@@ -3986,22 +3998,24 @@ export default function Home() {
                                   {player.name}
                                 </Button>
                               ))}
-                              <Button
-                                variant={bbbHoleData.closestTo === 'none' ? "default" : "outline"}
-                                onClick={() => setBBBHoleData(prev => ({ ...prev, closestTo: 'none' }))}
-                                className={`p-2 text-sm ${bbbHoleData.closestTo === 'none' ? '' : 'text-gray-500'}`}
-                                data-testid="button-closest-to-none"
-                              >
-                                None
-                              </Button>
                             </div>
                           </div>
 
                           {/* First In (Bongo) - Player Buttons */}
                           <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700">
-                              ⛳ First In
-                            </label>
+                            <div className="flex items-center justify-between">
+                              <label className="text-sm font-medium text-gray-700">
+                                ⛳ First In
+                              </label>
+                              <Button
+                                variant={bbbHoleData.firstIn === 'none' ? "default" : "outline"}
+                                onClick={() => setBBBHoleData(prev => ({ ...prev, firstIn: 'none' }))}
+                                className={`px-2 py-1 text-xs h-6 ${bbbHoleData.firstIn === 'none' ? '' : 'text-gray-500'}`}
+                                data-testid="button-first-in-none"
+                              >
+                                None
+                              </Button>
+                            </div>
                             <div className="flex flex-wrap gap-2">
                               {selectedGroup.players.map(player => (
                                 <Button
@@ -4015,14 +4029,6 @@ export default function Home() {
                                   {player.name}
                                 </Button>
                               ))}
-                              <Button
-                                variant={bbbHoleData.firstIn === 'none' ? "default" : "outline"}
-                                onClick={() => setBBBHoleData(prev => ({ ...prev, firstIn: 'none' }))}
-                                className={`p-2 text-sm ${bbbHoleData.firstIn === 'none' ? '' : 'text-gray-500'}`}
-                                data-testid="button-first-in-none"
-                              >
-                                None
-                              </Button>
                             </div>
                           </div>
                           

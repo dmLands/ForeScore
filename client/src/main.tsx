@@ -41,7 +41,7 @@ declare global {
   }
 
   // Initialize with your Pixel ID and track PageView
-  (window as any).fbq('init', '1327769082180305');
+  (window as any).fbq('init', '1348289710070322');
   (window as any).fbq('track', 'PageView');
 
   // Add noscript fallback for users with JavaScript disabled
@@ -50,7 +50,7 @@ declare global {
   img.height = 1;
   img.width = 1;
   img.style.display = 'none';
-  img.src = 'https://www.facebook.com/tr?id=1327769082180305&ev=PageView&noscript=1';
+  img.src = 'https://www.facebook.com/tr?id=1348289710070322&ev=PageView&noscript=1';
   noscript.appendChild(img);
   document.body.appendChild(noscript);
 })();

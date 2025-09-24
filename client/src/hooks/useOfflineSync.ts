@@ -37,9 +37,19 @@ export function useOfflineSync() {
   const syncOfflineData = useCallback(async () => {
     if (!isOnline || isSyncing) return;
 
+    setIsSyncing(true);
+    
     try {
-      setIsSyncing(true);
-      const unsyncedScores = await offlineStorage.getUnsyncedScores();
+      // First, try to get unsynced scores
+      let unsyncedScores;
+      try {
+        unsyncedScores = await offlineStorage.getUnsyncedScores();
+      } catch (error) {
+        console.error('Error checking for offline scores:', error);
+        // If we can't even check for offline data, just return silently
+        // This prevents showing sync errors when there's no data to sync
+        return;
+      }
       
       if (unsyncedScores.length === 0) {
         setPendingCount(0);
@@ -57,6 +67,7 @@ export function useOfflineSync() {
       }, {} as Record<string, any[]>);
 
       const syncedIds: number[] = [];
+      let syncErrors = 0;
 
       // Sync each group
       for (const [gameKey, scores] of Object.entries(scoresByGame)) {
@@ -90,6 +101,7 @@ export function useOfflineSync() {
           }
         } catch (error) {
           console.error(`Error syncing ${type} scores for game ${gameId}:`, error);
+          syncErrors++;
           // Continue with other scores even if some fail
         }
       }
@@ -104,14 +116,20 @@ export function useOfflineSync() {
         });
       }
 
+      // Only show error if we had actual sync failures (not just no data)
+      if (syncErrors > 0 && syncedIds.length === 0) {
+        toast({
+          title: "Sync Error",
+          description: "Failed to sync some offline data. Will retry automatically.",
+          variant: "destructive"
+        });
+      }
+
       await updatePendingCount();
     } catch (error) {
-      console.error('Error syncing offline data:', error);
-      toast({
-        title: "Sync Error",
-        description: "Failed to sync some offline data. Will retry automatically.",
-        variant: "destructive"
-      });
+      console.error('Error during sync process:', error);
+      // Only show sync error if we actually tried to sync data
+      // Don't show error for initialization or "no data" scenarios
     } finally {
       setIsSyncing(false);
     }

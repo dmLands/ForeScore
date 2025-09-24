@@ -88,7 +88,7 @@ export default function ManageSubscription() {
       toast({
         title: "Subscription Canceled",
         description: isTrial 
-          ? "Your trial has been canceled and your access has ended immediately."
+          ? `Your trial has been canceled. You'll continue to have access until ${formatDate(currentAccessInfo?.trialEndsAt)}.`
           : "Your subscription has been canceled. You'll continue to have access until the end of your billing period.",
       });
       
@@ -420,7 +420,7 @@ export default function ManageSubscription() {
                         </AlertDialogTitle>
                         <AlertDialogDescription>
                           Are you sure you want to cancel your free trial? 
-                          You'll lose access to ForeScore immediately and won't be charged.
+                          You'll continue to have access until {formatDate(currentAccessInfo?.trialEndsAt)} and won't be charged.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>

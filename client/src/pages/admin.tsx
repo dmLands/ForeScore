@@ -13,6 +13,7 @@ interface UserData {
   'Last Name': string;
   'Email Address': string;
   'Auth Method': string;
+  'Marketing Preference Status': string;
   'Subscription Status': string;
   'Created At': string;
 }
@@ -264,6 +265,7 @@ export default function AdminPage() {
                     <TableHead>Last Name</TableHead>
                     <TableHead>Email Address</TableHead>
                     <TableHead>Auth Method</TableHead>
+                    <TableHead>Marketing Status</TableHead>
                     <TableHead>Subscription Status</TableHead>
                     <TableHead>Created At</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -295,6 +297,25 @@ export default function AdminPage() {
                       <TableCell>
                         <Badge variant={user['Auth Method'] === 'local' ? 'default' : 'secondary'}>
                           {user['Auth Method']}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant={
+                            user['Marketing Preference Status'] === 'subscribed' ? 'default' :
+                            user['Marketing Preference Status'] === 'unsubscribed' ? 'destructive' :
+                            'outline'
+                          }
+                          className={`text-xs ${
+                            user['Marketing Preference Status'] === 'subscribed' ? 'bg-green-100 text-green-800' :
+                            user['Marketing Preference Status'] === 'unsubscribed' ? 'bg-red-100 text-red-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}
+                          data-testid={`badge-marketing-${index}`}
+                        >
+                          {user['Marketing Preference Status'] === 'subscribed' ? 'Subscribed' :
+                           user['Marketing Preference Status'] === 'unsubscribed' ? 'Unsubscribed' :
+                           'Pending'}
                         </Badge>
                       </TableCell>
                       <TableCell>

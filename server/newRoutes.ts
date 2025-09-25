@@ -2636,7 +2636,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('Admin user export requested by user:', (req as any).user?.claims?.sub);
       
-      // Extract all users with basic info
+      // Extract all users with basic info including marketing preferences
       const allUsers = await db
         .select({
           id: users.id,
@@ -2644,6 +2644,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           lastName: users.lastName,
           email: users.email,
           authMethod: users.authMethod,
+          marketingPreferenceStatus: users.marketingPreferenceStatus,
+          marketingConsentAt: users.marketingConsentAt,
+          marketingUnsubscribeAt: users.marketingUnsubscribeAt,
           createdAt: users.createdAt
         })
         .from(users);
@@ -2691,6 +2694,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'Last Name': user.lastName || '',
           'Email Address': user.email || '',
           'Auth Method': user.authMethod || '',
+          'Marketing Preference Status': user.marketingPreferenceStatus || 'pending',
           'Subscription Status': subscriptionDisplay,
           'Next Renewal': nextRenewal,
           'Created At': user.createdAt?.toISOString() || ''

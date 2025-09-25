@@ -239,6 +239,7 @@ export default function Home() {
   const [payoutMode, setPayoutMode] = useState<'points' | 'fbt'>('points');
   const [combinedPayoutMode, setCombinedPayoutMode] = useState<'points' | 'fbt' | 'both'>('points');
   const [showTermsOfService, setShowTermsOfService] = useState(false);
+  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const [showAboutForescore, setShowAboutForescore] = useState(false);
   
   // Games tab submenu state
@@ -1638,6 +1639,13 @@ export default function Home() {
                         >
                           <FileText className="h-4 w-4 mr-2" />
                           Terms of Service
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="cursor-pointer" 
+                          onClick={() => setShowPrivacyPolicy(true)}
+                        >
+                          <FileText className="h-4 w-4 mr-2" />
+                          Privacy Policy
                         </DropdownMenuItem>
                       </div>
                     </div>
@@ -5464,6 +5472,108 @@ export default function Home() {
             <h3>15) Contact</h3>
             <p>Questions or support requests: support@forescore.xyz</p>
             <p>Postal: danoNano, LLC. [2447 E Fremont Rd. Phoenix, AZ 85042]</p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Privacy Policy Dialog */}
+      <Dialog open={showPrivacyPolicy} onOpenChange={setShowPrivacyPolicy}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Privacy Policy</DialogTitle>
+            <DialogDescription>
+              Last updated: September 25, 2025
+            </DialogDescription>
+          </DialogHeader>
+          <div className="prose prose-sm max-w-none">
+            <p>This Privacy Policy explains how ForeScore, a service of danoNano, LLC (dba ForeScore) ("ForeScore," "we," "our," or "us"), collects, uses, and shares information when you use our websites, web apps, mobile apps, and related services (collectively, the "Service").</p>
+            
+            <p>By using the Service, you agree to the practices described in this Privacy Policy.</p>
+
+            <hr className="my-6" />
+
+            <h3>1. Information We Collect</h3>
+            <p>We may collect the following types of information:</p>
+            
+            <ul>
+              <li><strong>Account Information:</strong> Name, email address, login credentials, and any identifiers you provide when creating an account or signing in via third-party services (e.g., Google, Apple).</li>
+              <li><strong>Usage Data:</strong> Information about how you use the Service, such as games played, scores entered, groups joined, and device/browser information.</li>
+              <li><strong>Communications:</strong> Emails or messages you send to us, and your preferences regarding marketing or notifications.</li>
+              <li><strong>Cookies & Tracking:</strong> We use cookies, local storage, and similar technologies to remember preferences and improve the Service.</li>
+            </ul>
+            
+            <p>We do not knowingly collect personal data from children under 13 (or under the digital age of consent in your jurisdiction).</p>
+
+            <hr className="my-6" />
+
+            <h3>2. How We Use Information</h3>
+            <p>We use the information we collect to:</p>
+            
+            <ul>
+              <li>Provide and improve the Service, including gameplay tracking and group features.</li>
+              <li>Personalize your experience and suggest features.</li>
+              <li>Send marketing and promotional communications, where permitted by law. You can opt out at any time (see Section 6).</li>
+              <li>Communicate about account issues, security alerts, and updates to our Terms or Privacy Policy.</li>
+              <li>Comply with legal obligations and enforce our Terms of Service.</li>
+            </ul>
+
+            <hr className="my-6" />
+
+            <h3>3. Sharing of Information</h3>
+            <p>We do not sell your personal data. We may share information with:</p>
+            
+            <ul>
+              <li><strong>Service Providers:</strong> Vendors who help us with hosting, analytics, payments, or communications.</li>
+              <li><strong>Legal & Safety:</strong> If required by law, regulation, or legal process, or to protect the rights, property, or safety of ForeScore, our users, or others.</li>
+              <li><strong>Business Transfers:</strong> In the event of a merger, acquisition, or sale of assets, your information may transfer as part of that transaction.</li>
+            </ul>
+
+            <hr className="my-6" />
+
+            <h3>4. Payments</h3>
+            <p>If you make a purchase, payment information is collected and processed directly by our third-party payment providers (e.g., Stripe, PayPal). We do not store full payment card details.</p>
+
+            <hr className="my-6" />
+
+            <h3>5. Data Retention</h3>
+            <p>We retain information as long as necessary to provide the Service, comply with legal obligations, and resolve disputes. You may request deletion of your data (see Section 6).</p>
+
+            <hr className="my-6" />
+
+            <h3>6. Your Rights & Choices</h3>
+            <p>Depending on your location, you may have the right to:</p>
+            
+            <ul>
+              <li>Access or request a copy of your data.</li>
+              <li>Correct or delete personal data.</li>
+              <li>Restrict or object to our processing of your data.</li>
+              <li>Withdraw consent for marketing communications at any time by clicking "unsubscribe" in an email or adjusting settings in your account.</li>
+            </ul>
+            
+            <p>To exercise rights, email us at support@forescore.xyz.</p>
+
+            <hr className="my-6" />
+
+            <h3>7. Security</h3>
+            <p>We use reasonable safeguards (technical, administrative, and organizational) to protect your information. However, no system is completely secure, and we cannot guarantee absolute security of your data.</p>
+
+            <hr className="my-6" />
+
+            <h3>8. International Users</h3>
+            <p>If you access the Service from outside the United States, your information may be processed and stored in the U.S., where privacy laws may differ from those in your jurisdiction. We rely on user consent and other legal mechanisms to transfer data lawfully.</p>
+
+            <hr className="my-6" />
+
+            <h3>9. Changes to this Policy</h3>
+            <p>We may update this Privacy Policy from time to time. If changes are material, we will notify you via the Service or email. Continued use after updates means you accept the revised Policy.</p>
+
+            <hr className="my-6" />
+
+            <h3>10. Contact Us</h3>
+            <p>Questions or requests about this Privacy Policy can be directed to:</p>
+            <p>danoNano, LLC dba ForeScore<br />
+            Email: support@forescore.xyz<br />
+            Postal: danoNano, LLC. [2447 E Fremont Rd. Phoenix, AZ 85042]</p>
           </div>
         </DialogContent>
       </Dialog>

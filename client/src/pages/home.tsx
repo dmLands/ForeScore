@@ -5536,17 +5536,28 @@ export default function Home() {
 
             <hr className="my-6" />
 
-            <h3>4. Payments</h3>
+            <h3>4. Google Analytics</h3>
+            <p>We use Google Analytics to understand how users find and use ForeScore. This helps us study traffic sources and improve the Service.</p>
+            
+            <ul>
+              <li>Google Analytics collects data such as device type, pages visited, and general traffic patterns.</li>
+              <li>We configure Google Analytics so that data is reported in aggregate and is not used to personally identify you.</li>
+              <li>You can opt out of Google Analytics tracking at any time by installing the Google Analytics Opt-out Browser Add-on.</li>
+            </ul>
+
+            <hr className="my-6" />
+
+            <h3>5. Payments</h3>
             <p>If you make a purchase, payment information is collected and processed directly by our third-party payment providers (e.g., Stripe, PayPal). We do not store full payment card details.</p>
 
             <hr className="my-6" />
 
-            <h3>5. Data Retention</h3>
-            <p>We retain information as long as necessary to provide the Service, comply with legal obligations, and resolve disputes. You may request deletion of your data (see Section 6).</p>
+            <h3>6. Data Retention</h3>
+            <p>We retain information as long as necessary to provide the Service, comply with legal obligations, and resolve disputes. You may request deletion of your data (see Section 7).</p>
 
             <hr className="my-6" />
 
-            <h3>6. Your Rights & Choices</h3>
+            <h3>7. Your Rights & Choices</h3>
             <p>Depending on your location, you may have the right to:</p>
             
             <ul>
@@ -5560,26 +5571,25 @@ export default function Home() {
 
             <hr className="my-6" />
 
-            <h3>7. Security</h3>
+            <h3>8. Security</h3>
             <p>We use reasonable safeguards (technical, administrative, and organizational) to protect your information. However, no system is completely secure, and we cannot guarantee absolute security of your data.</p>
 
             <hr className="my-6" />
 
-            <h3>8. International Users</h3>
+            <h3>9. International Users</h3>
             <p>If you access the Service from outside the United States, your information may be processed and stored in the U.S., where privacy laws may differ from those in your jurisdiction. We rely on user consent and other legal mechanisms to transfer data lawfully.</p>
 
             <hr className="my-6" />
 
-            <h3>9. Changes to this Policy</h3>
+            <h3>10. Changes to this Policy</h3>
             <p>We may update this Privacy Policy from time to time. If changes are material, we will notify you via the Service or email. Continued use after updates means you accept the revised Policy.</p>
 
             <hr className="my-6" />
 
-            <h3>10. Contact Us</h3>
+            <h3>12. Contact Us</h3>
             <p>Questions or requests about this Privacy Policy can be directed to:</p>
             <p>danoNano, LLC dba ForeScore<br />
-            Email: support@forescore.xyz<br />
-            Postal: danoNano, LLC. [2447 E Fremont Rd. Phoenix, AZ 85042]</p>
+            Email: support@forescore.xyz</p>
           </div>
         </DialogContent>
       </Dialog>

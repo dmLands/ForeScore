@@ -136,140 +136,92 @@ export default function LegalDialogs({ showTerms, showPrivacy, onOpenChange }: L
             <div className="space-y-4 text-sm text-gray-800">
               <section>
                 <h3 className="font-semibold text-lg mb-2">1. Information We Collect</h3>
-                <h4 className="font-medium mb-1">Personal Information</h4>
-                <p>
-                  When you register for ForeScore, we collect:
-                </p>
+                <p>We may collect the following types of information:</p>
                 <ul className="list-disc list-inside mt-2 space-y-1">
-                  <li>Name (first and last name)</li>
-                  <li>Email address</li>
-                  <li>Password (encrypted and never stored in plain text)</li>
-                  <li>Subscription and billing information</li>
-                </ul>
-
-                <h4 className="font-medium mb-1 mt-3">Usage Information</h4>
-                <p>
-                  We automatically collect information about how you use our Service:
-                </p>
-                <ul className="list-disc list-inside mt-2 space-y-1">
-                  <li>Game data (scores, player groups, game history)</li>
-                  <li>Device information and browser type</li>
-                  <li>IP address and approximate location</li>
-                  <li>App usage patterns and feature interactions</li>
-                </ul>
-              </section>
-
-              <section>
-                <h3 className="font-semibold text-lg mb-2">2. How We Use Your Information</h3>
-                <p>
-                  We use the information we collect to:
-                </p>
-                <ul className="list-disc list-inside mt-2 space-y-1">
-                  <li>Provide, maintain, and improve our Service</li>
-                  <li>Process your subscription and payments</li>
-                  <li>Send you service-related communications</li>
-                  <li>Provide customer support and respond to your requests</li>
-                  <li>Send marketing communications (only with your consent)</li>
-                  <li>Analyze usage patterns to improve our Service</li>
-                  <li>Prevent fraud and ensure security</li>
-                </ul>
-              </section>
-
-              <section>
-                <h3 className="font-semibold text-lg mb-2">3. Information Sharing and Disclosure</h3>
-                <p>
-                  We do not sell, trade, or otherwise transfer your personal information to third parties, except as described in this policy:
-                </p>
-                <ul className="list-disc list-inside mt-2 space-y-1">
-                  <li>Service providers who assist in operating our Service (payment processing, hosting, analytics)</li>
-                  <li>Legal requirements or to protect our rights and safety</li>
-                  <li>Business transfers (merger, acquisition, or sale of assets)</li>
-                </ul>
-              </section>
-
-              <section>
-                <h3 className="font-semibold text-lg mb-2">4. Marketing Communications</h3>
-                <p>
-                  During registration, you may choose to receive marketing communications from us. You can:
-                </p>
-                <ul className="list-disc list-inside mt-2 space-y-1">
-                  <li>Opt-in to marketing communications during account registration</li>
-                  <li>Update your preferences anytime in your account settings</li>
-                  <li>Unsubscribe from marketing emails using the link in any email</li>
-                  <li>Contact us directly to change your preferences</li>
+                  <li><strong>Account Information:</strong> Name, email address, login credentials, and any identifiers you provide when creating an account or signing in via third-party services (e.g., Google, Apple).</li>
+                  <li><strong>Usage Data:</strong> Information about how you use the Service, such as games played, scores entered, groups joined, and device/browser information.</li>
+                  <li><strong>Communications:</strong> Emails or messages you send to us, and your preferences regarding marketing or notifications.</li>
+                  <li><strong>Cookies & Tracking:</strong> We use cookies, local storage, and similar technologies to remember preferences and improve the Service.</li>
                 </ul>
                 <p className="mt-2">
-                  Note: You will continue to receive essential service-related communications regardless of your marketing preferences.
+                  We do not knowingly collect personal data from children under 13 (or under the digital age of consent in your jurisdiction).
                 </p>
               </section>
 
               <section>
-                <h3 className="font-semibold text-lg mb-2">5. Data Security</h3>
-                <p>
-                  We implement appropriate security measures to protect your personal information:
-                </p>
+                <h3 className="font-semibold text-lg mb-2">2. How We Use Information</h3>
+                <p>We use the information we collect to:</p>
                 <ul className="list-disc list-inside mt-2 space-y-1">
-                  <li>Encryption of sensitive data in transit and at rest</li>
-                  <li>Secure password hashing using industry-standard methods</li>
-                  <li>Regular security assessments and updates</li>
-                  <li>Limited access to personal information on a need-to-know basis</li>
+                  <li>Provide and improve the Service, including gameplay tracking and group features.</li>
+                  <li>Personalize your experience and suggest features.</li>
+                  <li>Send marketing and promotional communications, where permitted by law. You can opt out at any time (see Section 6).</li>
+                  <li>Communicate about account issues, security alerts, and updates to our Terms or Privacy Policy.</li>
+                  <li>Comply with legal obligations and enforce our Terms of Service.</li>
                 </ul>
+              </section>
+
+              <section>
+                <h3 className="font-semibold text-lg mb-2">3. Sharing of Information</h3>
+                <p>We do not sell your personal data. We may share information with:</p>
+                <ul className="list-disc list-inside mt-2 space-y-1">
+                  <li><strong>Service Providers:</strong> Vendors who help us with hosting, analytics, payments, or communications.</li>
+                  <li><strong>Legal & Safety:</strong> If required by law, regulation, or legal process, or to protect the rights, property, or safety of ForeScore, our users, or others.</li>
+                  <li><strong>Business Transfers:</strong> In the event of a merger, acquisition, or sale of assets, your information may transfer as part of that transaction.</li>
+                </ul>
+              </section>
+
+              <section>
+                <h3 className="font-semibold text-lg mb-2">4. Google Analytics</h3>
+                <p>We use Google Analytics to understand how users find and use ForeScore. This helps us study traffic sources and improve the Service.</p>
+                <ul className="list-disc list-inside mt-2 space-y-1">
+                  <li>Google Analytics collects data such as device type, pages visited, and general traffic patterns.</li>
+                  <li>We configure Google Analytics so that data is reported in aggregate and is not used to personally identify you.</li>
+                  <li>You can opt out of Google Analytics tracking at any time by installing the Google Analytics Opt-out Browser Add-on.</li>
+                </ul>
+              </section>
+
+              <section>
+                <h3 className="font-semibold text-lg mb-2">5. Payments</h3>
+                <p>If you make a purchase, payment information is collected and processed directly by our third-party payment providers (e.g., Stripe, PayPal). We do not store full payment card details.</p>
               </section>
 
               <section>
                 <h3 className="font-semibold text-lg mb-2">6. Data Retention</h3>
-                <p>
-                  We retain your personal information for as long as necessary to provide our Service and fulfill the purposes outlined in this policy. Game data is automatically cleaned up after 61 days to manage storage efficiently while preserving recent activity.
-                </p>
+                <p>We retain information as long as necessary to provide the Service, comply with legal obligations, and resolve disputes. You may request deletion of your data (see Section 7).</p>
               </section>
 
               <section>
-                <h3 className="font-semibold text-lg mb-2">7. Third-Party Services</h3>
-                <p>
-                  Our Service uses third-party services that may collect information:
-                </p>
+                <h3 className="font-semibold text-lg mb-2">7. Your Rights & Choices</h3>
+                <p>Depending on your location, you may have the right to:</p>
                 <ul className="list-disc list-inside mt-2 space-y-1">
-                  <li><strong>Stripe:</strong> Payment processing (subject to Stripe's privacy policy)</li>
-                  <li><strong>SendGrid:</strong> Email delivery (subject to SendGrid's privacy policy)</li>
-                  <li><strong>Meta Pixel:</strong> Website analytics and advertising optimization</li>
-                  <li><strong>Neon Database:</strong> Secure data storage (subject to Neon's privacy policy)</li>
+                  <li>Access or request a copy of your data.</li>
+                  <li>Correct or delete personal data.</li>
+                  <li>Restrict or object to our processing of your data.</li>
+                  <li>Withdraw consent for marketing communications at any time by clicking "unsubscribe" in an email or adjusting settings in your account.</li>
                 </ul>
+                <p className="mt-2">To exercise rights, email us at support@forescore.xyz.</p>
               </section>
 
               <section>
-                <h3 className="font-semibold text-lg mb-2">8. Your Rights</h3>
-                <p>
-                  You have the right to:
-                </p>
-                <ul className="list-disc list-inside mt-2 space-y-1">
-                  <li>Access and review your personal information</li>
-                  <li>Correct or update your information</li>
-                  <li>Delete your account and associated data</li>
-                  <li>Export your data in a portable format</li>
-                  <li>Withdraw consent for marketing communications</li>
-                  <li>File a complaint with relevant data protection authorities</li>
-                </ul>
+                <h3 className="font-semibold text-lg mb-2">8. Security</h3>
+                <p>We use reasonable safeguards (technical, administrative, and organizational) to protect your information. However, no system is completely secure, and we cannot guarantee absolute security of your data.</p>
               </section>
 
               <section>
-                <h3 className="font-semibold text-lg mb-2">9. Children's Privacy</h3>
-                <p>
-                  Our Service is not directed to children under 13. We do not knowingly collect personal information from children under 13. If you become aware that a child has provided us with personal information, please contact us.
-                </p>
+                <h3 className="font-semibold text-lg mb-2">9. International Users</h3>
+                <p>If you access the Service from outside the United States, your information may be processed and stored in the U.S., where privacy laws may differ from those in your jurisdiction. We rely on user consent and other legal mechanisms to transfer data lawfully.</p>
               </section>
 
               <section>
-                <h3 className="font-semibold text-lg mb-2">10. Changes to This Privacy Policy</h3>
-                <p>
-                  We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "last updated" date.
-                </p>
+                <h3 className="font-semibold text-lg mb-2">10. Changes to this Policy</h3>
+                <p>We may update this Privacy Policy from time to time. If changes are material, we will notify you via the Service or email. Continued use after updates means you accept the revised Policy.</p>
               </section>
 
               <section>
-                <h3 className="font-semibold text-lg mb-2">11. Contact Us</h3>
-                <p>
-                  If you have any questions about this Privacy Policy, please contact us at support@forescore.xyz
-                </p>
+                <h3 className="font-semibold text-lg mb-2">12. Contact Us</h3>
+                <p>Questions or requests about this Privacy Policy can be directed to:</p>
+                <p className="mt-2">danoNano, LLC dba ForeScore<br />
+                Email: support@forescore.xyz</p>
               </section>
 
               <div className="text-xs text-gray-500 mt-6 pt-4 border-t">

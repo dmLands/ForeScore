@@ -8,6 +8,7 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Link, useLocation } from "wouter";
 import { z } from "zod";
+import { Checkbox } from "@/components/ui/checkbox";
 import AppDownloadPrompt from "@/components/AppDownloadPrompt";
 
 const registerSchema = z.object({
@@ -15,7 +16,11 @@ const registerSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
-  confirmPassword: z.string()
+  confirmPassword: z.string(),
+  termsAccepted: z.boolean().refine(val => val === true, {
+    message: "You must accept the Terms of Service and Privacy Policy to register"
+  }),
+  marketingConsent: z.boolean()
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -31,7 +36,9 @@ export default function Register() {
     password: "",
     firstName: "",
     lastName: "",
-    confirmPassword: ""
+    confirmPassword: "",
+    termsAccepted: false,
+    marketingConsent: false
   });
   const [errors, setErrors] = useState<Partial<Record<keyof RegisterForm, string>>>({});
 
@@ -88,6 +95,13 @@ export default function Register() {
 
   const handleInputChange = (field: keyof RegisterForm) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({ ...prev, [field]: e.target.value }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: undefined }));
+    }
+  };
+
+  const handleCheckboxChange = (field: 'termsAccepted' | 'marketingConsent') => (checked: boolean) => {
+    setFormData(prev => ({ ...prev, [field]: checked }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
@@ -182,10 +196,69 @@ export default function Register() {
               )}
             </div>
             
+            <div className="space-y-4">
+              <div className="flex items-start space-x-3">
+                <Checkbox
+                  id="terms-checkbox"
+                  data-testid="checkbox-terms"
+                  checked={formData.termsAccepted}
+                  onCheckedChange={handleCheckboxChange('termsAccepted')}
+                  className="mt-1"
+                />
+                <div className="space-y-1 leading-none">
+                  <label
+                    htmlFor="terms-checkbox"
+                    className="text-sm cursor-pointer text-gray-900"
+                    data-testid="label-terms"
+                  >
+                    I accept the{" "}
+                    <button
+                      type="button"
+                      className="text-green-600 hover:text-green-700 underline"
+                      data-testid="link-terms"
+                    >
+                      Terms of Service
+                    </button>
+                    {" "}and{" "}
+                    <button
+                      type="button"
+                      className="text-green-600 hover:text-green-700 underline"
+                      data-testid="link-privacy"
+                    >
+                      Privacy Policy
+                    </button>
+                  </label>
+                  {errors.termsAccepted && (
+                    <p className="text-sm text-red-500" data-testid="error-terms">{errors.termsAccepted}</p>
+                  )}
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-3">
+                <Checkbox
+                  id="marketing-checkbox"
+                  data-testid="checkbox-marketing"
+                  checked={formData.marketingConsent}
+                  onCheckedChange={handleCheckboxChange('marketingConsent')}
+                  className="mt-1"
+                />
+                <div className="space-y-1 leading-none">
+                  <label
+                    htmlFor="marketing-checkbox"
+                    className="text-sm cursor-pointer text-gray-900"
+                    data-testid="label-marketing"
+                  >
+                    I agree to receive marketing communications
+                  </label>
+                </div>
+              </div>
+            </div>
+            
             <Button
               type="submit"
               className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
               disabled={registerMutation.isPending}
+              data-testid="button-create-account"
             >
               {registerMutation.isPending ? "Creating Account..." : "Create Account"}
             </Button>

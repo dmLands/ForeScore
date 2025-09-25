@@ -10,6 +10,7 @@ import { Link, useLocation } from "wouter";
 import { z } from "zod";
 import { Checkbox } from "@/components/ui/checkbox";
 import AppDownloadPrompt from "@/components/AppDownloadPrompt";
+import LegalDialogs from "@/components/LegalDialogs";
 
 const registerSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -41,6 +42,8 @@ export default function Register() {
     marketingConsent: false
   });
   const [errors, setErrors] = useState<Partial<Record<keyof RegisterForm, string>>>({});
+  const [showTermsDialog, setShowTermsDialog] = useState(false);
+  const [showPrivacyDialog, setShowPrivacyDialog] = useState(false);
 
   const registerMutation = useMutation({
     mutationFn: async (data: Omit<RegisterForm, 'confirmPassword'>) => {
@@ -105,6 +108,24 @@ export default function Register() {
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
+  };
+
+  const handleDialogChange = (type: 'terms' | 'privacy', open: boolean) => {
+    if (type === 'terms') {
+      setShowTermsDialog(open);
+    } else {
+      setShowPrivacyDialog(open);
+    }
+  };
+
+  const openTermsDialog = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setShowTermsDialog(true);
+  };
+
+  const openPrivacyDialog = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setShowPrivacyDialog(true);
   };
 
   return (
@@ -214,6 +235,7 @@ export default function Register() {
                     I accept the{" "}
                     <button
                       type="button"
+                      onClick={openTermsDialog}
                       className="text-green-600 hover:text-green-700 underline"
                       data-testid="link-terms"
                     >
@@ -222,6 +244,7 @@ export default function Register() {
                     {" "}and{" "}
                     <button
                       type="button"
+                      onClick={openPrivacyDialog}
                       className="text-green-600 hover:text-green-700 underline"
                       data-testid="link-privacy"
                     >
@@ -284,6 +307,12 @@ export default function Register() {
           </div>
         </CardContent>
       </Card>
+      
+      <LegalDialogs
+        showTerms={showTermsDialog}
+        showPrivacy={showPrivacyDialog}
+        onOpenChange={handleDialogChange}
+      />
     </div>
   );
 }

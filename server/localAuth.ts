@@ -7,6 +7,10 @@ export const registerSchema = z.object({
   password: z.string().min(6),
   firstName: z.string().min(1),
   lastName: z.string().min(1),
+  termsAccepted: z.boolean().refine(val => val === true, {
+    message: "You must accept the Terms of Service and Privacy Policy to register"
+  }),
+  marketingConsent: z.boolean(),
 });
 
 export const loginSchema = z.object({
@@ -27,6 +31,12 @@ export async function registerUser(data: RegisterData) {
   // Hash password
   const passwordHash = await bcrypt.hash(data.password, 12);
 
+  // Prepare consent timestamps
+  const now = new Date();
+  const termsAcceptedAt = data.termsAccepted ? now : undefined;
+  const marketingConsentAt = data.marketingConsent ? now : undefined;
+  const marketingPreferenceStatus = data.marketingConsent ? 'subscribed' : 'unsubscribed';
+
   // Create user
   const user = await storage.createLocalUser({
     email: data.email,
@@ -34,6 +44,9 @@ export async function registerUser(data: RegisterData) {
     lastName: data.lastName,
     passwordHash,
     authMethod: "local",
+    termsAcceptedAt,
+    marketingConsentAt,
+    marketingPreferenceStatus,
   });
 
   return user;

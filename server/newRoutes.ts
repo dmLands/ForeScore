@@ -704,6 +704,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Email preferences endpoints
+  app.get('/api/user/email-preferences', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      
+      const [user] = await db
+        .select({
+          marketingPreferenceStatus: users.marketingPreferenceStatus,
+          marketingConsentAt: users.marketingConsentAt,
+          marketingUnsubscribeAt: users.marketingUnsubscribeAt
+        })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+      
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      res.json(user);
+    } catch (error) {
+      console.error('Error getting email preferences:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.put('/api/user/email-preferences', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims?.sub || req.user.id;
+      const { unsubscribe } = z.object({
+        unsubscribe: z.boolean()
+      }).parse(req.body);
+      
+      const marketingPreferenceStatus = unsubscribe ? 'unsubscribed' : 'subscribed';
+      const marketingUnsubscribeAt = unsubscribe ? new Date() : null;
+      
+      // Update user's marketing preferences
+      const updatedUser = await storage.updateMarketingPreferences(userId, {
+        marketingPreferenceStatus,
+        marketingUnsubscribeAt
+      });
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      res.json({ 
+        marketingPreferenceStatus: updatedUser.marketingPreferenceStatus,
+        marketingUnsubscribeAt: updatedUser.marketingUnsubscribeAt,
+        message: unsubscribe ? 
+          'You have successfully unsubscribed from marketing emails. You may still receive essential account or service-related communications.' :
+          'You have subscribed to marketing communications.'
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: 'Invalid data', 
+          errors: error.errors 
+        });
+      }
+      console.error('Error updating email preferences:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   // Generate room token for WebSocket authentication
   app.post('/api/auth/room-token', isAuthenticated, async (req: any, res) => {
     try {

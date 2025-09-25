@@ -8,7 +8,8 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
-  createLocalUser(user: { email: string; firstName: string; lastName: string; passwordHash: string; authMethod: string }): Promise<User>;
+  createLocalUser(user: { email: string; firstName: string; lastName: string; passwordHash: string; authMethod: string; termsAcceptedAt?: Date; marketingConsentAt?: Date; marketingPreferenceStatus?: 'subscribed' | 'unsubscribed' }): Promise<User>;
+  updateMarketingPreferences(userId: string, data: { marketingPreferenceStatus: 'subscribed' | 'unsubscribed'; marketingUnsubscribeAt?: Date }): Promise<User | undefined>;
   // Legacy subscription methods for V7.0 (deprecated - use Stripe subscription methods below)
   updateUserSubscription(userId: string, data: { stripeCustomerId?: string; stripeSubscriptionId?: string; subscriptionStatus?: 'trialing' | 'active' | 'canceled' | 'incomplete' | 'past_due' | null; trialEndsAt?: Date; subscriptionEndsAt?: Date }): Promise<User | undefined>;
   
@@ -85,7 +86,7 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async createLocalUser(userData: { email: string; firstName: string; lastName: string; passwordHash: string; authMethod: string }): Promise<User> {
+  async createLocalUser(userData: { email: string; firstName: string; lastName: string; passwordHash: string; authMethod: string; termsAcceptedAt?: Date; marketingConsentAt?: Date; marketingPreferenceStatus?: 'subscribed' | 'unsubscribed' }): Promise<User> {
     const [user] = await db
       .insert(users)
       .values({
@@ -95,7 +96,23 @@ export class DatabaseStorage implements IStorage {
         lastName: userData.lastName,
         passwordHash: userData.passwordHash,
         authMethod: userData.authMethod,
+        termsAcceptedAt: userData.termsAcceptedAt,
+        marketingConsentAt: userData.marketingConsentAt,
+        marketingPreferenceStatus: userData.marketingPreferenceStatus || 'subscribed',
       })
+      .returning();
+    return user;
+  }
+
+  async updateMarketingPreferences(userId: string, data: { marketingPreferenceStatus: 'subscribed' | 'unsubscribed'; marketingUnsubscribeAt?: Date }): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({ 
+        marketingPreferenceStatus: data.marketingPreferenceStatus,
+        marketingUnsubscribeAt: data.marketingUnsubscribeAt,
+        updatedAt: new Date() 
+      })
+      .where(eq(users.id, userId))
       .returning();
     return user;
   }

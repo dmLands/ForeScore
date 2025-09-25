@@ -58,12 +58,18 @@ export default function Register() {
       }
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
       toast({
-        title: "Account created successfully!",
-        description: "You can now sign in with your credentials.",
+        title: "Welcome to ForeScore!",
+        description: data.message || "Account created and you're now logged in.",
       });
-      setLocation("/login");
+      
+      // Handle auto-login success - redirect based on subscription status
+      if (data.requiresSubscription) {
+        setLocation("/subscribe");
+      } else {
+        setLocation("/");
+      }
     },
     onError: (error: any) => {
       toast({

@@ -127,11 +127,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = registerSchema.parse(req.body);
       const user = await registerUser(validatedData);
       
-      // Return user without sensitive data
-      const { passwordHash, ...userResponse } = user;
-      res.status(201).json({ 
-        message: "User registered successfully",
-        user: userResponse 
+      // Auto-login the user after successful registration
+      (req as any).user = {
+        claims: {
+          sub: user.id,
+          email: user.email,
+          first_name: user.firstName,
+          last_name: user.lastName,
+        },
+        expires_at: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60), // 7 days
+      };
+      
+      req.login((req as any).user, async (err) => {
+        if (err) {
+          console.error('Auto-login failed after registration:', err);
+          // Still return success but user will need to login manually
+          const { passwordHash, ...userResponse } = user;
+          return res.status(201).json({ 
+            message: "User registered successfully. Please log in.",
+            user: userResponse 
+          });
+        }
+        
+        // Check subscription status after successful registration and login
+        try {
+          const accessInfo = await stripeService.hasAccess(user.id);
+          
+          // Return user data with subscription info for frontend routing
+          const { passwordHash, ...userResponse } = user;
+          res.status(201).json({ 
+            message: "Account created successfully! Welcome to ForeScore.",
+            user: userResponse,
+            requiresSubscription: !accessInfo.hasAccess
+          });
+        } catch (error) {
+          console.error('Error checking subscription during registration:', error);
+          // Still allow auto-login but let middleware handle subscription later
+          const { passwordHash, ...userResponse } = user;
+          res.status(201).json({ 
+            message: "Account created successfully! Welcome to ForeScore.",
+            user: userResponse 
+          });
+        }
       });
     } catch (error) {
       if (error instanceof z.ZodError) {

@@ -29,6 +29,11 @@ export const users = pgTable("users", {
   subscriptionStatus: varchar("subscription_status").$type<'trialing' | 'active' | 'canceled' | 'incomplete' | 'past_due' | null>(),
   trialEndsAt: timestamp("trial_ends_at"),
   subscriptionEndsAt: timestamp("subscription_ends_at"),
+  // Consent tracking fields for V8.2
+  termsAcceptedAt: timestamp("terms_accepted_at"),
+  marketingConsentAt: timestamp("marketing_consent_at"),
+  marketingUnsubscribeAt: timestamp("marketing_unsubscribe_at"),
+  marketingPreferenceStatus: varchar("marketing_preference_status").$type<'subscribed' | 'unsubscribed'>().default('subscribed'),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

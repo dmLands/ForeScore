@@ -1605,6 +1605,12 @@ export default function Home() {
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
+                          <Link href="/email-preferences" className="cursor-pointer text-gray-900 hover:text-gray-700">
+                            <Mail className="h-4 w-4 mr-2" />
+                            Email Preferences
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
                           <Link href="/forgot-password" className="cursor-pointer text-gray-900 hover:text-gray-700">
                             <HelpCircle className="h-4 w-4 mr-2" />
                             Reset Password

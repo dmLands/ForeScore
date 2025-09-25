@@ -1,0 +1,60 @@
+Terms of Service
+Last updated: September 25, 2025
+Welcome to ForeScore. ForeScore is a service of danoNano, LLC (dba ForeScore) (“ForeScore,” “we,” “our,” or “us”). These Terms of Service (“Terms”) govern your access to and use of the ForeScore web and mobile applications, websites, and related services (collectively, the “Service”).
+By accessing or using the Service, you agree to these Terms. If you do not agree, do not use the Service.
+________________________________________
+1) Eligibility & Accounts
+You must be at least 13 years old (or the minimum age of digital consent in your country) to use the Service. You are responsible for the accuracy of your account information and all activity under your account. If you use a third-party login (e.g., Google, Apple, Facebook), you must comply with that provider’s rules.
+________________________________________
+2) What ForeScore Does (and Doesn’t Do)
+ForeScore provides tools to organize golf groups, track side-games (such as “2/9/16”), and calculate suggested payouts based on your group’s rules.
+•	No Gambling. ForeScore does not facilitate real-money gambling, wagering, or contests. Any real-world settlements are outside the Service and at users’ sole discretion and risk. You are responsible for complying with all applicable laws where you play.
+•	Utility Only. Suggested scores, points, or payouts are informational only. We do not guarantee accuracy or fairness.
+________________________________________
+3) User-Generated Content & Conduct
+You may submit content such as profile names, group names, game configurations, messages, and scores (“UGC”). You retain rights to your UGC, but you grant ForeScore a non-exclusive, worldwide, royalty-free license to host, display, and adapt it solely to operate and improve the Service.
+You agree not to:
+•	Upload unlawful, infringing, harassing, hateful, pornographic, or misleading content.
+•	Spam, scrape, reverse engineer, or interfere with the Service.
+•	Circumvent technical protections or security features.
+We may remove content or suspend accounts that violate these Terms.
+________________________________________
+4) Marketing Communications
+By creating an account, you consent to receive marketing and promotional communications from ForeScore, including emails, push notifications, and other messages. You may opt out at any time by following unsubscribe instructions in those messages or adjusting your notification settings. Opting out may limit your ability to receive updates about new features or promotions, but will not affect essential service communications (e.g., account security notices).
+________________________________________
+5) Privacy
+Your use of the Service is also governed by our Privacy Policy, which explains what we collect, how we use it, and your choices regarding data deletion and marketing preferences.
+________________________________________
+6) License & Intellectual Property
+Subject to these Terms, we grant you a limited, non-exclusive, non-transferable license to use the Service for its intended purpose. All rights, title, and interest in the Service (excluding UGC) remain with ForeScore and its licensors.
+________________________________________
+7) Payments, Subscriptions & Trials (if offered)
+If we offer paid features or subscriptions:
+•	Payments are processed by third-party providers (e.g., Stripe, PayPal). Their terms apply.
+•	Subscriptions may auto-renew until canceled. We will disclose pricing, renewal terms, and cancellation methods at the time of purchase.
+•	Refunds, if available, are governed by our refund policy and the terms of the payment provider.
+________________________________________
+8) Third-Party Services
+The Service may link to or integrate with third-party tools (e.g., chat apps, payment processors). ForeScore is not responsible for third-party services, which you use at your own risk.
+________________________________________
+9) Disclaimers
+THE SERVICE IS PROVIDED “AS IS” AND “AS AVAILABLE.” TO THE MAXIMUM EXTENT PERMITTED BY LAW, WE DISCLAIM ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, AND ACCURACY.
+________________________________________
+10) Limitation of Liability
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, FORESCORE AND ITS OFFICERS, DIRECTORS, EMPLOYEES, AND AGENTS ARE NOT LIABLE FOR INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE DAMAGES, OR ANY LOSS OF PROFITS, DATA, OR GOODWILL. OUR TOTAL LIABILITY WILL NOT EXCEED THE GREATER OF (A) AMOUNTS YOU PAID US IN THE 12 MONTHS BEFORE THE CLAIM OR (B) USD $50.
+________________________________________
+11) Indemnification
+You agree to indemnify and hold harmless ForeScore against claims, damages, or expenses arising from your UGC, use of the Service, or violation of these Terms.
+________________________________________
+12) Suspension & Termination
+We may suspend or terminate access if you violate these Terms or applicable laws. You may stop using the Service at any time. Sections relating to intellectual property, disclaimers, liability, and indemnification survive termination.
+________________________________________
+13) Changes
+We may update these Terms from time to time. If changes are material, we will notify you via the Service or email. Continued use after changes take effect means you accept the revised Terms.
+________________________________________
+14) Governing Law
+These Terms are governed by the laws of the State of Arizona, USA, without regard to conflict-of-law rules. Courts in Maricopa County, Arizona, will have exclusive jurisdiction.
+________________________________________
+15) Contact
+Questions or support requests: support@forescore.xyz
+Postal: danoNano, LLC. [2447 E Fremont Rd. Phoenix, AZ 85042]

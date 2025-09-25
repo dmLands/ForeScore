@@ -5362,83 +5362,107 @@ export default function Home() {
           <DialogHeader>
             <DialogTitle>Terms of Service</DialogTitle>
             <DialogDescription>
-              Last updated: September 1, 2025
+              Last updated: September 25, 2025
             </DialogDescription>
           </DialogHeader>
           <div className="prose prose-sm max-w-none">
-            <p>Welcome to ForeScore. ForeScore is a service of danoNano, LLC (dba ForeScore), ("ForeScore," "we," "our," or "us"). These Terms of Service ("Terms") govern your access to and use of the ForeScore mobile and web applications, websites, and related services (collectively, the "Service").</p>
+            <p>Welcome to ForeScore. ForeScore is a service of danoNano, LLC (dba ForeScore) ("ForeScore," "we," "our," or "us"). These Terms of Service ("Terms") govern your access to and use of the ForeScore web and mobile applications, websites, and related services (collectively, the "Service").</p>
             
             <p>By accessing or using the Service, you agree to these Terms. If you do not agree, do not use the Service.</p>
 
-            <h3>1) Who we are & how these Terms relate to Apple</h3>
-            <p>For iOS distribution, your license to use the app is governed by Apple's Standard Licensed Application End User License Agreement (EULA), which applies unless we provide a custom EULA. These Terms supplement the Apple EULA. If there is any conflict, the Apple EULA controls with respect to license scope and usage rules on Apple platforms.</p>
+            <hr className="my-6" />
 
-            <h3>2) Eligibility & accounts</h3>
-            <p>You must be at least 13 years old (or the age required by your local law if higher) to use the Service. You are responsible for the accuracy of your account information and for all activity under your account. If you use "Sign in with Apple" or another SSO, you must comply with the provider's rules and Apple's design and review requirements.</p>
+            <h3>1) Eligibility & Accounts</h3>
+            <p>You must be at least 13 years old (or the minimum age of digital consent in your country) to use the Service. You are responsible for the accuracy of your account information and all activity under your account. If you use a third-party login (e.g., Google, Apple, Facebook), you must comply with that provider's rules.</p>
 
-            <h3>3) What ForeScore does (and doesn't do)</h3>
-            <p>ForeScore provides tools to organize golf groups, track side-game (e.g., "2/9/16"), and calculate suggested payouts based on your group's rules. ForeScore does not facilitate real-money gambling, wagering, or contests. Any real-world settlements are outside the app and at users' discretion and risk. You are responsible for following all applicable laws where you play. (Apple's guidelines impose strict requirements for any real-money gaming; ForeScore is a scoring utility only.)</p>
+            <hr className="my-6" />
 
-            <h3>4) User-generated content & conduct</h3>
-            <p>You may submit content such as profile names, group names, game configurations, messages, scores, and other material ("UGC"). You retain your rights to your UGC; you grant ForeScore a non-exclusive, worldwide, royalty-free license to host, display, adapt, and otherwise use UGC solely to operate and improve the Service.</p>
+            <h3>2) What ForeScore Does (and Doesn't Do)</h3>
+            <p>ForeScore provides tools to organize golf groups, track side-games (such as "2/9/16"), and calculate suggested payouts based on your group's rules.</p>
             
-            <p>To comply with App Store rules for UGC:</p>
             <ul>
-              <li>We filter for objectionable content and reserve the right to remove it.</li>
-              <li>You can report UGC or users in-app and/or by emailing support@danonano.com; we respond promptly and remove/disable violating content, typically within 24 hours.</li>
-              <li>You can block or leave groups to avoid unwanted interactions.</li>
-              <li>Our contact info is published here and in-app so users can reach us.</li>
+              <li><strong>No Gambling.</strong> ForeScore does not facilitate real-money gambling, wagering, or contests. Any real-world settlements are outside the Service and at users' sole discretion and risk. You are responsible for complying with all applicable laws where you play.</li>
+              <li><strong>Utility Only.</strong> Suggested scores, points, or payouts are informational only. We do not guarantee accuracy or fairness.</li>
             </ul>
 
-            <p>You agree not to post or do anything unlawful, infringing, harassing, hateful, misleading, pornographic, spammy, or that violates others' rights; to reverse engineer, scrape, or overload the Service; or to attempt to circumvent technical protections.</p>
+            <hr className="my-6" />
+
+            <h3>3) User-Generated Content & Conduct</h3>
+            <p>You may submit content such as profile names, group names, game configurations, messages, and scores ("UGC"). You retain rights to your UGC, but you grant ForeScore a non-exclusive, worldwide, royalty-free license to host, display, and adapt it solely to operate and improve the Service.</p>
+            
+            <p>You agree not to:</p>
+            <ul>
+              <li>Upload unlawful, infringing, harassing, hateful, pornographic, or misleading content.</li>
+              <li>Spam, scrape, reverse engineer, or interfere with the Service.</li>
+              <li>Circumvent technical protections or security features.</li>
+            </ul>
+            
+            <p>We may remove content or suspend accounts that violate these Terms.</p>
+
+            <hr className="my-6" />
+
+            <h3>4) Marketing Communications</h3>
+            <p>By creating an account, you consent to receive marketing and promotional communications from ForeScore, including emails, push notifications, and other messages. You may opt out at any time by following unsubscribe instructions in those messages or adjusting your notification settings. Opting out may limit your ability to receive updates about new features or promotions, but will not affect essential service communications (e.g., account security notices).</p>
+
+            <hr className="my-6" />
 
             <h3>5) Privacy</h3>
-            <p>Your use is also governed by our Privacy Policy (linked in-app and on our website), which explains what we collect, how we use it, and your choices, including data deletion. Apple requires apps to include a privacy policy link in App Store Connect and inside the app in an easily accessible manner; we provide both.</p>
+            <p>Your use of the Service is also governed by our Privacy Policy, which explains what we collect, how we use it, and your choices regarding data deletion and marketing preferences.</p>
 
-            <h3>6) License & intellectual property</h3>
-            <p>Subject to these Terms, we grant you a limited, non-exclusive, non-transferable license to use the Service for its intended purpose. The Service (excluding your UGC) is owned by ForeScore and its licensors and is protected by IP laws. We reserve all rights not expressly granted.</p>
+            <hr className="my-6" />
 
-            <h3>7) Gameplay outputs & fairness</h3>
-            <p>ForeScore's calculations (e.g., points or payout suggestions) are based on the rules and inputs you select. These outputs are informational only. We do not guarantee accuracy, and we are not responsible for any disputes or losses arising from use of suggested payouts or scoring logic.</p>
+            <h3>6) License & Intellectual Property</h3>
+            <p>Subject to these Terms, we grant you a limited, non-exclusive, non-transferable license to use the Service for its intended purpose. All rights, title, and interest in the Service (excluding UGC) remain with ForeScore and its licensors.</p>
 
-            <h3>8) Purchases, subscriptions & trials (if offered)</h3>
-            <p>If we offer in-app purchases or auto-renewing subscriptions:</p>
+            <hr className="my-6" />
+
+            <h3>7) Payments, Subscriptions & Trials (if offered)</h3>
+            <p>If we offer paid features or subscriptions:</p>
             <ul>
-              <li><strong>Billing & Auto-renewal.</strong> Payment is processed through Apple using your Apple ID. Subscriptions auto-renew until canceled in your device Settings &gt; Apple ID &gt; Subscriptions. Cancel at least 24 hours before the current period ends to avoid renewal.</li>
-              <li><strong>Trials.</strong> If a trial is offered, you will be informed of the duration, price after the trial, and renewal terms before you subscribe.</li>
-              <li><strong>Pricing & Features.</strong> We will clearly describe what you get for the price prior to purchase. Features may vary by plan.</li>
+              <li>Payments are processed by third-party providers (e.g., Stripe, PayPal). Their terms apply.</li>
+              <li>Subscriptions may auto-renew until canceled. We will disclose pricing, renewal terms, and cancellation methods at the time of purchase.</li>
+              <li>Refunds, if available, are governed by our refund policy and the terms of the payment provider.</li>
             </ul>
-            <p>Refunds, if any, are handled by Apple under its media services terms; please see Apple's policies and your App Store receipt for details.</p>
 
-            <h3>9) Third-party services</h3>
-            <p>The Service may link to third-party sites or services (e.g., group chat or payment tools you use outside the app). We are not responsible for third-party services; you use them at your own risk and must follow their terms.</p>
+            <hr className="my-6" />
 
-            <h3>10) Prohibited uses & no gambling</h3>
-            <p>You must not use the Service to facilitate or advertise illegal gambling, sweepstakes, or lotteries. ForeScore may geo-restrict or disable features to comply with local laws and platform rules.</p>
+            <h3>8) Third-Party Services</h3>
+            <p>The Service may link to or integrate with third-party tools (e.g., chat apps, payment processors). ForeScore is not responsible for third-party services, which you use at your own risk.</p>
 
-            <h3>11) Support & Apple as a third-party beneficiary</h3>
-            <p>ForeScore is solely responsible for support for the iOS app (not Apple). You acknowledge that Apple and Apple's subsidiaries are third-party beneficiaries of these Terms for the limited purpose of enforcing the Apple EULA obligations applicable to iOS apps.</p>
+            <hr className="my-6" />
 
-            <h3>12) Disclaimers</h3>
+            <h3>9) Disclaimers</h3>
             <p>THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE." TO THE MAXIMUM EXTENT PERMITTED BY LAW, WE DISCLAIM ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, AND ACCURACY.</p>
 
-            <h3>13) Limitation of liability</h3>
-            <p>TO THE MAXIMUM EXTENT PERMITTED BY LAW, FORESCORE AND ITS OFFICERS, DIRECTORS, EMPLOYEES, AGENTS, AND SUPPLIERS ARE NOT LIABLE FOR INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE DAMAGES, OR ANY LOSS OF PROFITS, DATA, USE, OR GOODWILL, ARISING OUT OF OR RELATED TO YOUR USE OF (OR INABILITY TO USE) THE SERVICE. OUR TOTAL LIABILITY FOR ANY CLAIMS RELATING TO THE SERVICE WILL NOT EXCEED THE GREATER OF (A) AMOUNTS YOU PAID US IN THE 12 MONTHS BEFORE THE CLAIM OR (B) USD $50.</p>
+            <hr className="my-6" />
 
-            <h3>14) Indemnification</h3>
-            <p>You agree to defend, indemnify, and hold harmless ForeScore from and against any claims, liabilities, damages, losses, and expenses (including reasonable attorneys' fees) arising from or related to your UGC, your use of the Service, or your violation of these Terms.</p>
+            <h3>10) Limitation of Liability</h3>
+            <p>TO THE MAXIMUM EXTENT PERMITTED BY LAW, FORESCORE AND ITS OFFICERS, DIRECTORS, EMPLOYEES, AND AGENTS ARE NOT LIABLE FOR INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE DAMAGES, OR ANY LOSS OF PROFITS, DATA, OR GOODWILL. OUR TOTAL LIABILITY WILL NOT EXCEED THE GREATER OF (A) AMOUNTS YOU PAID US IN THE 12 MONTHS BEFORE THE CLAIM OR (B) USD $50.</p>
 
-            <h3>15) Suspension & termination</h3>
-            <p>We may suspend or terminate your access (with or without notice) for violations of these Terms, risk of harm to others, or platform/legal requirements. You may stop using the Service at any time. Some sections (e.g., IP, Disclaimers, Liability) survive termination.</p>
+            <hr className="my-6" />
 
-            <h3>16) Changes to the Service & Terms</h3>
-            <p>We may modify the Service and these Terms. If changes are material, we'll notify you in-app or by posting to our site. Continued use after changes become effective means you accept the revised Terms.</p>
+            <h3>11) Indemnification</h3>
+            <p>You agree to indemnify and hold harmless ForeScore against claims, damages, or expenses arising from your UGC, use of the Service, or violation of these Terms.</p>
 
-            <h3>17) Governing law; venue</h3>
-            <p>These Terms are governed by the laws of the State of Arizona, without regard to conflict-of-laws rules. Courts located in Maricopa County, Arizona will have exclusive jurisdiction, unless applicable law provides otherwise.</p>
+            <hr className="my-6" />
 
-            <h3>18) Contact</h3>
-            <p>Questions, reports, or takedown requests: support@danonano.com</p>
+            <h3>12) Suspension & Termination</h3>
+            <p>We may suspend or terminate access if you violate these Terms or applicable laws. You may stop using the Service at any time. Sections relating to intellectual property, disclaimers, liability, and indemnification survive termination.</p>
+
+            <hr className="my-6" />
+
+            <h3>13) Changes</h3>
+            <p>We may update these Terms from time to time. If changes are material, we will notify you via the Service or email. Continued use after changes take effect means you accept the revised Terms.</p>
+
+            <hr className="my-6" />
+
+            <h3>14) Governing Law</h3>
+            <p>These Terms are governed by the laws of the State of Arizona, USA, without regard to conflict-of-law rules. Courts in Maricopa County, Arizona, will have exclusive jurisdiction.</p>
+
+            <hr className="my-6" />
+
+            <h3>15) Contact</h3>
+            <p>Questions or support requests: support@forescore.xyz</p>
             <p>Postal: danoNano, LLC. [2447 E Fremont Rd. Phoenix, AZ 85042]</p>
           </div>
         </DialogContent>

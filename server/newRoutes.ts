@@ -2787,6 +2787,178 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Manual Trial Management Endpoints (Admin)
+  
+  // Grant manual trial to a user
+  app.post('/api/admin/grant-manual-trial', isAuthenticated, requireAdmin, async (req, res) => {
+    try {
+      const adminUserId = (req as any).user?.claims?.sub;
+      const { userId, days = 10, reason } = z.object({
+        userId: z.string(),
+        days: z.number().min(1).max(365).default(10),
+        reason: z.string().min(1, "Reason is required")
+      }).parse(req.body);
+
+      console.log(`Admin ${adminUserId} granting ${days}-day manual trial to user ${userId}: ${reason}`);
+
+      const updatedUser = await storage.grantManualTrial(userId, {
+        grantedBy: adminUserId,
+        days,
+        reason
+      });
+
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      res.json({
+        success: true,
+        message: `Manual trial granted successfully for ${days} days`,
+        user: {
+          id: updatedUser.id,
+          email: updatedUser.email,
+          firstName: updatedUser.firstName,
+          lastName: updatedUser.lastName,
+          manualTrialEndsAt: updatedUser.manualTrialEndsAt,
+          manualTrialDays: updatedUser.manualTrialDays
+        }
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          message: 'Invalid data',
+          errors: error.errors
+        });
+      }
+      console.error('Error granting manual trial:', error);
+      res.status(500).json({ message: 'Failed to grant manual trial' });
+    }
+  });
+
+  // Search users for manual trial management
+  app.get('/api/admin/users/search', isAuthenticated, requireAdmin, async (req, res) => {
+    try {
+      const { q: searchTerm } = req.query;
+      
+      const users = await storage.getUsersForManualTrials(searchTerm as string);
+      
+      res.json({
+        success: true,
+        users: users.map(user => ({
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          fullName: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+          hasManualTrial: !!user.manualTrialEndsAt,
+          manualTrialEndsAt: user.manualTrialEndsAt
+        }))
+      });
+    } catch (error) {
+      console.error('Error searching users:', error);
+      res.status(500).json({ message: 'Failed to search users' });
+    }
+  });
+
+  // Extend manual trial for a user
+  app.put('/api/admin/extend-manual-trial/:userId', isAuthenticated, requireAdmin, async (req, res) => {
+    try {
+      const adminUserId = (req as any).user?.claims?.sub;
+      const { userId } = req.params;
+      const { additionalDays, reason } = z.object({
+        additionalDays: z.number().min(1).max(365),
+        reason: z.string().min(1, "Reason is required")
+      }).parse(req.body);
+
+      console.log(`Admin ${adminUserId} extending manual trial for user ${userId} by ${additionalDays} days: ${reason}`);
+
+      const updatedUser = await storage.extendManualTrial(userId, additionalDays, reason);
+
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found or no active manual trial' });
+      }
+
+      res.json({
+        success: true,
+        message: `Manual trial extended by ${additionalDays} days`,
+        user: {
+          id: updatedUser.id,
+          email: updatedUser.email,
+          firstName: updatedUser.firstName,
+          lastName: updatedUser.lastName,
+          manualTrialEndsAt: updatedUser.manualTrialEndsAt,
+          manualTrialDays: updatedUser.manualTrialDays
+        }
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          message: 'Invalid data',
+          errors: error.errors
+        });
+      }
+      console.error('Error extending manual trial:', error);
+      res.status(500).json({ message: 'Failed to extend manual trial' });
+    }
+  });
+
+  // Revoke manual trial for a user
+  app.delete('/api/admin/revoke-manual-trial/:userId', isAuthenticated, requireAdmin, async (req, res) => {
+    try {
+      const adminUserId = (req as any).user?.claims?.sub;
+      const { userId } = req.params;
+
+      console.log(`Admin ${adminUserId} revoking manual trial for user ${userId}`);
+
+      const updatedUser = await storage.revokeManualTrial(userId);
+
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      res.json({
+        success: true,
+        message: 'Manual trial revoked successfully',
+        user: {
+          id: updatedUser.id,
+          email: updatedUser.email,
+          firstName: updatedUser.firstName,
+          lastName: updatedUser.lastName
+        }
+      });
+    } catch (error) {
+      console.error('Error revoking manual trial:', error);
+      res.status(500).json({ message: 'Failed to revoke manual trial' });
+    }
+  });
+
+  // List all active manual trials
+  app.get('/api/admin/manual-trials', isAuthenticated, requireAdmin, async (req, res) => {
+    try {
+      const activeTrials = await storage.getActiveManualTrials();
+
+      res.json({
+        success: true,
+        trials: activeTrials.map(user => ({
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          fullName: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+          manualTrialGrantedAt: user.manualTrialGrantedAt,
+          manualTrialEndsAt: user.manualTrialEndsAt,
+          manualTrialDays: user.manualTrialDays,
+          manualTrialReason: user.manualTrialReason,
+          daysRemaining: user.manualTrialEndsAt ? 
+            Math.ceil((new Date(user.manualTrialEndsAt).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0
+        }))
+      });
+    } catch (error) {
+      console.error('Error listing manual trials:', error);
+      res.status(500).json({ message: 'Failed to list manual trials' });
+    }
+  });
+
   // Create HTTP server
   const httpServer = createServer(app);
   

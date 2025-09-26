@@ -119,10 +119,9 @@ export default function AdminPage() {
     retry: 1,
   });
 
-  // Fetch search results
-  const { data: searchResults, isLoading: searchLoading } = useQuery<{success: boolean; users: SearchUser[]}>({
-    queryKey: ['/api/admin/users/search', searchTerm],
-    enabled: searchTerm.length > 0,
+  // Fetch all users for trial management
+  const { data: allUsersData, isLoading: usersLoading } = useQuery<{success: boolean; users: SearchUser[]}>({
+    queryKey: ['/api/admin/users/search', ''],
     retry: 1,
   });
 
@@ -331,145 +330,201 @@ export default function AdminPage() {
         {/* Manual Trial Management */}
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-6 w-6" />
-              Manual Trial Management
+            <CardTitle className="flex items-center gap-2 justify-between">
+              <div className="flex items-center gap-2">
+                <Clock className="h-6 w-6" />
+                Manual Trial Management
+              </div>
+              <Dialog open={isGrantDialogOpen} onOpenChange={setIsGrantDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    className="flex items-center gap-2"
+                    data-testid="button-open-grant-trial-modal"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Grant Manual Trial
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+                  <DialogHeader>
+                    <DialogTitle>Grant Manual Trial - Select User</DialogTitle>
+                  </DialogHeader>
+                  <div className="flex flex-col h-full space-y-4">
+                    {/* Search Filter */}
+                    <div className="flex-shrink-0">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                          placeholder="Filter users by email or name..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="pl-10"
+                          data-testid="input-filter-users"
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Users List */}
+                    <div className="flex-1 overflow-y-auto">
+                      {usersLoading ? (
+                        <div className="flex items-center justify-center py-8">
+                          <div className="text-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                            <p className="text-sm text-gray-500">Loading users...</p>
+                          </div>
+                        </div>
+                      ) : allUsersData?.users?.length ? (
+                        <div className="space-y-2">
+                          <p className="text-sm text-gray-600 mb-3">
+                            {allUsersData.users.filter(user => 
+                              !searchTerm || 
+                              user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                              user.fullName.toLowerCase().includes(searchTerm.toLowerCase())
+                            ).length} users available
+                          </p>
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Name</TableHead>
+                                <TableHead>Email</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead className="text-right">Action</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {allUsersData.users
+                                .filter(user => 
+                                  !searchTerm || 
+                                  user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                  user.fullName.toLowerCase().includes(searchTerm.toLowerCase())
+                                )
+                                .map((user) => (
+                                  <TableRow key={user.id} data-testid={`row-user-${user.id}`}>
+                                    <TableCell className="font-medium">
+                                      {user.fullName || 'No name'}
+                                    </TableCell>
+                                    <TableCell className="font-mono text-sm">
+                                      {user.email}
+                                    </TableCell>
+                                    <TableCell>
+                                      {user.hasManualTrial ? (
+                                        <Badge variant="secondary" className="text-xs">
+                                          Has Manual Trial
+                                        </Badge>
+                                      ) : (
+                                        <Badge variant="outline" className="text-xs">
+                                          Available
+                                        </Badge>
+                                      )}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        disabled={user.hasManualTrial}
+                                        onClick={() => {
+                                          setSelectedUser(user);
+                                          setIsGrantDialogOpen(false);
+                                          setTimeout(() => setIsGrantDialogOpen(true), 100);
+                                        }}
+                                        data-testid={`button-select-user-${user.id}`}
+                                      >
+                                        <Plus className="h-4 w-4 mr-1" />
+                                        Select
+                                      </Button>
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <p className="text-gray-500">No users found</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+              
+              {/* Grant Trial Form Dialog */}
+              <Dialog open={!!selectedUser && !isGrantDialogOpen} onOpenChange={(open) => {
+                if (!open) setSelectedUser(null);
+              }}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Grant Manual Trial</DialogTitle>
+                  </DialogHeader>
+                  {selectedUser && (
+                    <div className="space-y-4">
+                      <div className="p-4 bg-gray-50 rounded-lg">
+                        <p className="text-sm"><strong>Selected User:</strong></p>
+                        <p className="font-medium">{selectedUser.fullName || 'No name'}</p>
+                        <p className="text-sm text-gray-600">{selectedUser.email}</p>
+                      </div>
+                      <div>
+                        <Label htmlFor="trial-days-form">Trial Duration (days)</Label>
+                        <Input
+                          id="trial-days-form"
+                          type="number"
+                          min="1"
+                          max="365"
+                          value={trialDays}
+                          onChange={(e) => setTrialDays(parseInt(e.target.value) || 10)}
+                          data-testid="input-trial-days-form"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="trial-reason-form">Reason</Label>
+                        <Textarea
+                          id="trial-reason-form"
+                          placeholder="Why is this manual trial being granted?"
+                          value={trialReason}
+                          onChange={(e) => setTrialReason(e.target.value)}
+                          required
+                          data-testid="textarea-trial-reason-form"
+                        />
+                      </div>
+                      <div className="flex gap-2 justify-end">
+                        <Button 
+                          variant="outline" 
+                          onClick={() => {
+                            setSelectedUser(null);
+                            setTrialReason('');
+                          }}
+                          data-testid="button-cancel-grant-form"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            if (!trialReason.trim()) {
+                              toast({ title: "Error", description: "Reason is required", variant: "destructive" });
+                              return;
+                            }
+                            grantTrialMutation.mutate({
+                              userId: selectedUser.id,
+                              days: trialDays,
+                              reason: trialReason
+                            });
+                          }}
+                          disabled={grantTrialMutation.isPending || !trialReason.trim()}
+                          data-testid="button-confirm-grant-form"
+                        >
+                          {grantTrialMutation.isPending ? 'Granting...' : 'Grant Trial'}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </DialogContent>
+              </Dialog>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-6">
-              {/* User Search */}
-              <div>
-                <Label htmlFor="user-search" className="text-sm font-medium mb-2 block">Search Users</Label>
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="user-search"
-                      placeholder="Search by email or name..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                      data-testid="input-user-search"
-                    />
-                  </div>
-                </div>
-                
-                {/* Search Results */}
-                {searchTerm && (
-                  <div className="mt-3">
-                    {searchLoading ? (
-                      <p className="text-sm text-gray-500">Searching...</p>
-                    ) : searchResults?.users?.length ? (
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium">Found {searchResults.users.length} users:</p>
-                        <div className="grid gap-2 max-h-60 overflow-y-auto">
-                          {searchResults.users.map((user) => (
-                            <div 
-                              key={user.id} 
-                              className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
-                              data-testid={`search-result-${user.id}`}
-                            >
-                              <div>
-                                <p className="font-medium">{user.fullName || 'No name'}</p>
-                                <p className="text-sm text-gray-600">{user.email}</p>
-                                {user.hasManualTrial && (
-                                  <Badge variant="secondary" className="text-xs mt-1">
-                                    Has Manual Trial
-                                  </Badge>
-                                )}
-                              </div>
-                              <Dialog open={isGrantDialogOpen && selectedUser?.id === user.id} onOpenChange={(open) => {
-                                setIsGrantDialogOpen(open);
-                                if (!open) setSelectedUser(null);
-                              }}>
-                                <DialogTrigger asChild>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    disabled={user.hasManualTrial}
-                                    onClick={() => setSelectedUser(user)}
-                                    data-testid={`button-grant-trial-${user.id}`}
-                                  >
-                                    <Plus className="h-4 w-4 mr-1" />
-                                    Grant Trial
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent>
-                                  <DialogHeader>
-                                    <DialogTitle>Grant Manual Trial</DialogTitle>
-                                  </DialogHeader>
-                                  <div className="space-y-4">
-                                    <div>
-                                      <p className="text-sm"><strong>User:</strong> {user.fullName} ({user.email})</p>
-                                    </div>
-                                    <div>
-                                      <Label htmlFor="trial-days">Trial Duration (days)</Label>
-                                      <Input
-                                        id="trial-days"
-                                        type="number"
-                                        min="1"
-                                        max="365"
-                                        value={trialDays}
-                                        onChange={(e) => setTrialDays(parseInt(e.target.value) || 10)}
-                                        data-testid="input-trial-days"
-                                      />
-                                    </div>
-                                    <div>
-                                      <Label htmlFor="trial-reason">Reason</Label>
-                                      <Textarea
-                                        id="trial-reason"
-                                        placeholder="Why is this manual trial being granted?"
-                                        value={trialReason}
-                                        onChange={(e) => setTrialReason(e.target.value)}
-                                        required
-                                        data-testid="textarea-trial-reason"
-                                      />
-                                    </div>
-                                    <div className="flex gap-2 justify-end">
-                                      <Button 
-                                        variant="outline" 
-                                        onClick={() => {
-                                          setIsGrantDialogOpen(false);
-                                          setSelectedUser(null);
-                                          setTrialReason('');
-                                        }}
-                                        data-testid="button-cancel-grant"
-                                      >
-                                        Cancel
-                                      </Button>
-                                      <Button
-                                        onClick={() => {
-                                          if (!trialReason.trim()) {
-                                            toast({ title: "Error", description: "Reason is required", variant: "destructive" });
-                                            return;
-                                          }
-                                          grantTrialMutation.mutate({
-                                            userId: user.id,
-                                            days: trialDays,
-                                            reason: trialReason
-                                          });
-                                        }}
-                                        disabled={grantTrialMutation.isPending || !trialReason.trim()}
-                                        data-testid="button-confirm-grant"
-                                      >
-                                        {grantTrialMutation.isPending ? 'Granting...' : 'Grant Trial'}
-                                      </Button>
-                                    </div>
-                                  </div>
-                                </DialogContent>
-                              </Dialog>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-gray-500">No users found matching "{searchTerm}"</p>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
+            <p className="text-sm text-gray-600">
+              Click "Grant Manual Trial" above to select a user and grant them access without requiring payment information.
+            </p>
           </CardContent>
         </Card>
 

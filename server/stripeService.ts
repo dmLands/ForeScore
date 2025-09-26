@@ -194,7 +194,23 @@ export class StripeService {
       return { hasAccess: false, reason: 'User not found' };
     }
     
-    // Get canonical subscription data from our database (webhook-synced)
+    // FIRST PRIORITY: Check for active manual trial (admin-granted)
+    if (user.manualTrialEndsAt) {
+      const now = new Date();
+      const manualTrialEnd = new Date(user.manualTrialEndsAt);
+      if (now < manualTrialEnd) {
+        console.log(`✅ User ${userId} has access: Manual trial (ends ${manualTrialEnd}, granted by admin)`);
+        return { 
+          hasAccess: true, 
+          trialEndsAt: manualTrialEnd, 
+          subscriptionStatus: 'manual_trial'
+        };
+      } else {
+        console.log(`❌ User ${userId} manual trial expired (ended ${manualTrialEnd})`);
+      }
+    }
+    
+    // SECOND PRIORITY: Get canonical subscription data from our database (webhook-synced)
     const subscription = await storage.getStripeSubscription(userId);
     
     if (!subscription) {

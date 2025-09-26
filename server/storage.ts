@@ -67,7 +67,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
+    const [user] = await db.select().from(users).where(eq(users.email, email.toLowerCase()));
     return user;
   }
 
@@ -91,7 +91,7 @@ export class DatabaseStorage implements IStorage {
       .insert(users)
       .values({
         id: randomUUID(),
-        email: userData.email,
+        email: userData.email.toLowerCase(),
         firstName: userData.firstName,
         lastName: userData.lastName,
         passwordHash: userData.passwordHash,

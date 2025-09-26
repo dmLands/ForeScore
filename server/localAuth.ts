@@ -22,8 +22,11 @@ export type RegisterData = z.infer<typeof registerSchema>;
 export type LoginData = z.infer<typeof loginSchema>;
 
 export async function registerUser(data: RegisterData) {
+  // Normalize email to lowercase for case-insensitive comparison
+  const normalizedEmail = data.email.toLowerCase();
+  
   // Check if user already exists
-  const existingUser = await storage.getUserByEmail(data.email);
+  const existingUser = await storage.getUserByEmail(normalizedEmail);
   if (existingUser) {
     throw new Error("User with this email already exists");
   }
@@ -39,7 +42,7 @@ export async function registerUser(data: RegisterData) {
 
   // Create user
   const user = await storage.createLocalUser({
-    email: data.email,
+    email: normalizedEmail,
     firstName: data.firstName,
     lastName: data.lastName,
     passwordHash,
@@ -53,8 +56,11 @@ export async function registerUser(data: RegisterData) {
 }
 
 export async function authenticateUser(data: LoginData) {
+  // Normalize email to lowercase for case-insensitive lookup
+  const normalizedEmail = data.email.toLowerCase();
+  
   // Find user by email
-  const user = await storage.getUserByEmail(data.email);
+  const user = await storage.getUserByEmail(normalizedEmail);
   if (!user) {
     throw new Error("Invalid email or password");
   }

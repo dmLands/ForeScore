@@ -19,6 +19,13 @@ export interface IStorage {
   upsertStripeSubscription(subscription: InsertStripeSubscription): Promise<StripeSubscription>;
   updateStripeSubscription(stripeSubscriptionId: string, updates: Partial<InsertStripeSubscription>): Promise<StripeSubscription | undefined>;
   
+  // Manual Trial Management
+  grantManualTrial(userId: string, data: { grantedBy: string; days: number; reason: string }): Promise<User | undefined>;
+  revokeManualTrial(userId: string): Promise<User | undefined>;
+  extendManualTrial(userId: string, additionalDays: number, reason: string): Promise<User | undefined>;
+  getActiveManualTrials(): Promise<User[]>;
+  getUsersForManualTrials(searchTerm?: string): Promise<Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'manualTrialEndsAt'>[]>;
+  
   // Groups
   getGroups(): Promise<Group[]>;
   getGroupsByUser(userId: string): Promise<Group[]>;
@@ -160,6 +167,97 @@ export class DatabaseStorage implements IStorage {
       .where(eq(stripeSubscriptions.stripeSubscriptionId, stripeSubscriptionId))
       .returning();
     return subscription;
+  }
+
+  // Manual Trial Management
+  async grantManualTrial(userId: string, data: { grantedBy: string; days: number; reason: string }): Promise<User | undefined> {
+    const now = new Date();
+    const endsAt = new Date(now.getTime() + data.days * 24 * 60 * 60 * 1000);
+    
+    const [user] = await db
+      .update(users)
+      .set({
+        manualTrialGrantedBy: data.grantedBy,
+        manualTrialGrantedAt: now,
+        manualTrialEndsAt: endsAt,
+        manualTrialDays: data.days,
+        manualTrialReason: data.reason,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  async revokeManualTrial(userId: string): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({
+        manualTrialGrantedBy: null,
+        manualTrialGrantedAt: null,
+        manualTrialEndsAt: null,
+        manualTrialDays: null,
+        manualTrialReason: null,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  async extendManualTrial(userId: string, additionalDays: number, reason: string): Promise<User | undefined> {
+    const user = await this.getUser(userId);
+    if (!user || !user.manualTrialEndsAt) {
+      return undefined;
+    }
+
+    const newEndsAt = new Date(user.manualTrialEndsAt.getTime() + additionalDays * 24 * 60 * 60 * 1000);
+    const newTotalDays = (user.manualTrialDays || 0) + additionalDays;
+
+    const [updatedUser] = await db
+      .update(users)
+      .set({
+        manualTrialEndsAt: newEndsAt,
+        manualTrialDays: newTotalDays,
+        manualTrialReason: `${user.manualTrialReason} | Extended: ${reason}`,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return updatedUser;
+  }
+
+  async getActiveManualTrials(): Promise<User[]> {
+    const now = new Date();
+    return await db
+      .select()
+      .from(users)
+      .where(and(
+        sql`${users.manualTrialEndsAt} IS NOT NULL`,
+        sql`${users.manualTrialEndsAt} > ${now}`
+      ));
+  }
+
+  async getUsersForManualTrials(searchTerm?: string): Promise<Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'manualTrialEndsAt'>[]> {
+    let query = db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        manualTrialEndsAt: users.manualTrialEndsAt
+      })
+      .from(users);
+
+    if (searchTerm) {
+      query = query.where(
+        sql`(${users.email} ILIKE ${`%${searchTerm}%`} OR 
+             ${users.firstName} ILIKE ${`%${searchTerm}%`} OR 
+             ${users.lastName} ILIKE ${`%${searchTerm}%`})`
+      );
+    }
+
+    return await query.limit(20);
   }
   
   // Clean up old data on startup (older than 7 days)

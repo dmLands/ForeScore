@@ -34,6 +34,12 @@ export const users = pgTable("users", {
   marketingConsentAt: timestamp("marketing_consent_at"),
   marketingUnsubscribeAt: timestamp("marketing_unsubscribe_at"),
   marketingPreferenceStatus: varchar("marketing_preference_status").$type<'subscribed' | 'unsubscribed'>().default('subscribed'),
+  // Manual trial fields for admin-granted trial access
+  manualTrialGrantedBy: varchar("manual_trial_granted_by").references(() => users.id),
+  manualTrialGrantedAt: timestamp("manual_trial_granted_at"),
+  manualTrialEndsAt: timestamp("manual_trial_ends_at"),
+  manualTrialDays: integer("manual_trial_days"),
+  manualTrialReason: text("manual_trial_reason"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

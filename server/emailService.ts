@@ -19,7 +19,7 @@ export async function sendForgotPasswordEmail(params: ForgotPasswordEmailParams)
   const emailContent = {
       to,
       from: {
-        email: process.env.SENDGRID_FROM_EMAIL || 'support@danonano.com',
+        email: process.env.SENDGRID_FROM_EMAIL || 'support@forescore.xyz',
         name: process.env.SENDGRID_FROM_NAME || 'ForeScore Support'
       },
       subject: 'Reset Your ForeScore Password',
@@ -104,7 +104,7 @@ export async function sendForgotPasswordEmail(params: ForgotPasswordEmailParams)
           </div>
           
           <div class="footer">
-            <p><strong>Need help?</strong> Contact our support team at support@danonano.com</p>
+            <p><strong>Need help?</strong> Contact our support team at support@forescore.xyz</p>
             <p>If this link doesn't work, you can copy and paste this URL into your browser: ${loginLink}</p>
             <p>This email was sent from ForeScore, owned and operated by danoNano, LLC.</p>
             <p><small>Please do not reply to this automated email.</small></p>
@@ -125,7 +125,7 @@ If you didn't request a password reset, you can safely ignore this email. Your p
 
 For security reasons, this link can only be used once.
 
-Need help? Contact our support team at support@danonano.com
+Need help? Contact our support team at support@forescore.xyz
 
 This email was sent from ForeScore, owned and operated by danoNano, LLC.
       `

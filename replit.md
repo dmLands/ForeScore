@@ -20,7 +20,7 @@ ForeScore V7.0 is a secure, full-stack application designed as a companion for t
   - **SendGrid Email Integration**: Professional HTML email templates with red "Reset Password" button, white text, and inline styling for cross-client compatibility
   - **Security-First Design**: 30-minute token expiration, single-use tokens, secure 32-byte random token generation, and account enumeration prevention
   - **Enhanced User Experience**: Clean "Forgot Password" link on login page, clear success/error messaging, proper authentication state management
-  - **Professional Branding**: Branded emails from support@danonano.com with ForeScore styling and comprehensive security notices
+  - **Professional Branding**: Branded emails from support@forescore.xyz with ForeScore styling and comprehensive security notices
   - **Robust Error Handling**: Fixed authentication loops, routing conflicts, and redirect issues for seamless user experience
   - **Production-Ready Foundation**: Established secure token-based password reset system ready for security hardening
 

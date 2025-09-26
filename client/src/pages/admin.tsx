@@ -61,7 +61,8 @@ export default function AdminPage() {
   const [trialReason, setTrialReason] = useState('');
   const [extendDays, setExtendDays] = useState(7);
   const [extendReason, setExtendReason] = useState('');
-  const [isGrantDialogOpen, setIsGrantDialogOpen] = useState(false);
+  const [isUserSelectionOpen, setIsUserSelectionOpen] = useState(false);
+  const [isGrantFormOpen, setIsGrantFormOpen] = useState(false);
   const [isExtendDialogOpen, setIsExtendDialogOpen] = useState(false);
   const { toast } = useToast();
   const { isAuthenticated, isLoading, isAdmin } = useAuth();
@@ -150,7 +151,7 @@ export default function AdminPage() {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/manual-trials'] });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/users/search'] });
       toast({ title: "Success", description: "Manual trial granted successfully" });
-      setIsGrantDialogOpen(false);
+      setIsGrantFormOpen(false);
       setSelectedUser(null);
       setTrialReason('');
     },
@@ -335,7 +336,7 @@ export default function AdminPage() {
                 <Clock className="h-6 w-6" />
                 Manual Trial Management
               </div>
-              <Dialog open={isGrantDialogOpen} onOpenChange={setIsGrantDialogOpen}>
+              <Dialog open={isUserSelectionOpen} onOpenChange={setIsUserSelectionOpen}>
                 <DialogTrigger asChild>
                   <Button 
                     className="flex items-center gap-2"
@@ -424,8 +425,8 @@ export default function AdminPage() {
                                         disabled={user.hasManualTrial}
                                         onClick={() => {
                                           setSelectedUser(user);
-                                          setIsGrantDialogOpen(false);
-                                          setTimeout(() => setIsGrantDialogOpen(true), 100);
+                                          setIsUserSelectionOpen(false);
+                                          setIsGrantFormOpen(true);
                                         }}
                                         data-testid={`button-select-user-${user.id}`}
                                       >
@@ -449,8 +450,12 @@ export default function AdminPage() {
               </Dialog>
               
               {/* Grant Trial Form Dialog */}
-              <Dialog open={!!selectedUser && !isGrantDialogOpen} onOpenChange={(open) => {
-                if (!open) setSelectedUser(null);
+              <Dialog open={isGrantFormOpen} onOpenChange={(open) => {
+                if (!open) {
+                  setSelectedUser(null);
+                  setIsGrantFormOpen(false);
+                  setTrialReason('');
+                }
               }}>
                 <DialogContent>
                   <DialogHeader>
@@ -491,6 +496,7 @@ export default function AdminPage() {
                           variant="outline" 
                           onClick={() => {
                             setSelectedUser(null);
+                            setIsGrantFormOpen(false);
                             setTrialReason('');
                           }}
                           data-testid="button-cancel-grant-form"

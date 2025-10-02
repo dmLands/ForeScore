@@ -64,11 +64,14 @@ export default function Register() {
         description: data.message || "Account created and you're now logged in.",
       });
       
-      // Invalidate auth query so user data is fresh
+      // Invalidate and refetch user data
       await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      await queryClient.refetchQueries({ queryKey: ['/api/auth/user'] });
       
-      // Redirect to home - ProtectedHome will show welcome page for new users
-      setLocation("/");
+      // Small delay to ensure query completes
+      setTimeout(() => {
+        setLocation("/");
+      }, 100);
     },
     onError: (error: any) => {
       toast({

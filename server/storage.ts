@@ -260,57 +260,10 @@ export class DatabaseStorage implements IStorage {
     return await query.limit(20);
   }
   
-  // Clean up old data on startup (older than 7 days)
+  // DISABLED: Automatic cleanup removed - use manual /api/admin/cleanup-old-games endpoint instead
   async cleanupOldData() {
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    
-    try {
-      // Relationship-driven cleanup to avoid foreign key violations
-      // Strategy: Only delete groups where ALL associated gameStates are also old
-      
-      // Step 1: Find old gameStates (candidates for deletion)
-      const oldGameStates = await db
-        .select({ id: gameStates.id, groupId: gameStates.groupId })
-        .from(gameStates)
-        .where(lt(gameStates.createdAt, sevenDaysAgo));
-      
-      const oldGameStateIds = oldGameStates.map(gs => gs.id);
-      
-      if (oldGameStateIds.length > 0) {
-        // Step 2: Delete child tables that reference gameStates (have cascade)
-        await db.delete(combinedPayoutResults).where(inArray(combinedPayoutResults.gameStateId, oldGameStateIds));
-        await db.delete(pointsGames).where(inArray(pointsGames.gameStateId, oldGameStateIds));
-        
-        // Step 3: Delete the old gameStates themselves
-        await db.delete(gameStates).where(inArray(gameStates.id, oldGameStateIds));
-      }
-      
-      // Step 4: Find groups that are old AND have no remaining gameStates
-      const oldGroupsWithNoGameStates = await db
-        .select({ id: groups.id })
-        .from(groups)
-        .leftJoin(gameStates, eq(groups.id, gameStates.groupId))
-        .where(and(
-          lt(groups.createdAt, sevenDaysAgo),
-          sql`${gameStates.id} IS NULL` // No gameStates exist for this group
-        ));
-      
-      const eligibleGroupIds = oldGroupsWithNoGameStates.map(g => g.id);
-      
-      if (eligibleGroupIds.length > 0) {
-        // Step 5: Delete orphaned child tables for these groups
-        await db.delete(combinedPayoutResults).where(inArray(combinedPayoutResults.groupId, eligibleGroupIds));
-        await db.delete(pointsGames).where(inArray(pointsGames.groupId, eligibleGroupIds));
-        
-        // Step 6: Finally delete the eligible groups
-        await db.delete(groups).where(inArray(groups.id, eligibleGroupIds));
-      }
-      
-      console.log(`Cleaned up data older than 7 days: ${oldGameStateIds.length} gameStates, ${eligibleGroupIds.length} groups`);
-    } catch (error) {
-      console.error('Error cleaning up old data:', error);
-      // Continue without failing the app
-    }
+    // No automatic cleanup - data retention is managed manually via admin endpoint
+    console.log('Automatic cleanup disabled - use /api/admin/cleanup-old-games for manual cleanup');
   }
 
   // Groups

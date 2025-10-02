@@ -5,12 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Link, useLocation } from "wouter";
 import { z } from "zod";
 import { Checkbox } from "@/components/ui/checkbox";
 import AppDownloadPrompt from "@/components/AppDownloadPrompt";
 import LegalDialogs from "@/components/LegalDialogs";
-import { queryClient } from "@/lib/queryClient";
 
 const registerSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -59,11 +59,17 @@ export default function Register() {
       return response.json();
     },
     onSuccess: (data: any) => {
-      // Invalidate auth query (don't await - just trigger it)
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      toast({
+        title: "Welcome to ForeScore!",
+        description: data.message || "Account created and you're now logged in.",
+      });
       
-      // Immediate SPA navigation
-      setLocation('/trial-welcome');
+      // Handle auto-login success - redirect based on subscription status
+      if (data.requiresSubscription) {
+        setLocation("/subscribe");
+      } else {
+        setLocation("/");
+      }
     },
     onError: (error: any) => {
       toast({

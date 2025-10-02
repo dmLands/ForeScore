@@ -60,8 +60,8 @@ export function useAuth() {
   useEffect(() => {
     // Only redirect if we have subscription data (no error) and user doesn't have access
     if (!isLoading && isAuthenticated && hasSubscriptionData) {
-      // Skip redirect logic for subscription-related pages and trial welcome
-      const allowedPaths = ['/subscribe', '/manage-subscription', '/trial-welcome'];
+      // Skip redirect logic for subscription-related pages
+      const allowedPaths = ['/subscribe', '/manage-subscription'];
       const isOnAllowedPath = allowedPaths.some(path => location.startsWith(path));
       
       // Only redirect if we're not already on the target location to prevent loops

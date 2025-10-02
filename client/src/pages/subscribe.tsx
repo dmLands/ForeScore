@@ -9,7 +9,6 @@ import { useLocation } from "wouter";
 import { useStripe, Elements, PaymentElement, useElements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import { CheckCircle, Clock, CreditCard, Users, Calculator, Trophy } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
 
 // Load Stripe
 if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
@@ -30,10 +29,9 @@ interface SubscriptionPlans {
   annual: SubscriptionPlan;
 }
 
-const SubscribeForm = ({ selectedPlan, onSubscriptionComplete, hasExpiredTrial }: { 
+const SubscribeForm = ({ selectedPlan, onSubscriptionComplete }: { 
   selectedPlan: string; 
   onSubscriptionComplete: () => void;
-  hasExpiredTrial?: boolean;
 }) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -73,10 +71,8 @@ const SubscribeForm = ({ selectedPlan, onSubscriptionComplete, hasExpiredTrial }
           }
           
           toast({
-            title: hasExpiredTrial ? "Subscription Active!" : "Trial Started!",
-            description: hasExpiredTrial 
-              ? "Welcome back! Your subscription is now active." 
-              : "Your 7-day free trial has begun. Enjoy ForeScore!",
+            title: "Trial Started!",
+            description: "Your 7-day free trial has begun. Enjoy ForeScore!",
           });
           onSubscriptionComplete();
         } catch (error) {
@@ -108,19 +104,17 @@ const SubscribeForm = ({ selectedPlan, onSubscriptionComplete, hasExpiredTrial }
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-gray-900">Payment Information</h3>
-        {!hasExpiredTrial && (
-          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-            <div className="flex items-center space-x-2">
-              <Clock className="h-5 w-5 text-blue-600" />
-              <p className="text-sm text-blue-800">
-                <strong>Start your trial now!</strong> No charge for 7 days.
-              </p>
-            </div>
-            <p className="text-xs text-blue-600 mt-1">
-              Full access to all features included.
+        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+          <div className="flex items-center space-x-2">
+            <Clock className="h-5 w-5 text-blue-600" />
+            <p className="text-sm text-blue-800">
+              <strong>Start your trial now!</strong> No charge for 7 days.
             </p>
           </div>
-        )}
+          <p className="text-xs text-blue-600 mt-1">
+            Full access to all features included.
+          </p>
+        </div>
         <PaymentElement 
           options={{
             fields: {
@@ -141,10 +135,7 @@ const SubscribeForm = ({ selectedPlan, onSubscriptionComplete, hasExpiredTrial }
         disabled={!stripe || isLoading}
         data-testid="button-start-trial"
       >
-        {isLoading 
-          ? (hasExpiredTrial ? "Processing..." : "Starting Trial...") 
-          : (hasExpiredTrial ? "Subscribe Now" : "Start 7-Day Free Trial")
-        }
+        {isLoading ? "Starting Trial..." : "Start 7-Day Free Trial"}
       </Button>
     </form>
   );
@@ -155,14 +146,12 @@ const PlanCard = ({
   plan, 
   isSelected, 
   onSelect, 
-  isPopular = false,
-  hasExpiredTrial = false
+  isPopular = false 
 }: { 
   planKey: string; 
   plan: SubscriptionPlan; 
   isSelected: boolean; 
   onSelect: (planKey: string) => void;
-  hasExpiredTrial?: boolean;
   isPopular?: boolean;
 }) => {
   const monthlyPrice = plan.amount / 100;
@@ -206,12 +195,10 @@ const PlanCard = ({
       
       <CardContent className="pt-0">
         <div className="text-center">
-          {!hasExpiredTrial && (
-            <div className="flex items-center justify-center space-x-1 mb-2">
-              <Clock className="h-3 w-3 text-blue-600" />
-              <span className="text-xs font-medium text-blue-600">7-day trial</span>
-            </div>
-          )}
+          <div className="flex items-center justify-center space-x-1 mb-2">
+            <Clock className="h-3 w-3 text-blue-600" />
+            <span className="text-xs font-medium text-blue-600">7-day trial</span>
+          </div>
           <div className="text-xs text-gray-500">
             All features included
           </div>
@@ -224,13 +211,9 @@ const PlanCard = ({
 export default function Subscribe() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { subscriptionAccess } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState<string>('annual');
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [subscriptionCreated, setSubscriptionCreated] = useState(false);
-
-  // Check if user had a trial that expired
-  const hasExpiredTrial = !!(subscriptionAccess?.trialEndsAt && new Date(subscriptionAccess.trialEndsAt) < new Date());
 
   // Fetch subscription plans
   const { data: plans } = useQuery<SubscriptionPlans>({
@@ -294,10 +277,7 @@ export default function Subscribe() {
               </div>
               <CardTitle className="text-2xl">Complete Your Setup</CardTitle>
               <CardDescription>
-                {hasExpiredTrial 
-                  ? 'Add your payment method to continue using ForeScore'
-                  : 'Add your payment method to activate your 7-day free trial'
-                }
+                Add your payment method to activate your 7-day free trial
               </CardDescription>
             </CardHeader>
             
@@ -317,7 +297,6 @@ export default function Subscribe() {
                 <SubscribeForm 
                   selectedPlan={selectedPlan} 
                   onSubscriptionComplete={handleSubscriptionComplete}
-                  hasExpiredTrial={hasExpiredTrial}
                 />
               </Elements>
             </CardContent>
@@ -333,14 +312,9 @@ export default function Subscribe() {
       <div className="bg-white shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900">
-              {hasExpiredTrial ? '🏌️ Continue with ForeScore' : '🏌️ Join ForeScore'}
-            </h1>
+            <h1 className="text-3xl font-bold text-gray-900">🏌️ Join Forescore</h1>
             <p className="mt-2 text-lg text-gray-600">
-              {hasExpiredTrial 
-                ? 'Your trial has ended. Subscribe to keep your data and continue playing!'
-                : 'You hit the shots, we do the math'
-              }
+              You hit the shots, we do the math
             </p>
           </div>
         </div>
@@ -356,7 +330,6 @@ export default function Subscribe() {
                 plan={plans.monthly}
                 isSelected={selectedPlan === 'monthly'}
                 onSelect={setSelectedPlan}
-                hasExpiredTrial={hasExpiredTrial}
               />
               <PlanCard
                 planKey="annual"
@@ -364,7 +337,6 @@ export default function Subscribe() {
                 isSelected={selectedPlan === 'annual'}
                 onSelect={setSelectedPlan}
                 isPopular={true}
-                hasExpiredTrial={hasExpiredTrial}
               />
             </>
           )}
@@ -379,8 +351,8 @@ export default function Subscribe() {
             data-testid="button-select-plan"
           >
             {createSubscriptionMutation.isPending 
-              ? (hasExpiredTrial ? "Processing..." : "Setting up trial...")
-              : (hasExpiredTrial ? "Subscribe Now" : "Start 7-Day Free Trial")
+              ? "Setting up trial..." 
+              : "Start 7-Day Free Trial"
             }
           </Button>
           

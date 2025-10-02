@@ -40,10 +40,6 @@ export async function registerUser(data: RegisterData) {
   const marketingConsentAt = data.marketingConsent ? now : undefined;
   const marketingPreferenceStatus = data.marketingConsent ? 'subscribed' : 'unsubscribed';
 
-  // Auto-grant 7-day free trial (no payment required)
-  const trialEndsAt = new Date();
-  trialEndsAt.setDate(trialEndsAt.getDate() + 7);
-
   // Create user
   const user = await storage.createLocalUser({
     email: normalizedEmail,
@@ -54,7 +50,6 @@ export async function registerUser(data: RegisterData) {
     termsAcceptedAt,
     marketingConsentAt,
     marketingPreferenceStatus,
-    manualTrialEndsAt: trialEndsAt,
   });
 
   return user;

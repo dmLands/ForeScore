@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
-import { Link, useLocation } from "wouter";
+import { Link, useLocation, Redirect } from "wouter";
 import { z } from "zod";
 import { Checkbox } from "@/components/ui/checkbox";
 import AppDownloadPrompt from "@/components/AppDownloadPrompt";
@@ -32,6 +32,7 @@ type RegisterForm = z.infer<typeof registerSchema>;
 export default function Register() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const [shouldRedirect, setShouldRedirect] = useState(false);
   const [formData, setFormData] = useState<RegisterForm>({
     email: "",
     password: "",
@@ -44,6 +45,11 @@ export default function Register() {
   const [errors, setErrors] = useState<Partial<Record<keyof RegisterForm, string>>>({});
   const [showTermsDialog, setShowTermsDialog] = useState(false);
   const [showPrivacyDialog, setShowPrivacyDialog] = useState(false);
+  
+  // Redirect after successful registration
+  if (shouldRedirect) {
+    return <Redirect to="/trial-welcome" />;
+  }
 
   const registerMutation = useMutation({
     mutationFn: async (data: Omit<RegisterForm, 'confirmPassword'>) => {
@@ -59,17 +65,13 @@ export default function Register() {
       return response.json();
     },
     onSuccess: (data: any) => {
-      console.log('[REGISTER] onSuccess called, about to navigate to /trial-welcome');
-      
       toast({
         title: "Account Created!",
         description: "Welcome to ForeScore. Let's get you started!",
       });
       
-      // Navigate to trial welcome page - queries will fetch naturally there
-      console.log('[REGISTER] Calling setLocation("/trial-welcome")');
-      setLocation('/trial-welcome');
-      console.log('[REGISTER] setLocation called successfully');
+      // Trigger redirect to trial welcome page
+      setShouldRedirect(true);
     },
     onError: (error: any) => {
       toast({

@@ -209,11 +209,23 @@ const PlanCard = ({
 };
 
 export default function Subscribe() {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const { toast } = useToast();
   const [selectedPlan, setSelectedPlan] = useState<string>('annual');
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [subscriptionCreated, setSubscriptionCreated] = useState(false);
+
+  // Fetch user to check for auto-trial eligibility
+  const { data: user } = useQuery<any>({
+    queryKey: ['/api/auth/user'],
+  });
+
+  // Redirect eligible users to welcome-trial page
+  useEffect(() => {
+    if (user && user.autoTrialStatus === 'eligible' && location !== '/welcome-trial') {
+      setLocation('/welcome-trial');
+    }
+  }, [user, location, setLocation]);
 
   // Fetch subscription plans
   const { data: plans } = useQuery<SubscriptionPlans>({

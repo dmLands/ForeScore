@@ -232,7 +232,7 @@ export class StripeService {
     if (user.autoTrialStatus === 'eligible') {
       console.log(`ℹ️ User ${userId} is eligible for auto-trial (not activated)`);
       return {
-        hasAccess: true, // Grant access so they can reach welcome page
+        hasAccess: false, // No access until they activate
         subscriptionStatus: 'trial_eligible',
         reason: 'Trial eligible - needs activation'
       };

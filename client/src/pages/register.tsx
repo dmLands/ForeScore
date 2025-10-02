@@ -5,11 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { z } from "zod";
 import { Checkbox } from "@/components/ui/checkbox";
 import AppDownloadPrompt from "@/components/AppDownloadPrompt";
 import LegalDialogs from "@/components/LegalDialogs";
+import { queryClient } from "@/lib/queryClient";
 
 const registerSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -29,6 +30,7 @@ const registerSchema = z.object({
 type RegisterForm = z.infer<typeof registerSchema>;
 
 export default function Register() {
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [formData, setFormData] = useState<RegisterForm>({
     email: "",
@@ -56,14 +58,12 @@ export default function Register() {
       }
       return response.json();
     },
-    onSuccess: (data: any) => {
-      toast({
-        title: "Account Created!",
-        description: "Welcome to ForeScore. Let's get you started!",
-      });
+    onSuccess: async (data: any) => {
+      // Invalidate auth query to pick up new user
+      await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       
-      // Direct navigation to trial welcome page
-      window.location.href = '/trial-welcome';
+      // Use SPA navigation to avoid slow page reload/rebundle
+      setLocation('/trial-welcome');
     },
     onError: (error: any) => {
       toast({

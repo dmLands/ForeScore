@@ -129,25 +129,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Auto-grant 7-day trial to new users
       const trialDays = 7;
-      const trialEndsAt = new Date();
-      trialEndsAt.setDate(trialEndsAt.getDate() + trialDays);
-      
-      await storage.updateUser(user.id, {
-        manualTrialEndsAt: trialEndsAt,
-        manualTrialGrantedAt: new Date(),
-        manualTrialDays: trialDays,
-        manualTrialReason: 'Auto-granted on registration'
+      const updatedUser = await storage.grantManualTrial(user.id, {
+        grantedBy: null, // Auto-granted, not by a specific admin
+        days: trialDays,
+        reason: 'Auto-granted on registration'
       });
       
+      const trialEndsAt = new Date();
+      trialEndsAt.setDate(trialEndsAt.getDate() + trialDays);
       console.log(`✅ Auto-granted ${trialDays}-day trial to new user ${user.id} (ends ${trialEndsAt.toISOString()})`);
+      
+      // Use the updated user object with trial fields
+      const userWithTrial = updatedUser || user;
       
       // Auto-login the user after successful registration
       (req as any).user = {
         claims: {
-          sub: user.id,
-          email: user.email,
-          first_name: user.firstName,
-          last_name: user.lastName,
+          sub: userWithTrial.id,
+          email: userWithTrial.email,
+          first_name: userWithTrial.firstName,
+          last_name: userWithTrial.lastName,
         },
         expires_at: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60), // 7 days
       };
@@ -156,7 +157,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (err) {
           console.error('Auto-login failed after registration:', err);
           // Still return success but user will need to login manually
-          const { passwordHash, ...userResponse } = user;
+          const { passwordHash, ...userResponse } = userWithTrial;
           return res.status(201).json({ 
             message: "User registered successfully. Please log in.",
             user: userResponse 
@@ -164,7 +165,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // Return success - user now has trial access
-        const { passwordHash, ...userResponse } = user;
+        const { passwordHash, ...userResponse } = userWithTrial;
         res.status(201).json({ 
           message: "Account created successfully! Welcome to ForeScore.",
           user: userResponse,

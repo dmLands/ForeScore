@@ -20,7 +20,7 @@ export interface IStorage {
   updateStripeSubscription(stripeSubscriptionId: string, updates: Partial<InsertStripeSubscription>): Promise<StripeSubscription | undefined>;
   
   // Manual Trial Management
-  grantManualTrial(userId: string, data: { grantedBy: string; days: number; reason: string }): Promise<User | undefined>;
+  grantManualTrial(userId: string, data: { grantedBy: string | null; days: number; reason: string }): Promise<User | undefined>;
   revokeManualTrial(userId: string): Promise<User | undefined>;
   extendManualTrial(userId: string, additionalDays: number, reason: string): Promise<User | undefined>;
   getActiveManualTrials(): Promise<User[]>;
@@ -170,7 +170,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Manual Trial Management
-  async grantManualTrial(userId: string, data: { grantedBy: string; days: number; reason: string }): Promise<User | undefined> {
+  async grantManualTrial(userId: string, data: { grantedBy: string | null; days: number; reason: string }): Promise<User | undefined> {
     const now = new Date();
     const endsAt = new Date(now.getTime() + data.days * 24 * 60 * 60 * 1000);
     

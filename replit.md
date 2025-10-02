@@ -1,9 +1,18 @@
-# ForeScore V7.0 - Complete Stripe Subscription Integration
+# ForeScore V9.0 - Frictionless Trial Registration
 
 ## Overview
-ForeScore V7.0 is a secure, full-stack application designed as a companion for the golf penalty game "Animal." It provides enterprise-grade local authentication with complete password recovery functionality, server-side security validation, enhanced payout visualization, and now features a complete Stripe subscription system with "invisible trial" strategy. The application supports complete group management, card game mechanics utilizing a Proportional Share Algorithm, isolated 2/9/16 points games per session, and multiple payout calculation views. All game calculations are performed server-side to prevent tampering, ensuring secure user authentication, session management, and subscription access control. The project's vision is to offer a robust, reliable, and secure platform for managing golf penalty games, with ambitions to become the leading digital tool in this niche.
+ForeScore V9.0 is a secure, full-stack Progressive Web App designed as a companion for the golf penalty game "Animal." It provides enterprise-grade local authentication with complete password recovery functionality, server-side security validation, enhanced payout visualization, and now features a frictionless trial registration system with automatic 7-day trials. The application supports complete group management, card game mechanics utilizing a Proportional Share Algorithm, isolated 2/9/16 points games per session, and multiple payout calculation views. All game calculations are performed server-side to prevent tampering, ensuring secure user authentication, session management, and subscription access control. The project's vision is to offer a robust, reliable, and secure platform for managing golf penalty games, with ambitions to become the leading digital tool in this niche.
 
 ## Recent Changes
+### V9.0 (COMPLETED) - October 2025
+- **Frictionless Trial Registration**:
+  - **Automatic Trial Grant**: New users automatically receive a 7-day free trial on registration without requiring payment information upfront
+  - **Welcome Page**: Created dedicated welcome-trial page with three options: "Start Trial" (primary), "Monthly Plan", and "Annual Plan" (secondary)
+  - **Trial Countdown Banner**: Implemented countdown banner component that appears 3 days before trial expiration, showing remaining time and upgrade option
+  - **Seamless Flow**: Register → auto-grant trial → welcome page → full app access without payment friction
+  - **Manual Trial System**: Leverages existing `manualTrialEndsAt` infrastructure with `grantedBy: null` for auto-granted trials
+  - **Session Integration**: Trial users immediately get `manual_trial` subscription status with full app access
+
 ### V7.0 (COMPLETED) - September 2025
 - **Complete Stripe Subscription Integration**:
   - **Invisible Trial Strategy**: Implemented 7-day free trial with upfront payment collection but no expiration warnings or countdown timers to users

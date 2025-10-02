@@ -64,12 +64,8 @@ export default function Register() {
         description: data.message || "Account created and you're now logged in.",
       });
       
-      // Handle auto-login success - redirect based on subscription status
-      if (data.requiresSubscription) {
-        setLocation("/subscribe");
-      } else {
-        setLocation("/");
-      }
+      // Redirect to welcome page to start trial
+      setLocation("/welcome-trial");
     },
     onError: (error: any) => {
       toast({

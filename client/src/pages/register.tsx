@@ -64,8 +64,10 @@ export default function Register() {
         description: data.message || "Account created and you're now logged in.",
       });
       
-      // Use hard redirect to prevent any route guards from interfering
-      window.location.href = "/welcome-trial";
+      // Small delay to ensure session is established before redirect
+      setTimeout(() => {
+        setLocation("/welcome-trial");
+      }, 100);
     },
     onError: (error: any) => {
       toast({

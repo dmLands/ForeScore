@@ -47,7 +47,10 @@ ForeScore V7.0 is a secure, full-stack application designed as a companion for t
   - **Rules Tab Enhancement**: Restructured content with numbered green circle headers for consistent formatting throughout
 
 - **Backend Infrastructure**:
-  - **Database Cleanup System**: Added automated 61-day game cleanup endpoint (`/api/admin/cleanup-old-games`) to manage storage growth while preserving recent game data
+  - **Database Cleanup System**: Added manual cleanup endpoint (`/api/admin/cleanup-old-games`) with smart retention logic:
+    - For users with **6+ groups**: Keeps 5 most recent groups forever, deletes excess groups only if 61+ days old
+    - For users with **5 or fewer groups**: Never deletes any data, regardless of age
+    - No automatic cleanup on server startup - cleanup is manual and intentional only
   - **Clean Code Architecture**: Chose maintainable solutions over quick fixes, prioritizing long-term code health and scalability
   - **Content Hierarchy**: Consistently prioritized 2/9/16 game over card game throughout Rules and tutorial sections
 

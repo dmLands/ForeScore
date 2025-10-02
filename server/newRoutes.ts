@@ -2606,55 +2606,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   */
 
-  // Cleanup games older than 61 days
+  // Cleanup excess groups (beyond 5 most recent) that are 61+ days old
   app.post('/api/admin/cleanup-old-games', isAuthenticated, async (req, res) => {
     try {
-      console.log('Starting cleanup of games older than 61 days...');
+      console.log('Starting cleanup of excess groups older than 61 days...');
       
       // Calculate date 61 days ago
       const sixtyOneDaysAgo = new Date();
       sixtyOneDaysAgo.setDate(sixtyOneDaysAgo.getDate() - 61);
       
-      // Find old game states
-      const oldGameStates = await db
-        .select({ id: gameStates.id })
-        .from(gameStates)
-        .where(sql`${gameStates.createdAt} < ${sixtyOneDaysAgo.toISOString()}`);
+      // Find groups to delete: users with 6+ groups, delete excess groups that are 61+ days old
+      // Strategy: For each user, keep 5 most recent groups, delete older excess groups if 61+ days old
+      const groupsToDelete = await db.execute(sql`
+        WITH ranked_groups AS (
+          SELECT 
+            id,
+            created_by,
+            created_at,
+            ROW_NUMBER() OVER (
+              PARTITION BY created_by 
+              ORDER BY COALESCE(last_played, created_at) DESC
+            ) as row_num
+          FROM groups
+          WHERE created_by IS NOT NULL
+        ),
+        user_group_counts AS (
+          SELECT created_by, COUNT(*) as total_groups
+          FROM groups
+          WHERE created_by IS NOT NULL
+          GROUP BY created_by
+          HAVING COUNT(*) > 5
+        )
+        SELECT rg.id
+        FROM ranked_groups rg
+        INNER JOIN user_group_counts ugc ON rg.created_by = ugc.created_by
+        WHERE rg.row_num > 5 
+          AND rg.created_at < ${sixtyOneDaysAgo.toISOString()}
+      `);
       
-      if (oldGameStates.length === 0) {
+      if (groupsToDelete.rows.length === 0) {
         return res.json({
           success: true,
-          message: 'No games older than 61 days found',
+          message: 'No excess groups older than 61 days found for cleanup',
           cleaned: {
+            groups: 0,
             gameStates: 0,
-            pointsGames: 0,
-            roomStates: 0
+            relatedData: 0
           }
         });
       }
       
-      const gameStateIds = oldGameStates.map((gs: { id: string }) => gs.id);
-      console.log(`Found ${gameStateIds.length} game states to clean up:`, gameStateIds);
+      const groupIds = groupsToDelete.rows.map((row: any) => row.id);
+      console.log(`Found ${groupIds.length} excess groups to clean up:`, groupIds);
       
-      // Delete related room states first to avoid foreign key constraints
-      const deletedRoomStates = await db
-        .delete(roomStates)
-        .where(sql`${roomStates.gameStateId} IN (${sql.join(gameStateIds.map((id: string) => sql`${id}`), sql`, `)})`);
+      // Get associated game states for these groups
+      const gameStatesToDelete = await db
+        .select({ id: gameStates.id })
+        .from(gameStates)
+        .where(inArray(gameStates.groupId, groupIds));
       
-      // Delete old game states (this will cascade delete related points games)
-      const deletedGameStates = await db
-        .delete(gameStates)
-        .where(sql`${gameStates.id} IN (${sql.join(gameStateIds.map((id: string) => sql`${id}`), sql`, `)})`);
+      const gameStateIds = gameStatesToDelete.map(gs => gs.id);
       
-      console.log(`Cleanup completed: ${gameStateIds.length} game states and related data deleted`);
+      // Delete in correct order to respect foreign keys
+      if (gameStateIds.length > 0) {
+        // 1. Delete room states
+        await db.delete(roomStates).where(inArray(roomStates.gameStateId, gameStateIds));
+        
+        // 2. Delete combined payout results
+        await db.delete(combinedPayoutResults).where(inArray(combinedPayoutResults.gameStateId, gameStateIds));
+        
+        // 3. Delete points games
+        await db.delete(pointsGames).where(inArray(pointsGames.gameStateId, gameStateIds));
+        
+        // 4. Delete game states
+        await db.delete(gameStates).where(inArray(gameStates.id, gameStateIds));
+      }
+      
+      // 5. Delete the groups themselves
+      await db.delete(groups).where(inArray(groups.id, groupIds));
+      
+      console.log(`Cleanup completed: ${groupIds.length} groups and ${gameStateIds.length} game states deleted`);
       
       res.json({
         success: true,
-        message: `Successfully cleaned up ${gameStateIds.length} games older than 61 days`,
+        message: `Successfully cleaned up ${groupIds.length} excess groups older than 61 days`,
         cleaned: {
+          groups: groupIds.length,
           gameStates: gameStateIds.length,
-          pointsGames: gameStateIds.length, // Each game state has corresponding points games that cascade delete
-          roomStates: 0 // Room states cleaned up
+          relatedData: gameStateIds.length
         },
         cutoffDate: sixtyOneDaysAgo.toISOString()
       });

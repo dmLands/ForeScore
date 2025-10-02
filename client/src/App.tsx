@@ -1,10 +1,10 @@
-import { Switch, Route, useLocation } from "wouter";
+import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { initGA } from "./lib/analytics";
 import { useAnalytics } from "./hooks/use-analytics";
 import { TrialBanner } from "@/components/TrialBanner";
@@ -24,25 +24,8 @@ import AdminPage from "@/pages/admin";
 // Guard component that wraps Home to check subscription access
 function ProtectedHome() {
   const { isAuthenticated, hasActiveSubscription, isLoading } = useAuth();
-  const [location, setLocation] = useLocation();
-  const [checkingNewRegistration, setCheckingNewRegistration] = useState(true);
 
-  // Check for new registration flag on mount
-  useEffect(() => {
-    if (isAuthenticated && !isLoading) {
-      const isNewRegistration = localStorage.getItem('newRegistration');
-      if (isNewRegistration === 'true') {
-        localStorage.removeItem('newRegistration');
-        setLocation('/trial-welcome');
-        return;
-      }
-      setCheckingNewRegistration(false);
-    } else if (!isLoading) {
-      setCheckingNewRegistration(false);
-    }
-  }, [isAuthenticated, isLoading, setLocation]);
-
-  if (isLoading || checkingNewRegistration) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Link, useLocation } from "wouter";
 import { z } from "zod";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -58,7 +58,11 @@ export default function Register() {
       }
       return response.json();
     },
-    onSuccess: (data: any) => {
+    onSuccess: async (data: any) => {
+      // Invalidate auth and subscription queries to refresh user state
+      await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/subscription/status'] });
+      
       toast({
         title: "Welcome to ForeScore!",
         description: data.message || "Account created and you're now logged in.",

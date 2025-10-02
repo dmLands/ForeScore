@@ -63,12 +63,24 @@ export function useAuth() {
       // Normalize location to always start with /
       const normalizedLocation = location.startsWith('/') ? location : `/${location}`;
       
+      console.log('[useAuth] Location check:', { 
+        raw: location, 
+        normalized: normalizedLocation, 
+        hasAccess: hasActiveSubscription 
+      });
+      
       // Skip redirect logic for auth and subscription-related pages
       const allowedPaths = ['/subscribe', '/manage-subscription', '/login', '/register', '/forgot-password', '/reset-password'];
       const isOnAllowedPath = allowedPaths.some(path => normalizedLocation.startsWith(path));
       
+      console.log('[useAuth] Redirect check:', { 
+        isOnAllowedPath, 
+        shouldRedirect: !hasActiveSubscription && !isOnAllowedPath 
+      });
+      
       // Only redirect if we're not already on the target location to prevent loops
       if (!hasActiveSubscription && !isOnAllowedPath && normalizedLocation !== '/subscribe') {
+        console.log('[useAuth] REDIRECTING to /subscribe');
         setLocation('/subscribe');
       }
     }

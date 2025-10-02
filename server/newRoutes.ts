@@ -252,6 +252,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Auto-trial activation endpoint (V9.0)
+  app.post('/api/trial/start', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req as any).user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      // Check if user is eligible for auto-trial
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      if (user.autoTrialStatus !== 'eligible') {
+        return res.status(400).json({ 
+          message: "Trial not available", 
+          reason: user.autoTrialStatus === 'active' 
+            ? "Trial already active" 
+            : user.autoTrialStatus === 'expired' 
+            ? "Trial already used" 
+            : "Not eligible for trial"
+        });
+      }
+
+      // Activate the trial
+      const updatedUser = await storage.startAutoTrial(userId, 7);
+      if (!updatedUser) {
+        return res.status(500).json({ message: "Failed to activate trial" });
+      }
+
+      console.log(`✅ Auto-trial activated for user ${userId}, expires ${updatedUser.autoTrialEndsAt?.toISOString()}`);
+
+      res.json({
+        message: "Trial activated successfully!",
+        trialEndsAt: updatedUser.autoTrialEndsAt,
+        hasAccess: true
+      });
+    } catch (error) {
+      console.error('Error activating trial:', error);
+      res.status(500).json({ message: "Failed to activate trial" });
+    }
+  });
+
   // Subscription routes for V7.0
   app.get('/api/subscription/plans', (req, res) => {
     res.json(SUBSCRIPTION_PLANS);

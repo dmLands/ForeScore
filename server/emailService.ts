@@ -4,10 +4,11 @@ const mailService = new MailService();
 
 // Initialize SendGrid with API key (lazy initialization to ensure env vars are loaded)
 function ensureSendGridInitialized() {
-  if (!process.env.SENDGRID_API_KEY) {
-    throw new Error("SENDGRID_API_KEY environment variable must be set");
+  const apiKey = process.env.SENDGRIDPWRESET_API_KEY || process.env.SENDGRID_API_KEY;
+  if (!apiKey) {
+    throw new Error("SENDGRIDPWRESET_API_KEY or SENDGRID_API_KEY environment variable must be set");
   }
-  mailService.setApiKey(process.env.SENDGRID_API_KEY);
+  mailService.setApiKey(apiKey);
 }
 
 interface ForgotPasswordEmailParams {

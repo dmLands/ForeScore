@@ -59,17 +59,17 @@ export default function Register() {
       return response.json();
     },
     onSuccess: (data: any) => {
+      console.log('[REGISTER] onSuccess called, about to navigate to /trial-welcome');
+      
       toast({
         title: "Account Created!",
         description: "Welcome to ForeScore. Let's get you started!",
       });
       
-      // Navigate to trial welcome page immediately
+      // Navigate to trial welcome page - queries will fetch naturally there
+      console.log('[REGISTER] Calling setLocation("/trial-welcome")');
       setLocation('/trial-welcome');
-      
-      // Invalidate auth queries to pick up the new session (don't await)
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      queryClient.invalidateQueries({ queryKey: ['/api/subscription/status'] });
+      console.log('[REGISTER] setLocation called successfully');
     },
     onError: (error: any) => {
       toast({

@@ -5,10 +5,12 @@ import { CheckCircle, Sparkles, CreditCard } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function TrialWelcome() {
+  console.log('[TRIAL-WELCOME] Component rendering');
   const [, setLocation] = useLocation();
   const { user } = useAuth();
   
   const firstName = (user as any)?.firstName;
+  console.log('[TRIAL-WELCOME] User data:', user);
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">

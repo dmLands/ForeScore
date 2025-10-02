@@ -64,10 +64,8 @@ export default function Register() {
         description: data.message || "Account created and you're now logged in.",
       });
       
-      // Small delay to ensure session is established before redirect
-      setTimeout(() => {
-        setLocation("/welcome-trial");
-      }, 100);
+      // Redirect to welcome page to activate trial
+      setLocation("/welcome-trial");
     },
     onError: (error: any) => {
       toast({

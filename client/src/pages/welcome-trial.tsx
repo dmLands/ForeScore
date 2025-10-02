@@ -2,7 +2,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLocation } from "wouter";
 import { CheckCircle, Trophy, Users, Calculator } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface SubscriptionPlan {
   priceId: string;
@@ -19,14 +21,45 @@ interface SubscriptionPlans {
 
 export default function WelcomeTrial() {
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
 
   // Fetch subscription plans for pricing display
   const { data: plans } = useQuery<SubscriptionPlans>({
     queryKey: ['/api/subscription/plans'],
   });
 
+  // Mutation to activate auto-trial
+  const startTrialMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest('POST', '/api/trial/start');
+      return response;
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: "Trial Started!",
+        description: `Your 7-day free trial is now active. Enjoy full access to ForeScore!`,
+      });
+      
+      // Invalidate subscription status to reflect new trial
+      queryClient.invalidateQueries({ queryKey: ['/api/subscription/status'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      
+      // Navigate to home after short delay
+      setTimeout(() => {
+        setLocation('/');
+      }, 500);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to start trial",
+        description: error.message || "Please try again or contact support.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleStartTrial = () => {
-    setLocation('/');
+    startTrialMutation.mutate();
   };
 
   const handleSubscribe = (planKey: 'monthly' | 'annual') => {
@@ -77,10 +110,11 @@ export default function WelcomeTrial() {
           {/* Primary CTA */}
           <Button
             onClick={handleStartTrial}
+            disabled={startTrialMutation.isPending}
             className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white py-6 text-lg font-semibold"
             data-testid="button-start-trial"
           >
-            Start Using ForeScore Now
+            {startTrialMutation.isPending ? "Starting Trial..." : "Start Using ForeScore Now"}
           </Button>
 
           {/* Divider */}

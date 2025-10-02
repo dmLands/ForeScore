@@ -58,11 +58,11 @@ export default function Register() {
       }
       return response.json();
     },
-    onSuccess: async (data: any) => {
-      // Invalidate auth query to pick up new user
-      await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+    onSuccess: (data: any) => {
+      // Invalidate auth query (don't await - just trigger it)
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       
-      // Use SPA navigation to avoid slow page reload/rebundle
+      // Immediate SPA navigation
       setLocation('/trial-welcome');
     },
     onError: (error: any) => {

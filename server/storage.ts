@@ -26,6 +26,10 @@ export interface IStorage {
   getActiveManualTrials(): Promise<User[]>;
   getUsersForManualTrials(searchTerm?: string): Promise<Pick<User, 'id' | 'email' | 'firstName' | 'lastName' | 'manualTrialEndsAt'>[]>;
   
+  // Auto-Trial Management (V9.0 - Self-serve trials)
+  startAutoTrial(userId: string, days?: number): Promise<User | undefined>;
+  checkAutoTrialStatus(userId: string): Promise<{ status: 'eligible' | 'active' | 'expired' | null; endsAt?: Date }>;
+  
   // Groups
   getGroups(): Promise<Group[]>;
   getGroupsByUser(userId: string): Promise<Group[]>;
@@ -258,6 +262,52 @@ export class DatabaseStorage implements IStorage {
     }
 
     return await query.limit(20);
+  }
+
+  // Auto-Trial Management (V9.0)
+  async startAutoTrial(userId: string, days: number = 7): Promise<User | undefined> {
+    const now = new Date();
+    const endsAt = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+    
+    const [user] = await db
+      .update(users)
+      .set({
+        autoTrialStatus: 'active',
+        autoTrialActivatedAt: now,
+        autoTrialEndsAt: endsAt,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  async checkAutoTrialStatus(userId: string): Promise<{ status: 'eligible' | 'active' | 'expired' | null; endsAt?: Date }> {
+    const user = await this.getUser(userId);
+    if (!user) {
+      return { status: null };
+    }
+
+    const now = new Date();
+    
+    // If trial is active and not expired
+    if (user.autoTrialStatus === 'active' && user.autoTrialEndsAt && user.autoTrialEndsAt > now) {
+      return { status: 'active', endsAt: user.autoTrialEndsAt };
+    }
+    
+    // If trial was active but is now expired, update status
+    if (user.autoTrialStatus === 'active' && user.autoTrialEndsAt && user.autoTrialEndsAt <= now) {
+      await db
+        .update(users)
+        .set({
+          autoTrialStatus: 'expired',
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId));
+      return { status: 'expired', endsAt: user.autoTrialEndsAt };
+    }
+    
+    return { status: user.autoTrialStatus as 'eligible' | 'active' | 'expired' | null };
   }
   
   // DISABLED: Automatic cleanup removed - use manual /api/admin/cleanup-old-games endpoint instead

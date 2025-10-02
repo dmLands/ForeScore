@@ -9,6 +9,7 @@ import { useLocation } from "wouter";
 import { useStripe, Elements, PaymentElement, useElements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import { CheckCircle, Clock, CreditCard, Users, Calculator, Trophy } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 // Load Stripe
 if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
@@ -29,9 +30,10 @@ interface SubscriptionPlans {
   annual: SubscriptionPlan;
 }
 
-const SubscribeForm = ({ selectedPlan, onSubscriptionComplete }: { 
+const SubscribeForm = ({ selectedPlan, onSubscriptionComplete, hasExpiredTrial }: { 
   selectedPlan: string; 
   onSubscriptionComplete: () => void;
+  hasExpiredTrial?: boolean;
 }) => {
   const stripe = useStripe();
   const elements = useElements();
@@ -104,17 +106,19 @@ const SubscribeForm = ({ selectedPlan, onSubscriptionComplete }: {
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-gray-900">Payment Information</h3>
-        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-          <div className="flex items-center space-x-2">
-            <Clock className="h-5 w-5 text-blue-600" />
-            <p className="text-sm text-blue-800">
-              <strong>Start your trial now!</strong> No charge for 7 days.
+        {!hasExpiredTrial && (
+          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <div className="flex items-center space-x-2">
+              <Clock className="h-5 w-5 text-blue-600" />
+              <p className="text-sm text-blue-800">
+                <strong>Start your trial now!</strong> No charge for 7 days.
+              </p>
+            </div>
+            <p className="text-xs text-blue-600 mt-1">
+              Full access to all features included.
             </p>
           </div>
-          <p className="text-xs text-blue-600 mt-1">
-            Full access to all features included.
-          </p>
-        </div>
+        )}
         <PaymentElement 
           options={{
             fields: {
@@ -211,9 +215,13 @@ const PlanCard = ({
 export default function Subscribe() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { subscriptionAccess } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState<string>('annual');
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [subscriptionCreated, setSubscriptionCreated] = useState(false);
+
+  // Check if user had a trial that expired
+  const hasExpiredTrial = !!(subscriptionAccess?.trialEndsAt && new Date(subscriptionAccess.trialEndsAt) < new Date());
 
   // Fetch subscription plans
   const { data: plans } = useQuery<SubscriptionPlans>({
@@ -277,7 +285,10 @@ export default function Subscribe() {
               </div>
               <CardTitle className="text-2xl">Complete Your Setup</CardTitle>
               <CardDescription>
-                Add your payment method to activate your 7-day free trial
+                {hasExpiredTrial 
+                  ? 'Add your payment method to continue using ForeScore'
+                  : 'Add your payment method to activate your 7-day free trial'
+                }
               </CardDescription>
             </CardHeader>
             
@@ -297,6 +308,7 @@ export default function Subscribe() {
                 <SubscribeForm 
                   selectedPlan={selectedPlan} 
                   onSubscriptionComplete={handleSubscriptionComplete}
+                  hasExpiredTrial={hasExpiredTrial}
                 />
               </Elements>
             </CardContent>
@@ -312,9 +324,14 @@ export default function Subscribe() {
       <div className="bg-white shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-900">🏌️ Join Forescore</h1>
+            <h1 className="text-3xl font-bold text-gray-900">
+              {hasExpiredTrial ? '🏌️ Continue with ForeScore' : '🏌️ Join ForeScore'}
+            </h1>
             <p className="mt-2 text-lg text-gray-600">
-              You hit the shots, we do the math
+              {hasExpiredTrial 
+                ? 'Your trial has ended. Subscribe to keep your data and continue playing!'
+                : 'You hit the shots, we do the math'
+              }
             </p>
           </div>
         </div>

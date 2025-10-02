@@ -5,10 +5,12 @@ import { CheckCircle, Sparkles, CreditCard } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function TrialWelcome() {
+  console.log('[TRIAL-WELCOME] Component rendering');
   const [, setLocation] = useLocation();
   const { user } = useAuth();
   
   const firstName = (user as any)?.firstName;
+  console.log('[TRIAL-WELCOME] User data:', user);
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -76,25 +78,15 @@ export default function TrialWelcome() {
               onClick={() => setLocation('/subscribe')}
               variant="outline"
               className="w-full py-6 text-lg border-2 border-gray-300 hover:border-green-600 hover:bg-green-50"
-              data-testid="button-subscribe-monthly"
+              data-testid="button-subscribe-now"
             >
               <CreditCard className="mr-2 h-5 w-5" />
-              Subscribe Monthly ($1.99/month)
-            </Button>
-            
-            <Button 
-              onClick={() => setLocation('/subscribe')}
-              variant="outline"
-              className="w-full py-6 text-lg border-2 border-gray-300 hover:border-green-600 hover:bg-green-50"
-              data-testid="button-subscribe-annual"
-            >
-              <CreditCard className="mr-2 h-5 w-5" />
-              Subscribe Annually ($16.99/year)
+              Subscribe Now ($1.99/month)
             </Button>
           </div>
 
           <p className="text-center text-sm text-gray-500">
-            After your trial ends, subscribe to keep your data and continue playing
+            After your trial ends, subscribe for just $1.99/month to keep your data and continue playing
           </p>
         </CardContent>
       </Card>

@@ -14,6 +14,7 @@ import Login from "@/pages/login";
 import Register from "@/pages/register";
 import ForgotPassword from "@/pages/forgot-password";
 import ResetPassword from "@/pages/reset-password";
+import TrialWelcome from "@/pages/trial-welcome";
 import Subscribe from "@/pages/subscribe";
 import ManageSubscription from "@/pages/manage-subscription";
 import EmailPreferences from "@/pages/email-preferences";
@@ -56,6 +57,7 @@ function Router() {
       <Route path="/admin" component={AdminPage} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
+      <Route path="/trial-welcome" component={TrialWelcome} />
       <Route path="/subscribe" component={Subscribe} />
       <Route path="/manage-subscription" component={ManageSubscription} />
       <Route path="/email-preferences" component={EmailPreferences} />

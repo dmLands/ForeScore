@@ -60,16 +60,12 @@ export default function Register() {
     },
     onSuccess: (data: any) => {
       toast({
-        title: "Welcome to ForeScore!",
-        description: data.message || "Account created and you're now logged in.",
+        title: "Account Created!",
+        description: "Welcome to ForeScore. Let's get you started!",
       });
       
-      // Handle auto-login success - redirect based on subscription status
-      if (data.requiresSubscription) {
-        setLocation("/subscribe");
-      } else {
-        setLocation("/");
-      }
+      // Redirect to trial welcome page to show trial info
+      setLocation("/trial-welcome");
     },
     onError: (error: any) => {
       toast({

@@ -40,6 +40,10 @@ export const users = pgTable("users", {
   manualTrialEndsAt: timestamp("manual_trial_ends_at"),
   manualTrialDays: integer("manual_trial_days"),
   manualTrialReason: text("manual_trial_reason"),
+  // Auto-trial fields for self-serve registration (V9.0)
+  autoTrialStatus: varchar("auto_trial_status").$type<'eligible' | 'active' | 'expired' | null>(),
+  autoTrialActivatedAt: timestamp("auto_trial_activated_at"),
+  autoTrialEndsAt: timestamp("auto_trial_ends_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

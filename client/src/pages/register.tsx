@@ -5,8 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
-import { queryClient } from "@/lib/queryClient";
-import { Link, useLocation, Redirect } from "wouter";
+import { Link } from "wouter";
 import { z } from "zod";
 import { Checkbox } from "@/components/ui/checkbox";
 import AppDownloadPrompt from "@/components/AppDownloadPrompt";
@@ -30,9 +29,7 @@ const registerSchema = z.object({
 type RegisterForm = z.infer<typeof registerSchema>;
 
 export default function Register() {
-  const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const [shouldRedirect, setShouldRedirect] = useState(false);
   const [formData, setFormData] = useState<RegisterForm>({
     email: "",
     password: "",
@@ -45,11 +42,6 @@ export default function Register() {
   const [errors, setErrors] = useState<Partial<Record<keyof RegisterForm, string>>>({});
   const [showTermsDialog, setShowTermsDialog] = useState(false);
   const [showPrivacyDialog, setShowPrivacyDialog] = useState(false);
-  
-  // Redirect after successful registration
-  if (shouldRedirect) {
-    return <Redirect to="/trial-welcome" />;
-  }
 
   const registerMutation = useMutation({
     mutationFn: async (data: Omit<RegisterForm, 'confirmPassword'>) => {
@@ -70,8 +62,8 @@ export default function Register() {
         description: "Welcome to ForeScore. Let's get you started!",
       });
       
-      // Trigger redirect to trial welcome page
-      setShouldRedirect(true);
+      // Direct navigation to trial welcome page
+      window.location.href = '/trial-welcome';
     },
     onError: (error: any) => {
       toast({

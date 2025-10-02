@@ -64,11 +64,8 @@ export function useAuth() {
       const allowedPaths = ['/subscribe', '/manage-subscription', '/trial-welcome'];
       const isOnAllowedPath = allowedPaths.some(path => location.startsWith(path));
       
-      console.log('[useAuth] Redirect check:', { location, hasActiveSubscription, isOnAllowedPath });
-      
       // Only redirect if we're not already on the target location to prevent loops
       if (!hasActiveSubscription && !isOnAllowedPath && location !== '/subscribe') {
-        console.log('[useAuth] Redirecting to /subscribe');
         setLocation('/subscribe');
       }
     }

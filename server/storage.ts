@@ -1,6 +1,6 @@
 import { users, groups, gameStates, pointsGames, roomStates, combinedPayoutResults, stripeSubscriptions, type User, type UpsertUser, type Group, type InsertGroup, type GameState, type InsertGameState, type Player, type Card, type CustomCard, type CardAssignment, type CardValues, type PointsGame, type InsertPointsGame, type RoomState, type InsertRoomState, type CombinedPayoutResult, type InsertCombinedPayoutResult, type StripeSubscription, type InsertStripeSubscription } from "@shared/schema";
 import { db } from "./db";
-import { eq, sql, lt, and } from "drizzle-orm";
+import { eq, sql, lt, and, inArray } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -265,16 +265,48 @@ export class DatabaseStorage implements IStorage {
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     
     try {
-      // Delete old points games first (foreign key constraint)
-      await db.delete(pointsGames).where(lt(pointsGames.createdAt, sevenDaysAgo));
+      // Relationship-driven cleanup to avoid foreign key violations
+      // Strategy: Only delete groups where ALL associated gameStates are also old
       
-      // Delete old game states
-      await db.delete(gameStates).where(lt(gameStates.createdAt, sevenDaysAgo));
+      // Step 1: Find old gameStates (candidates for deletion)
+      const oldGameStates = await db
+        .select({ id: gameStates.id, groupId: gameStates.groupId })
+        .from(gameStates)
+        .where(lt(gameStates.createdAt, sevenDaysAgo));
       
-      // Delete old groups  
-      await db.delete(groups).where(lt(groups.createdAt, sevenDaysAgo));
+      const oldGameStateIds = oldGameStates.map(gs => gs.id);
       
-      console.log('Cleaned up data older than 7 days');
+      if (oldGameStateIds.length > 0) {
+        // Step 2: Delete child tables that reference gameStates (have cascade)
+        await db.delete(combinedPayoutResults).where(inArray(combinedPayoutResults.gameStateId, oldGameStateIds));
+        await db.delete(pointsGames).where(inArray(pointsGames.gameStateId, oldGameStateIds));
+        
+        // Step 3: Delete the old gameStates themselves
+        await db.delete(gameStates).where(inArray(gameStates.id, oldGameStateIds));
+      }
+      
+      // Step 4: Find groups that are old AND have no remaining gameStates
+      const oldGroupsWithNoGameStates = await db
+        .select({ id: groups.id })
+        .from(groups)
+        .leftJoin(gameStates, eq(groups.id, gameStates.groupId))
+        .where(and(
+          lt(groups.createdAt, sevenDaysAgo),
+          sql`${gameStates.id} IS NULL` // No gameStates exist for this group
+        ));
+      
+      const eligibleGroupIds = oldGroupsWithNoGameStates.map(g => g.id);
+      
+      if (eligibleGroupIds.length > 0) {
+        // Step 5: Delete orphaned child tables for these groups
+        await db.delete(combinedPayoutResults).where(inArray(combinedPayoutResults.groupId, eligibleGroupIds));
+        await db.delete(pointsGames).where(inArray(pointsGames.groupId, eligibleGroupIds));
+        
+        // Step 6: Finally delete the eligible groups
+        await db.delete(groups).where(inArray(groups.id, eligibleGroupIds));
+      }
+      
+      console.log(`Cleaned up data older than 7 days: ${oldGameStateIds.length} gameStates, ${eligibleGroupIds.length} groups`);
     } catch (error) {
       console.error('Error cleaning up old data:', error);
       // Continue without failing the app

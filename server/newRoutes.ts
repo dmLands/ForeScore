@@ -127,6 +127,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = registerSchema.parse(req.body);
       const user = await registerUser(validatedData);
       
+      // Auto-grant 7-day trial to new users
+      const trialDays = 7;
+      const trialEndsAt = new Date();
+      trialEndsAt.setDate(trialEndsAt.getDate() + trialDays);
+      
+      await storage.updateUser(user.id, {
+        manualTrialEndsAt: trialEndsAt,
+        manualTrialGrantedAt: new Date(),
+        manualTrialDays: trialDays,
+        manualTrialReason: 'Auto-granted on registration'
+      });
+      
+      console.log(`✅ Auto-granted ${trialDays}-day trial to new user ${user.id} (ends ${trialEndsAt.toISOString()})`);
+      
       // Auto-login the user after successful registration
       (req as any).user = {
         claims: {
@@ -149,26 +163,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
         
-        // Check subscription status after successful registration and login
-        try {
-          const accessInfo = await stripeService.hasAccess(user.id);
-          
-          // Return user data with subscription info for frontend routing
-          const { passwordHash, ...userResponse } = user;
-          res.status(201).json({ 
-            message: "Account created successfully! Welcome to ForeScore.",
-            user: userResponse,
-            requiresSubscription: !accessInfo.hasAccess
-          });
-        } catch (error) {
-          console.error('Error checking subscription during registration:', error);
-          // Still allow auto-login but let middleware handle subscription later
-          const { passwordHash, ...userResponse } = user;
-          res.status(201).json({ 
-            message: "Account created successfully! Welcome to ForeScore.",
-            user: userResponse 
-          });
-        }
+        // Return success - user now has trial access
+        const { passwordHash, ...userResponse } = user;
+        res.status(201).json({ 
+          message: "Account created successfully! Welcome to ForeScore.",
+          user: userResponse,
+          hasTrialAccess: true,
+          trialEndsAt: trialEndsAt.toISOString()
+        });
       });
     } catch (error) {
       if (error instanceof z.ZodError) {

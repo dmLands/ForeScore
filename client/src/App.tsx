@@ -23,14 +23,6 @@ import AdminPage from "@/pages/admin";
 // Guard component that wraps Home to check subscription access
 function ProtectedHome() {
   const { isAuthenticated, hasActiveSubscription, isLoading, user } = useAuth();
-  const [location, setLocation] = useLocation();
-
-  // Redirect eligible users to welcome-trial page (unless already there)
-  useEffect(() => {
-    if (user && (user as any).autoTrialStatus === 'eligible' && location !== '/welcome-trial') {
-      setLocation('/welcome-trial');
-    }
-  }, [user, location, setLocation]);
 
   if (isLoading) {
     return (
@@ -45,6 +37,11 @@ function ProtectedHome() {
 
   if (!isAuthenticated) {
     return <Landing />;
+  }
+
+  // If user is new (eligible for trial), show welcome page
+  if (user && (user as any).autoTrialStatus === 'eligible') {
+    return <WelcomeTrial />;
   }
 
   if (!hasActiveSubscription) {

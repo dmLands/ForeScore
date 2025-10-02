@@ -67,8 +67,8 @@ export default function Register() {
       // Invalidate auth query so user data is fresh
       await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
       
-      // Redirect to welcome page
-      setLocation("/welcome-trial");
+      // Redirect to home - ProtectedHome will show welcome page for new users
+      setLocation("/");
     },
     onError: (error: any) => {
       toast({

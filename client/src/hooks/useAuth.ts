@@ -56,35 +56,7 @@ export function useAuth() {
   const hasActiveSubscription = subscriptionAccess?.hasAccess ?? false;
   const hasSubscriptionData = !!subscriptionAccess && !subscriptionError;
 
-  // Redirect logic for authenticated users without active subscriptions
-  useEffect(() => {
-    // Only redirect if we have subscription data (no error) and user doesn't have access
-    if (!isLoading && isAuthenticated && hasSubscriptionData) {
-      // Normalize location to always start with /
-      const normalizedLocation = location.startsWith('/') ? location : `/${location}`;
-      
-      console.log('[useAuth] Location check:', { 
-        raw: location, 
-        normalized: normalizedLocation, 
-        hasAccess: hasActiveSubscription 
-      });
-      
-      // Skip redirect logic for auth and subscription-related pages
-      const allowedPaths = ['/subscribe', '/manage-subscription', '/login', '/register', '/forgot-password', '/reset-password'];
-      const isOnAllowedPath = allowedPaths.some(path => normalizedLocation.startsWith(path));
-      
-      console.log('[useAuth] Redirect check:', { 
-        isOnAllowedPath, 
-        shouldRedirect: !hasActiveSubscription && !isOnAllowedPath 
-      });
-      
-      // Only redirect if we're not already on the target location to prevent loops
-      if (!hasActiveSubscription && !isOnAllowedPath && normalizedLocation !== '/subscribe') {
-        console.log('[useAuth] REDIRECTING to /subscribe');
-        setLocation('/subscribe');
-      }
-    }
-  }, [isLoading, isAuthenticated, hasActiveSubscription, hasSubscriptionData, location, setLocation]);
+  // No redirect logic here - let route guards handle it to prevent loops
 
   return {
     user,

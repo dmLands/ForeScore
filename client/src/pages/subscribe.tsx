@@ -364,11 +364,7 @@ export default function Subscribe() {
             <p className="text-sm text-gray-600">
               Already have an account?{" "}
               <button
-                onClick={() => {
-                  console.log('[Subscribe] Attempting to navigate to /login');
-                  setLocation('/login');
-                  console.log('[Subscribe] setLocation called');
-                }}
+                onClick={() => setLocation('/login')}
                 className="text-green-600 hover:text-green-700 font-medium underline"
                 data-testid="link-existing-login"
               >

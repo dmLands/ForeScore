@@ -58,18 +58,18 @@ export default function Register() {
       }
       return response.json();
     },
-    onSuccess: async (data: any) => {
+    onSuccess: (data: any) => {
       toast({
         title: "Account Created!",
         description: "Welcome to ForeScore. Let's get you started!",
       });
       
-      // Invalidate auth queries to pick up the new session
-      await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      await queryClient.invalidateQueries({ queryKey: ['/api/subscription/status'] });
-      
-      // Navigate to trial welcome page using SPA navigation
+      // Navigate to trial welcome page immediately
       setLocation('/trial-welcome');
+      
+      // Invalidate auth queries to pick up the new session (don't await)
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/subscription/status'] });
     },
     onError: (error: any) => {
       toast({

@@ -16,6 +16,7 @@ import { BottomNavigation } from "@/components/bottom-navigation";
 import { Tutorial } from "@/components/tutorial";
 import AppDownloadPrompt from "@/components/AppDownloadPrompt";
 import OfflineIndicator from "@/components/OfflineIndicator";
+import TrialCountdownBanner from "@/components/TrialCountdownBanner";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useGameState } from "@/hooks/use-game-state";
@@ -1558,6 +1559,9 @@ export default function Home() {
 
   return (
     <div className="max-w-md mx-auto bg-white min-h-screen shadow-lg">
+      {/* Trial Countdown Banner */}
+      <TrialCountdownBanner />
+      
       {/* Header */}
       <header className="bg-emerald-600 text-white p-4 shadow-md">
         <div className="flex items-center justify-between">

@@ -59,17 +59,13 @@ export default function Register() {
       return response.json();
     },
     onSuccess: async (data: any) => {
-      // Invalidate auth and subscription queries to refresh user state
-      await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-      await queryClient.invalidateQueries({ queryKey: ['/api/subscription/status'] });
-      
       toast({
         title: "Welcome to ForeScore!",
         description: data.message || "Account created and you're now logged in.",
       });
       
-      // Redirect to welcome page to start trial
-      setLocation("/welcome-trial");
+      // Use hard redirect to prevent any route guards from interfering
+      window.location.href = "/welcome-trial";
     },
     onError: (error: any) => {
       toast({

@@ -59,13 +59,16 @@ export default function Register() {
       return response.json();
     },
     onSuccess: (data: any) => {
+      // Mark this as a new registration
+      localStorage.setItem('newRegistration', 'true');
+      
       toast({
         title: "Account Created!",
         description: "Welcome to ForeScore. Let's get you started!",
       });
       
-      // Redirect to trial welcome page to show trial info
-      setLocation("/trial-welcome");
+      // Redirect to home, which will check for newRegistration flag
+      window.location.href = '/';
     },
     onError: (error: any) => {
       toast({

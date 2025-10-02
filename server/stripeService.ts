@@ -210,7 +210,25 @@ export class StripeService {
       }
     }
     
-    // SECOND PRIORITY: Get canonical subscription data from our database (webhook-synced)
+    // SECOND PRIORITY: Check for active auto-trial (self-serve registration)
+    if (user.autoTrialStatus === 'active' && user.autoTrialEndsAt) {
+      const now = new Date();
+      const autoTrialEnd = new Date(user.autoTrialEndsAt);
+      if (now < autoTrialEnd) {
+        console.log(`✅ User ${userId} has access: Auto-trial (ends ${autoTrialEnd}, self-serve)`);
+        return { 
+          hasAccess: true, 
+          trialEndsAt: autoTrialEnd, 
+          subscriptionStatus: 'auto_trial'
+        };
+      } else {
+        console.log(`❌ User ${userId} auto-trial expired (ended ${autoTrialEnd})`);
+        // Update status to expired
+        await storage.checkAutoTrialStatus(userId); // This will update the status
+      }
+    }
+    
+    // THIRD PRIORITY: Get canonical subscription data from our database (webhook-synced)
     const subscription = await storage.getStripeSubscription(userId);
     
     if (!subscription) {

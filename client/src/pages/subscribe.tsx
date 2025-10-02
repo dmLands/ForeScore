@@ -73,8 +73,10 @@ const SubscribeForm = ({ selectedPlan, onSubscriptionComplete, hasExpiredTrial }
           }
           
           toast({
-            title: "Trial Started!",
-            description: "Your 7-day free trial has begun. Enjoy ForeScore!",
+            title: hasExpiredTrial ? "Subscription Active!" : "Trial Started!",
+            description: hasExpiredTrial 
+              ? "Welcome back! Your subscription is now active." 
+              : "Your 7-day free trial has begun. Enjoy ForeScore!",
           });
           onSubscriptionComplete();
         } catch (error) {
@@ -139,7 +141,10 @@ const SubscribeForm = ({ selectedPlan, onSubscriptionComplete, hasExpiredTrial }
         disabled={!stripe || isLoading}
         data-testid="button-start-trial"
       >
-        {isLoading ? "Starting Trial..." : "Start 7-Day Free Trial"}
+        {isLoading 
+          ? (hasExpiredTrial ? "Processing..." : "Starting Trial...") 
+          : (hasExpiredTrial ? "Subscribe Now" : "Start 7-Day Free Trial")
+        }
       </Button>
     </form>
   );
@@ -150,12 +155,14 @@ const PlanCard = ({
   plan, 
   isSelected, 
   onSelect, 
-  isPopular = false 
+  isPopular = false,
+  hasExpiredTrial = false
 }: { 
   planKey: string; 
   plan: SubscriptionPlan; 
   isSelected: boolean; 
   onSelect: (planKey: string) => void;
+  hasExpiredTrial?: boolean;
   isPopular?: boolean;
 }) => {
   const monthlyPrice = plan.amount / 100;
@@ -199,10 +206,12 @@ const PlanCard = ({
       
       <CardContent className="pt-0">
         <div className="text-center">
-          <div className="flex items-center justify-center space-x-1 mb-2">
-            <Clock className="h-3 w-3 text-blue-600" />
-            <span className="text-xs font-medium text-blue-600">7-day trial</span>
-          </div>
+          {!hasExpiredTrial && (
+            <div className="flex items-center justify-center space-x-1 mb-2">
+              <Clock className="h-3 w-3 text-blue-600" />
+              <span className="text-xs font-medium text-blue-600">7-day trial</span>
+            </div>
+          )}
           <div className="text-xs text-gray-500">
             All features included
           </div>
@@ -347,6 +356,7 @@ export default function Subscribe() {
                 plan={plans.monthly}
                 isSelected={selectedPlan === 'monthly'}
                 onSelect={setSelectedPlan}
+                hasExpiredTrial={hasExpiredTrial}
               />
               <PlanCard
                 planKey="annual"
@@ -354,6 +364,7 @@ export default function Subscribe() {
                 isSelected={selectedPlan === 'annual'}
                 onSelect={setSelectedPlan}
                 isPopular={true}
+                hasExpiredTrial={hasExpiredTrial}
               />
             </>
           )}
@@ -368,8 +379,8 @@ export default function Subscribe() {
             data-testid="button-select-plan"
           >
             {createSubscriptionMutation.isPending 
-              ? "Setting up trial..." 
-              : "Start 7-Day Free Trial"
+              ? (hasExpiredTrial ? "Processing..." : "Setting up trial...")
+              : (hasExpiredTrial ? "Subscribe Now" : "Start 7-Day Free Trial")
             }
           </Button>
           

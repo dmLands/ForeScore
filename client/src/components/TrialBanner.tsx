@@ -25,7 +25,9 @@ export function TrialBanner() {
   const trialEnd = new Date(trialEndsAt);
   const daysLeft = Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
-  if (daysLeft > 3 || daysLeft < 0) {
+  // Only show banner on last 3 days of trial (1-3 days left)
+  // Don't show when expired (0 or negative) - user will be redirected to /subscribe
+  if (daysLeft > 3 || daysLeft <= 0) {
     return null;
   }
 

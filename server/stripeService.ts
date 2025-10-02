@@ -228,6 +228,16 @@ export class StripeService {
       }
     }
     
+    // Check if user is eligible for auto-trial (not activated yet)
+    if (user.autoTrialStatus === 'eligible') {
+      console.log(`ℹ️ User ${userId} is eligible for auto-trial (not activated)`);
+      return {
+        hasAccess: true, // Grant access so they can reach welcome page
+        subscriptionStatus: 'trial_eligible',
+        reason: 'Trial eligible - needs activation'
+      };
+    }
+    
     // THIRD PRIORITY: Get canonical subscription data from our database (webhook-synced)
     const subscription = await storage.getStripeSubscription(userId);
     

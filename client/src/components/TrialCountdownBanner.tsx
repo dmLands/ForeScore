@@ -47,11 +47,14 @@ export default function TrialCountdownBanner() {
 
   // Don't show banner if:
   // 1. No trial end date
-  // 2. Not in trial status
+  // 2. Not in trial status (manual or auto)
   // 3. Banner was dismissed
   // 4. More than 3 days remaining
+  const isTrialUser = subscriptionAccess?.subscriptionStatus === 'manual_trial' || 
+                      subscriptionAccess?.subscriptionStatus === 'auto_trial';
+  
   if (!subscriptionAccess?.trialEndsAt || 
-      subscriptionAccess?.subscriptionStatus !== 'manual_trial' ||
+      !isTrialUser ||
       dismissed) {
     return null;
   }

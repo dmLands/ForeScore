@@ -1,11 +1,14 @@
 import { MailService } from '@sendgrid/mail';
 
-if (!process.env.SENDGRID_API_KEY) {
-  throw new Error("SENDGRID_API_KEY environment variable must be set");
-}
-
 const mailService = new MailService();
-mailService.setApiKey(process.env.SENDGRID_API_KEY);
+
+// Initialize SendGrid with API key (lazy initialization to ensure env vars are loaded)
+function ensureSendGridInitialized() {
+  if (!process.env.SENDGRID_API_KEY) {
+    throw new Error("SENDGRID_API_KEY environment variable must be set");
+  }
+  mailService.setApiKey(process.env.SENDGRID_API_KEY);
+}
 
 interface ForgotPasswordEmailParams {
   to: string;
@@ -16,11 +19,25 @@ interface ForgotPasswordEmailParams {
 export async function sendForgotPasswordEmail(params: ForgotPasswordEmailParams): Promise<boolean> {
   const { to, firstName, loginLink } = params;
   
+  // Ensure SendGrid is initialized
+  ensureSendGridInitialized();
+  
+  // Validate environment variables
+  if (!process.env.SENDGRID_FROM_EMAIL) {
+    console.error('SENDGRID_FROM_EMAIL environment variable is not set');
+    return false;
+  }
+  
+  const fromEmail = process.env.SENDGRID_FROM_EMAIL;
+  const fromName = process.env.SENDGRID_FROM_NAME || 'ForeScore Support';
+  
+  console.log(`Attempting to send password reset email to ${to} from ${fromEmail}`);
+  
   const emailContent = {
       to,
       from: {
-        email: process.env.SENDGRID_FROM_EMAIL || 'support@forescore.xyz',
-        name: process.env.SENDGRID_FROM_NAME || 'ForeScore Support'
+        email: fromEmail,
+        name: fromName
       },
       subject: 'Reset Your ForeScore Password',
       html: `

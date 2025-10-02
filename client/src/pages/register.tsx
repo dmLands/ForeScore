@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
 import { Link, useLocation } from "wouter";
 import { z } from "zod";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -58,17 +58,18 @@ export default function Register() {
       }
       return response.json();
     },
-    onSuccess: (data: any) => {
-      // Mark this as a new registration
-      localStorage.setItem('newRegistration', 'true');
-      
+    onSuccess: async (data: any) => {
       toast({
         title: "Account Created!",
         description: "Welcome to ForeScore. Let's get you started!",
       });
       
-      // Redirect to home, which will check for newRegistration flag
-      window.location.href = '/';
+      // Invalidate auth queries to pick up the new session
+      await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/subscription/status'] });
+      
+      // Navigate to trial welcome page using SPA navigation
+      setLocation('/trial-welcome');
     },
     onError: (error: any) => {
       toast({

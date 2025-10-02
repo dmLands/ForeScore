@@ -64,7 +64,10 @@ export default function Register() {
         description: data.message || "Account created and you're now logged in.",
       });
       
-      // Redirect to welcome page to activate trial
+      // Invalidate auth query so user data is fresh
+      await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      
+      // Redirect to welcome page
       setLocation("/welcome-trial");
     },
     onError: (error: any) => {

@@ -25,6 +25,13 @@ function ProtectedHome() {
   const { isAuthenticated, hasActiveSubscription, isLoading, user } = useAuth();
   const [, setLocation] = useLocation();
 
+  // Redirect eligible users to welcome-trial page
+  useEffect(() => {
+    if (user && (user as any).autoTrialStatus === 'eligible') {
+      setLocation('/welcome-trial');
+    }
+  }, [user, setLocation]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -38,19 +45,6 @@ function ProtectedHome() {
 
   if (!isAuthenticated) {
     return <Landing />;
-  }
-
-  // Check if user is eligible for auto-trial and redirect to welcome page
-  if (user && (user as any).autoTrialStatus === 'eligible') {
-    setLocation('/welcome-trial');
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
   }
 
   if (!hasActiveSubscription) {

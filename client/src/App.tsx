@@ -40,9 +40,13 @@ function ProtectedHome() {
   }
 
   // If user is new (eligible for trial), show welcome page
+  console.log('🔍 ProtectedHome - user:', user);
+  console.log('🔍 ProtectedHome - autoTrialStatus:', (user as any)?.autoTrialStatus);
   if (user && (user as any).autoTrialStatus === 'eligible') {
+    console.log('✅ ProtectedHome - Rendering WelcomeTrial');
     return <WelcomeTrial />;
   }
+  console.log('❌ ProtectedHome - NOT rendering WelcomeTrial, showing subscribe or home');
 
   if (!hasActiveSubscription) {
     return <Subscribe />;

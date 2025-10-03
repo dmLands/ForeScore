@@ -702,6 +702,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Return user without password hash
       const { passwordHash, ...userData } = fullUser;
+      console.log(`📤 /api/auth/user returning autoTrialStatus: ${userData.autoTrialStatus}`);
       res.json(userData);
     } catch (error) {
       console.error("Error fetching user:", error);

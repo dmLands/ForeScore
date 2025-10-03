@@ -152,7 +152,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       req.login((req as any).user, async (err) => {
         if (err) {
-          console.error('Auto-login failed after registration:', err);
+          console.error('❌ Auto-login failed after registration:', err);
           // Still return success but user will need to login manually
           const { passwordHash, ...userResponse } = updatedUser;
           return res.status(201).json({ 
@@ -160,6 +160,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             user: userResponse 
           });
         }
+        
+        console.log(`✅ Auto-login successful for user ${updatedUser.id}, session created`);
+        console.log(`📤 Returning user with autoTrialStatus: ${updatedUser.autoTrialStatus}`);
         
         // Return success - user is eligible for trial but hasn't activated it yet
         const { passwordHash, ...userResponse } = updatedUser;

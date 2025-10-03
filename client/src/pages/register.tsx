@@ -58,20 +58,17 @@ export default function Register() {
       }
       return response.json();
     },
-    onSuccess: async (data: any) => {
+    onSuccess: (data: any) => {
       toast({
         title: "Welcome to ForeScore!",
         description: data.message || "Account created and you're now logged in.",
       });
       
-      // Invalidate and refetch user data
-      await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-      await queryClient.refetchQueries({ queryKey: ['/api/auth/user'] });
+      // Directly update the user cache with fresh data from registration response
+      queryClient.setQueryData(['/api/auth/user'], data.user);
       
-      // Small delay to ensure query completes
-      setTimeout(() => {
-        setLocation("/");
-      }, 100);
+      // Navigate to home - ProtectedHome will render WelcomeTrial for new users
+      setLocation("/");
     },
     onError: (error: any) => {
       toast({

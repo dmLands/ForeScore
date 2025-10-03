@@ -35,7 +35,7 @@ export function useAuth() {
     queryKey: ["/api/auth/user"],
     retry: false,
     refetchOnWindowFocus: false,
-    refetchOnMount: true,
+    refetchOnMount: false, // Don't refetch on mount - use cached data
     refetchOnReconnect: false,
     staleTime: Infinity, // Cache forever until manually invalidated
   });

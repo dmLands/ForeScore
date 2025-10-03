@@ -686,14 +686,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get current user endpoint
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      // Extract user data from the session (set during login)
-      const userData = req.user.claims ? {
-        id: req.user.claims.sub,
-        email: req.user.claims.email,
-        firstName: req.user.claims.first_name,
-        lastName: req.user.claims.last_name
-      } : req.user;
+      // Get user ID from session
+      const userId = req.user.claims?.sub || req.user.id;
       
+      // Fetch full user from database to include autoTrialStatus
+      const [fullUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+      
+      if (!fullUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Return user without password hash
+      const { passwordHash, ...userData } = fullUser;
       res.json(userData);
     } catch (error) {
       console.error("Error fetching user:", error);

@@ -41,19 +41,7 @@ function ProtectedHome() {
 
   // If user is new (eligible for trial), show welcome page
   const autoTrialStatus = (user as any)?.autoTrialStatus;
-  
-  // Debug logging
-  if (user) {
-    const debugInfo = {
-      id: (user as any).id?.substring(0, 8),
-      autoTrialStatus,
-      allKeys: Object.keys(user)
-    };
-    console.log('🔍 ProtectedHome user check:', JSON.stringify(debugInfo, null, 2));
-  }
-  
   if (user && autoTrialStatus === 'eligible') {
-    console.log('✅ MATCH! Rendering WelcomeTrial');
     return <WelcomeTrial />;
   }
 

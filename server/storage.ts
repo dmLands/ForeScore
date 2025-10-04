@@ -261,7 +261,7 @@ export class DatabaseStorage implements IStorage {
       );
     }
 
-    return await query.limit(20);
+    return await query;
   }
 
   // Auto-Trial Management (V9.0)

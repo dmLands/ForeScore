@@ -83,13 +83,19 @@ export class DatabaseStorage implements IStorage {
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
+    // Always normalize email to lowercase for consistency
+    const normalizedData = {
+      ...userData,
+      email: userData.email?.toLowerCase(),
+    };
+    
     const [user] = await db
       .insert(users)
-      .values(userData)
+      .values(normalizedData)
       .onConflictDoUpdate({
         target: users.id,
         set: {
-          ...userData,
+          ...normalizedData,
           updatedAt: new Date(),
         },
       })

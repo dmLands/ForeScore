@@ -1,0 +1,283 @@
+Data exported at: Oct 3, 2025, 09:22 PM
+
+Copy All Emails
+Download CSV
+Manual Trial Management
+Grant Manual Trial
+Click "Grant Manual Trial" above to select a user and grant them access without requiring payment information.
+
+Active Manual Trials (11)
+User	Email	Granted	Expires	Days Remaining	Reason	Actions
+Kevin Unterreiner	kevin@twincitiesgolf.com	Oct 2, 2025, 10:21 AM	Oct 12, 2025, 10:21 AM	9 days	signup	
+Extend
+Revoke
+Andre Bates	juicedre62@gmail.com	Sep 29, 2025, 07:05 PM	Apr 7, 2026, 07:05 PM	186 days	applebees homie	
+Extend
+Revoke
+test2 test	test2@test.com	Sep 26, 2025, 10:38 AM	Oct 6, 2025, 10:38 AM	3 days	test2	
+Extend
+Revoke
+Jason Cook	jcjayco@gmail.com	Sep 26, 2025, 11:04 AM	Oct 6, 2025, 11:04 AM	3 days	Duplicate account creation. Did not signup for trial	
+Extend
+Revoke
+Test Trial	test-trial-user2@example.com	Oct 2, 2025, 03:08 PM	Oct 9, 2025, 03:08 PM	6 days	Auto-granted on registration	
+Extend
+Revoke
+Test Trial	test-trial-user3@example.com	Oct 2, 2025, 03:09 PM	Oct 9, 2025, 03:09 PM	6 days	Auto-granted on registration	
+Extend
+Revoke
+Working Trial	test-working-trial@example.com	Oct 2, 2025, 03:09 PM	Oct 9, 2025, 03:09 PM	6 days	Auto-granted on registration	
+Extend
+Revoke
+test52 test	test52@test.com	Oct 2, 2025, 03:12 PM	Oct 9, 2025, 03:12 PM	6 days	Auto-granted on registration	
+Extend
+Revoke
+TEST53 test	test53@test.com	Oct 2, 2025, 03:19 PM	Oct 9, 2025, 03:19 PM	6 days	Auto-granted on registration	
+Extend
+Revoke
+test55 test	test55@test.com	Oct 2, 2025, 03:26 PM	Oct 9, 2025, 03:26 PM	6 days	Auto-granted on registration	
+Extend
+Revoke
+test56 test	test56@test.com	Oct 2, 2025, 03:30 PM	Oct 9, 2025, 03:30 PM	6 days	Auto-granted on registration	
+Extend
+Revoke
+All User Accounts
+First Name	Last Name	Email Address	Auth Method	Marketing Status	Subscription Status	Created At	Actions
+test4	test	
+test4@test.com
+
+local	Subscribed	Active	Sep 5, 2025, 06:09 PM	Copy
+Krystina	Raedel	
+krystina.raedel@gmail.com
+
+local	Subscribed	No Subscription	Sep 25, 2025, 05:11 PM	Copy
+Kevin	Unterreiner	
+kevin@twincitiesgolf.com
+
+local	Subscribed	No Subscription	Oct 2, 2025, 05:14 AM	Copy
+Test	User	
+test@example.com
+
+local	Subscribed	No Subscription	Sep 5, 2025, 10:22 AM	Copy
+MetaTest2	Meta	
+metatest2@test.com
+
+local	Subscribed	No Subscription	Sep 24, 2025, 03:49 PM	Copy
+tesy	9	
+test@test2.com
+
+local	Subscribed	No Subscription	Sep 16, 2025, 02:46 PM	Copy
+test12	test	
+test12@test.com
+
+local	Unsubscribed	No Subscription	Sep 25, 2025, 09:44 AM	Copy
+Andre	Bates	
+juicedre62@gmail.com
+
+local	Subscribed	No Subscription	Sep 29, 2025, 07:04 PM	Copy
+test30	test	
+test30@test.com
+
+local	Unsubscribed	No Subscription	Oct 2, 2025, 01:41 PM	Copy
+test6	test	
+test@test.com
+
+local	Subscribed	No Subscription	Sep 8, 2025, 09:13 AM	Copy
+test8	test	
+test8@test.com
+
+local	Subscribed	No Subscription	Sep 8, 2025, 10:12 AM	Copy
+First Test Name	Last Test Name	
+firstTest@lastTest.com
+
+local	Subscribed	No Subscription	Sep 8, 2025, 11:20 AM	Copy
+akash	q	
+112@test.com
+
+local	Subscribed	No Subscription	Sep 10, 2025, 10:22 PM	Copy
+test123	test123	
+test123@test.com
+
+local	Subscribed	No Subscription	Sep 10, 2025, 10:23 PM	Copy
+Akash	Mehta	
+sky2785@gmail.com
+
+local	Subscribed	No Subscription	Sep 10, 2025, 10:35 PM	Copy
+Test15	Test	
+test15@test.com
+
+local	Subscribed	No Subscription	Sep 23, 2025, 01:41 PM	Copy
+daniel	Nano	
+daniel@danonano.com
+
+local	Subscribed	Active	Sep 5, 2025, 11:33 AM	Copy
+testMeta	Meta	
+metatest@test.com
+
+local	Subscribed	No Subscription	Sep 24, 2025, 03:43 PM	Copy
+test13	test	
+test13@test.com
+
+local	Unsubscribed	No Subscription	Sep 25, 2025, 09:53 AM	Copy
+daniel	Lands	
+danielmlands@gmail.com
+
+local	Subscribed	Active	Sep 5, 2025, 10:27 AM	Copy
+test2	test	
+test2@test.com
+
+local	Subscribed	No Subscription	Sep 5, 2025, 12:01 PM	Copy
+test3	test	
+test3@test.com
+
+local	Subscribed	No Subscription	Sep 5, 2025, 12:08 PM	Copy
+Jason	Cook	
+jcjayco@gmail.com
+
+local	Subscribed	No Subscription	Sep 25, 2025, 09:37 AM	Copy
+daniel	Huebner	
+danielmhuebner@gmail.com
+
+local	Subscribed	Active	Sep 5, 2025, 10:19 AM	Copy
+TEST33	test	
+test33@test.com
+
+local	Unsubscribed	No Subscription	Oct 2, 2025, 02:46 PM	Copy
+test45	test	
+test45@test.com
+
+local	Unsubscribed	No Subscription	Oct 2, 2025, 03:03 PM	Copy
+test51	test	
+test51@test.com
+
+local	Unsubscribed	No Subscription	Oct 2, 2025, 03:04 PM	Copy
+Test	Trial	
+test-trial-user@example.com
+
+local	Unsubscribed	No Subscription	Oct 2, 2025, 03:06 PM	Copy
+Test	Trial	
+test-trial-user2@example.com
+
+local	Unsubscribed	No Subscription	Oct 2, 2025, 03:08 PM	Copy
+Test	Trial	
+test-trial-user3@example.com
+
+local	Unsubscribed	No Subscription	Oct 2, 2025, 03:09 PM	Copy
+Working	Trial	
+test-working-trial@example.com
+
+local	Unsubscribed	No Subscription	Oct 2, 2025, 03:09 PM	Copy
+test52	test	
+test52@test.com
+
+local	Unsubscribed	No Subscription	Oct 2, 2025, 03:12 PM	Copy
+TEST53	test	
+test53@test.com
+
+local	Unsubscribed	No Subscription	Oct 2, 2025, 03:19 PM	Copy
+test55	test	
+test55@test.com
+
+local	Unsubscribed	No Subscription	Oct 2, 2025, 03:26 PM	Copy
+test56	test	
+test56@test.com
+
+local	Unsubscribed	No Subscription	Oct 2, 2025, 03:30 PM	Copy
+test61	test	
+test61@test.com
+
+local	Unsubscribed	No Subscription	Oct 2, 2025, 04:35 PM	Copy
+Jack	Carron	
+John.jack.carron@gmail.com
+
+local	Subscribed	No Subscription	Sep 23, 2025, 08:27 PM	Copy
+Auto	Trial	
+test-autotrial@example.com
+
+local	Unsubscribed	No Subscription	Oct 2, 2025, 04:02 PM	Copy
+Fresh	User	
+fresh-autotrial-v2@example.com
+
+local	Unsubscribed	No Subscription	Oct 2, 2025, 04:02 PM	Copy
+test57	test	
+test57@test.com
+
+local	Unsubscribed	No Subscription	Oct 2, 2025, 04:06 PM	Copy
+Final	Test	
+finaltest@example.com
+
+local	Unsubscribed	No Subscription	Oct 2, 2025, 04:10 PM	Copy
+test58	test	
+test58@test.com
+
+local	Unsubscribed	No Subscription	Oct 2, 2025, 04:15 PM	Copy
+test59	test	
+test59@test.com
+
+local	Unsubscribed	No Subscription	Oct 2, 2025, 04:21 PM	Copy
+test60	test	
+test60@test.com
+
+local	Unsubscribed	No Subscription	Oct 2, 2025, 04:24 PM	Copy
+test62	test	
+test62@tset.com
+
+local	Unsubscribed	No Subscription	Oct 2, 2025, 04:41 PM	Copy
+test63	test	
+test63@test.com
+
+local	Unsubscribed	No Subscription	Oct 2, 2025, 04:54 PM	Copy
+test64	test	
+test64@test.com
+
+local	Unsubscribed	No Subscription	Oct 2, 2025, 04:58 PM	Copy
+Ray	Harris	
+rharrisjr@me.com
+
+local	Unsubscribed	No Subscription	Oct 3, 2025, 03:15 AM	Copy
+test65	test	
+test65@test.com
+
+local	Unsubscribed	No Subscription	Oct 3, 2025, 02:38 PM	Copy
+test66	test	
+test66@test.com
+
+local	Unsubscribed	No Subscription	Oct 3, 2025, 02:40 PM	Copy
+test67	test	
+test67@test.com
+
+local	Unsubscribed	No Subscription	Oct 3, 2025, 02:43 PM	Copy
+test68	test	
+test68@test.com
+
+local	Unsubscribed	No Subscription	Oct 3, 2025, 02:45 PM	Copy
+test69	test	
+test69@test.com
+
+local	Unsubscribed	No Subscription	Oct 3, 2025, 02:47 PM	Copy
+test70	test	
+test70@test.com
+
+local	Unsubscribed	No Subscription	Oct 3, 2025, 02:51 PM	Copy
+test71	test	
+test71@test.com
+
+local	Unsubscribed	No Subscription	Oct 3, 2025, 03:04 PM	Copy
+test72	test	
+test72@test.com
+
+local	Unsubscribed	No Subscription	Oct 3, 2025, 03:05 PM	Copy
+test73	test	
+test73@test.com
+
+local	Unsubscribed	No Subscription	Oct 3, 2025, 03:07 PM	Copy
+test77	test	
+test74@test.com
+
+local	Unsubscribed	No Subscription	Oct 3, 2025, 03:09 PM	Copy
+test75	test	
+test75@test.com
+
+local	Unsubscribed	No Subscription	Oct 3, 2025, 09:04 PM	Copy
+← Back to App
+Grant Manual Trial - Select User

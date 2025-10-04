@@ -2935,18 +2935,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { q: searchTerm } = req.query;
       
       const users = await storage.getUsersForManualTrials(searchTerm as string);
+      console.log(`🔍 Admin user search - returning ${users.length} users (search term: "${searchTerm || 'none'}")`);
+      
+      const mappedUsers = users.map(user => ({
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        fullName: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+        hasManualTrial: !!user.manualTrialEndsAt,
+        manualTrialEndsAt: user.manualTrialEndsAt
+      }));
       
       res.json({
         success: true,
-        users: users.map(user => ({
-          id: user.id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          fullName: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
-          hasManualTrial: !!user.manualTrialEndsAt,
-          manualTrialEndsAt: user.manualTrialEndsAt
-        }))
+        users: mappedUsers
       });
     } catch (error) {
       console.error('Error searching users:', error);

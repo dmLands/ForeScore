@@ -114,22 +114,31 @@ export default function AdminPage() {
     );
   }
 
-  // Fetch user data
+  // Fetch user data - always get fresh data
   const { data: exportData, isLoading: dataLoading, error } = useQuery<ExportResponse>({
     queryKey: ['/api/admin/export-users'],
     retry: 1,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: 'always',
   });
 
-  // Fetch all users for trial management
+  // Fetch all users for trial management - always get fresh data
   const { data: allUsersData, isLoading: usersLoading } = useQuery<{success: boolean; users: SearchUser[]}>({
     queryKey: ['/api/admin/users/search', ''],
     retry: 1,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: 'always',
   });
 
-  // Fetch active manual trials
+  // Fetch active manual trials - always get fresh data
   const { data: activeTrials, isLoading: trialsLoading } = useQuery<{success: boolean; trials: ActiveTrial[]}>({
     queryKey: ['/api/admin/manual-trials'],
     retry: 1,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: 'always',
   });
 
   // Grant manual trial mutation

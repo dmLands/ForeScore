@@ -160,12 +160,32 @@ export class StripeService {
     
     const subscription = await stripe.subscriptions.create(subscriptionData);
     
-    // Update user record with subscription info
+    // CRITICAL FIX: Write to canonical stripe_subscriptions table
+    const sub = subscription as any; // Cast to access all Stripe fields
+    await storage.upsertStripeSubscription({
+      userId,
+      stripeSubscriptionId: subscription.id,
+      stripeCustomerId: customerId,
+      stripePriceId: plan.priceId,
+      status: subscription.status as any,
+      currentPeriodStart: sub.current_period_start ? new Date(sub.current_period_start * 1000) : null,
+      currentPeriodEnd: sub.current_period_end ? new Date(sub.current_period_end * 1000) : null,
+      trialStart: subscription.trial_start ? new Date(subscription.trial_start * 1000) : null,
+      trialEnd: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
+      cancelAt: subscription.cancel_at ? new Date(subscription.cancel_at * 1000) : null,
+      cancelAtPeriodEnd: subscription.cancel_at_period_end ? 1 : 0,
+      latestInvoiceId: subscription.latest_invoice as string | null,
+      collectionMethod: subscription.collection_method as any,
+    });
+    
+    // Also update legacy user fields for backward compatibility
     await storage.updateUserSubscription(userId, {
       stripeSubscriptionId: subscription.id,
       subscriptionStatus: subscription.status as any,
       trialEndsAt: trialEnd,
     });
+    
+    console.log(`✅ Created subscription ${subscription.id} for user ${userId} - canonical table updated`);
     
     return {
       subscriptionId: subscription.id,

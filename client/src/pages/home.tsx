@@ -4372,12 +4372,12 @@ export default function Home() {
                       
                       <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                         <h4 className="font-medium text-gray-800 mb-2">🎯 Bango - Closest to Pin</h4>
-                        <p className="text-sm text-gray-600">The player whose ball comes to rest closest to the hole before any other player holes out. One player can hit it to 2 feet from the fairway, but if someone else chips it to 1 foot, they win Bango.</p>
+                        <p className="text-sm text-gray-600">The player whose ball comes to rest closest to the hole before any other player holes out. One player can hit it from the fairway to 2 feet, but if someone else chips it to 1 foot, they win Bango.</p>
                       </div>
                       
                       <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                         <h4 className="font-medium text-gray-800 mb-2">🎯 Bongo - First in Hole</h4>
-                        <p className="text-sm text-gray-600">The first person to hole out from anywhere on the course. If both players hole out simultaneously, it's still the first person to hole out that wins Bongo.</p>
+                        <p className="text-sm text-gray-600">The first person to hole out from anywhere on the course. If both players hole out on successive shots, it's still the first person to hole out that wins Bongo.</p>
                       </div>
                       
                       <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">

@@ -132,6 +132,22 @@ export class StripeService {
       throw new Error('Missing metadata from SetupIntent');
     }
     
+    // CRITICAL: Check for existing active subscriptions to prevent duplicates
+    const existingSubscriptions = await stripe.subscriptions.list({
+      customer: customerId,
+      status: 'active',
+      limit: 100,
+    });
+    
+    const activeOrTrialingSubs = existingSubscriptions.data.filter(
+      sub => sub.status === 'active' || sub.status === 'trialing'
+    );
+    
+    if (activeOrTrialingSubs.length > 0) {
+      console.log(`⚠️  Customer ${customerId} already has ${activeOrTrialingSubs.length} active subscription(s)`);
+      throw new Error(`Customer already has an active subscription. Please cancel existing subscription first.`);
+    }
+    
     const plan = SUBSCRIPTION_PLANS[planKey];
     
     // Calculate trial end date (7 days from now)

@@ -3056,6 +3056,137 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Investigate Stripe billing history for a user (Admin)
+  app.get('/api/admin/stripe-billing/:userId', isAuthenticated, requireAdmin, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      if (!user.stripeCustomerId) {
+        return res.status(404).json({ message: 'No Stripe customer found for this user' });
+      }
+
+      // Fetch all invoices for this customer
+      const invoices = await stripe.invoices.list({
+        customer: user.stripeCustomerId,
+        limit: 100,
+      });
+
+      // Fetch all charges for this customer
+      const charges = await stripe.charges.list({
+        customer: user.stripeCustomerId,
+        limit: 100,
+      });
+
+      // Fetch all subscriptions for this customer
+      const subscriptions = await stripe.subscriptions.list({
+        customer: user.stripeCustomerId,
+        limit: 100,
+      });
+
+      res.json({
+        success: true,
+        user: {
+          id: user.id,
+          email: user.email,
+          stripeCustomerId: user.stripeCustomerId,
+          stripeSubscriptionId: user.stripeSubscriptionId,
+        },
+        invoices: invoices.data.map(inv => ({
+          id: inv.id,
+          created: new Date(inv.created * 1000).toISOString(),
+          amount: inv.amount_due / 100,
+          status: inv.status,
+          paid: inv.paid,
+          subscription: inv.subscription,
+          periodStart: inv.period_start ? new Date(inv.period_start * 1000).toISOString() : null,
+          periodEnd: inv.period_end ? new Date(inv.period_end * 1000).toISOString() : null,
+        })),
+        charges: charges.data.map(charge => ({
+          id: charge.id,
+          created: new Date(charge.created * 1000).toISOString(),
+          amount: charge.amount / 100,
+          status: charge.status,
+          paid: charge.paid,
+          invoice: charge.invoice,
+          description: charge.description,
+        })),
+        subscriptions: subscriptions.data.map(sub => ({
+          id: sub.id,
+          status: sub.status,
+          created: new Date(sub.created * 1000).toISOString(),
+          currentPeriodStart: sub.current_period_start ? new Date(sub.current_period_start * 1000).toISOString() : null,
+          currentPeriodEnd: sub.current_period_end ? new Date(sub.current_period_end * 1000).toISOString() : null,
+          trialStart: sub.trial_start ? new Date(sub.trial_start * 1000).toISOString() : null,
+          trialEnd: sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null,
+          cancelAtPeriodEnd: sub.cancel_at_period_end,
+        })),
+      });
+    } catch (error) {
+      console.error('Error fetching Stripe billing history:', error);
+      res.status(500).json({ message: 'Failed to fetch billing history' });
+    }
+  });
+
+  // Delete user with proper Stripe cleanup (Admin)
+  app.delete('/api/admin/delete-user/:userId', isAuthenticated, requireAdmin, async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      console.log(`🗑️ Admin deleting user: ${user.email} (${userId})`);
+
+      // STEP 1: Cancel ALL Stripe subscriptions for this customer
+      if (user.stripeCustomerId) {
+        console.log(`📋 Checking for Stripe subscriptions to cancel...`);
+        
+        const subscriptions = await stripe.subscriptions.list({
+          customer: user.stripeCustomerId,
+          limit: 100,
+        });
+
+        for (const sub of subscriptions.data) {
+          if (sub.status !== 'canceled') {
+            console.log(`❌ Canceling subscription: ${sub.id} (status: ${sub.status})`);
+            await stripe.subscriptions.cancel(sub.id);
+          }
+        }
+        
+        console.log(`✅ All subscriptions canceled for customer: ${user.stripeCustomerId}`);
+      }
+
+      // STEP 2: Delete user from database
+      const deleted = await storage.deleteUser(userId);
+      
+      if (!deleted) {
+        return res.status(500).json({ message: 'Failed to delete user from database' });
+      }
+
+      console.log(`✅ User deleted successfully: ${user.email}`);
+
+      res.json({
+        success: true,
+        message: `User ${user.email} deleted successfully. All Stripe subscriptions canceled.`,
+        deletedUser: {
+          id: user.id,
+          email: user.email,
+          stripeCustomerId: user.stripeCustomerId,
+        }
+      });
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      res.status(500).json({ message: 'Failed to delete user' });
+    }
+  });
+
   // Create HTTP server
   const httpServer = createServer(app);
   

@@ -9,6 +9,7 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   createLocalUser(user: { email: string; firstName: string; lastName: string; passwordHash: string; authMethod: string; termsAcceptedAt?: Date; marketingConsentAt?: Date; marketingPreferenceStatus?: 'subscribed' | 'unsubscribed' }): Promise<User>;
+  deleteUser(userId: string): Promise<boolean>;
   updateMarketingPreferences(userId: string, data: { marketingPreferenceStatus: 'subscribed' | 'unsubscribed'; marketingUnsubscribeAt?: Date }): Promise<User | undefined>;
   // Legacy subscription methods for V7.0 (deprecated - use Stripe subscription methods below)
   updateUserSubscription(userId: string, data: { stripeCustomerId?: string; stripeSubscriptionId?: string; subscriptionStatus?: 'trialing' | 'active' | 'canceled' | 'incomplete' | 'past_due' | null; trialEndsAt?: Date; subscriptionEndsAt?: Date }): Promise<User | undefined>;
@@ -132,6 +133,14 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, userId))
       .returning();
     return user;
+  }
+
+  async deleteUser(userId: string): Promise<boolean> {
+    // Delete user and all related data (cascades via foreign key constraints)
+    const result = await db
+      .delete(users)
+      .where(eq(users.id, userId));
+    return true;
   }
 
   // Legacy subscription methods for V7.0 (deprecated)

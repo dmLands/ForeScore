@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ForeScore QR Code</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #d1fae5 0%, #ffffff 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 500px;
+            width: 100%;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            padding: 48px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        h1 {
+            font-size: 36px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 8px;
+        }
+        
+        .subtitle {
+            color: #6b7280;
+            font-size: 16px;
+        }
+        
+        .qr-container {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            border: 4px solid #0A9961;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 32px;
+        }
+        
+        #qrcode {
+            display: inline-block;
+        }
+        
+        .instructions {
+            text-align: center;
+        }
+        
+        .main-text {
+            font-size: 20px;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 8px;
+        }
+        
+        .sub-text {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+        
+        .divider {
+            height: 1px;
+            background: #e5e7eb;
+            margin: 24px 0;
+        }
+        
+        .link {
+            color: #0A9961;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            word-break: break-all;
+        }
+        
+        .link:hover {
+            color: #087f4d;
+        }
+        
+        .footer {
+            margin-top: 32px;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <h1>ForeScore</h1>
+                <p class="subtitle">Golf Payout Calculator</p>
+            </div>
+            
+            <div class="qr-container">
+                <div id="qrcode"></div>
+            </div>
+            
+            <div class="instructions">
+                <p class="main-text">Scan to Open ForeScore</p>
+                <p class="sub-text">Track your golf game payouts instantly</p>
+                
+                <div class="divider"></div>
+                
+                <a href="https://forescore.xyz" class="link" target="_blank">
+                    Or visit: https://forescore.xyz
+                </a>
+            </div>
+        </div>
+        
+        <div class="footer">
+            © 2025 ForeScore. All rights reserved.
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        const logoBase64 = "data:image/jpeg;base64,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";
+        
+        // Create QR code with custom styling
+        new QRCode(document.getElementById("qrcode"), {
+            text: "https://forescore.xyz",
+            width: 280,
+            height: 280,
+            colorDark: "#0A9961",  // Green color for QR code
+            colorLight: "#ffffff", // White background
+            correctLevel: QRCode.CorrectLevel.H  // High error correction for logo
+        });
+        
+        // Add logo to center after QR code renders
+        setTimeout(() => {
+            const qrCanvas = document.querySelector('#qrcode canvas');
+            if (qrCanvas) {
+                const ctx = qrCanvas.getContext('2d');
+                const img = new Image();
+                img.onload = function() {
+                    const logoSize = 60;
+                    const x = (qrCanvas.width - logoSize) / 2;
+                    const y = (qrCanvas.height - logoSize) / 2;
+                    
+                    // Draw white background for logo
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(x - 5, y - 5, logoSize + 10, logoSize + 10);
+                    
+                    // Draw logo
+                    ctx.drawImage(img, x, y, logoSize, logoSize);
+                };
+                img.src = logoBase64;
+            }
+        }, 100);
+    </script>
+</body>
+</html>

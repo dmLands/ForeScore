@@ -19,6 +19,7 @@ import ManageSubscription from "@/pages/manage-subscription";
 import EmailPreferences from "@/pages/email-preferences";
 import NotFound from "@/pages/not-found";
 import AdminPage from "@/pages/admin";
+import QRCodePage from "@/pages/qr-code";
 
 // Guard component that wraps Home to check subscription access
 function ProtectedHome() {
@@ -56,9 +57,18 @@ function Router() {
   // Track page views when routes change
   useAnalytics();
   
+  // Check if we're on the QR subdomain
+  const isQRSubdomain = window.location.hostname.startsWith('qr.');
+  
+  // If on QR subdomain, always show QR code page
+  if (isQRSubdomain) {
+    return <QRCodePage />;
+  }
+  
   return (
     <Switch>
       <Route path="/" component={ProtectedHome} />
+      <Route path="/qr" component={QRCodePage} />
       <Route path="/admin" component={AdminPage} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />

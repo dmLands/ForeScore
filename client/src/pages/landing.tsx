@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import AppDownloadPrompt from "@/components/AppDownloadPrompt";
+import logoPath from "@assets/ForeScore_Logo_wtbkg_1761776446382.png";
 
 export default function Landing() {
   return (
@@ -17,16 +18,13 @@ export default function Landing() {
       <div className="relative flex items-center justify-center min-h-screen p-4">
         <Card className="w-full max-w-2xl shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
           <CardHeader className="text-center pb-8">
-            {/* Golf-themed icon */}
+            {/* ForeScore Logo */}
             <div className="flex justify-center mb-4">
-              <div className="relative">
-                <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-700 rounded-full flex items-center justify-center text-3xl text-white shadow-lg">
-                  ⛳
-                </div>
-                <div className="absolute -top-1 -right-1 w-6 h-6 bg-white rounded-full flex items-center justify-center text-sm shadow-md">
-                  🏌️
-                </div>
-              </div>
+              <img 
+                src={logoPath} 
+                alt="ForeScore Logo" 
+                className="w-24 h-24"
+              />
             </div>
             
             <CardTitle className="text-4xl font-bold text-gray-900 mb-2">

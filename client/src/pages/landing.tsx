@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import AppDownloadPrompt from "@/components/AppDownloadPrompt";
-import logoPath from "@assets/ForeScore_Logo_wtbkg_1761776446382.png";
 
 export default function Landing() {
   return (
@@ -21,7 +20,7 @@ export default function Landing() {
             {/* ForeScore Logo */}
             <div className="flex justify-center mb-4">
               <img 
-                src={logoPath} 
+                src="/forescore-logo.png" 
                 alt="ForeScore Logo" 
                 className="w-24 h-24"
               />

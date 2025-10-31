@@ -204,7 +204,7 @@ export default function Subscribe() {
     return (planParam === 'monthly' || planParam === 'annual') ? planParam : 'annual';
   });
   
-  const [isAutoFlow] = useState<boolean>(() => {
+  const [isAutoFlow, setIsAutoFlow] = useState<boolean>(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const planParam = urlParams.get('plan');
     return planParam === 'monthly' || planParam === 'annual';
@@ -212,6 +212,7 @@ export default function Subscribe() {
   
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [subscriptionCreated, setSubscriptionCreated] = useState(false);
+  const [autoFlowError, setAutoFlowError] = useState<string | null>(null);
 
   // Fetch subscription plans
   const { data: plans } = useQuery<SubscriptionPlans>({
@@ -237,9 +238,11 @@ export default function Subscribe() {
       }
     },
     onError: (error: any) => {
+      const errorMessage = error.message || "Failed to start subscription. Please try again.";
+      setAutoFlowError(errorMessage);
       toast({
         title: "Subscription Error",
-        description: error.message || "Failed to start subscription. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     },
@@ -258,6 +261,9 @@ export default function Subscribe() {
   };
 
   const handleSubscriptionComplete = () => {
+    // Mark that user just completed payment to bypass welcome-trial page
+    localStorage.setItem('justCompletedPayment', 'true');
+    
     // Give webhook time to create subscription and update user status
     setTimeout(() => {
       queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
@@ -272,6 +278,49 @@ export default function Subscribe() {
 
   // Show loading state when auto-flow is processing
   if (isAutoFlow && !subscriptionCreated) {
+    // Show error with retry option if auto-flow failed
+    if (autoFlowError) {
+      return (
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+          <div className="max-w-md w-full">
+            <Card>
+              <CardHeader className="text-center">
+                <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                  <span className="text-3xl">⚠️</span>
+                </div>
+                <CardTitle className="text-2xl">Setup Failed</CardTitle>
+                <CardDescription className="text-red-600">
+                  {autoFlowError}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button
+                  onClick={() => {
+                    setAutoFlowError(null);
+                    createSubscriptionMutation.mutate(selectedPlan);
+                  }}
+                  className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                  disabled={createSubscriptionMutation.isPending}
+                  data-testid="button-retry-subscription"
+                >
+                  {createSubscriptionMutation.isPending ? "Retrying..." : "Try Again"}
+                </Button>
+                <Button
+                  onClick={() => setIsAutoFlow(false)}
+                  variant="outline"
+                  className="w-full"
+                  data-testid="button-back-to-plans"
+                >
+                  Back to Plan Selection
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      );
+    }
+    
+    // Show loading spinner while setting up
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="max-w-md w-full">

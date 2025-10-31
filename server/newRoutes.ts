@@ -439,13 +439,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/subscription/create-after-setup', isAuthenticated, async (req: any, res) => {
     try {
       const { setupIntentId } = req.body;
+      const userId = req.user?.claims?.sub;
       
       if (!setupIntentId) {
         return res.status(400).json({ message: 'SetupIntent ID required' });
       }
       
+      if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
+      
+      // Create the subscription in Stripe and database
       const result = await stripeService.createSubscriptionAfterPayment(setupIntentId);
-      res.json({ message: 'Subscription created successfully', result });
+      
+      // Get updated subscription access status immediately
+      const accessStatus = await stripeService.hasAccess(userId);
+      
+      // Return complete status so frontend knows subscription is active immediately
+      res.json({ 
+        message: 'Subscription created successfully', 
+        subscriptionId: result.subscriptionId,
+        status: result.status,
+        hasAccess: accessStatus.hasAccess,
+        subscriptionStatus: accessStatus.subscriptionStatus,
+        currentPlan: accessStatus.currentPlan,
+      });
     } catch (error) {
       console.error('Subscription creation after setup error:', error);
       res.status(500).json({ 

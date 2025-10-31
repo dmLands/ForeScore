@@ -65,23 +65,30 @@ const SubscribeForm = ({ selectedPlan, onSubscriptionComplete }: {
         try {
           const setupIntentId = result.setupIntent?.id;
           if (setupIntentId) {
-            await apiRequest('POST', '/api/subscription/create-after-setup', {
+            const response = await apiRequest('POST', '/api/subscription/create-after-setup', {
               setupIntentId
             });
+            const data = await response.json();
+            
+            // Subscription is now active - invalidate queries to refresh auth state
+            queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
+            queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+            
+            toast({
+              title: "Payment Complete!",
+              description: "Your subscription is now active. Welcome to ForeScore!",
+            });
+            
+            // Don't set the processing flag - subscription is active immediately
+            onSubscriptionComplete();
           }
-          
-          toast({
-            title: "Payment Complete!",
-            description: "Your subscription is now active. Welcome to ForeScore!",
-          });
-          onSubscriptionComplete();
         } catch (error) {
           console.error('Subscription creation error after payment:', error);
           toast({
-            title: "Payment Complete",
-            description: "Your subscription is being activated.",
+            title: "Error",
+            description: "Failed to activate subscription. Please contact support.",
+            variant: "destructive",
           });
-          onSubscriptionComplete();
         }
       }
     } catch (error) {
@@ -261,19 +268,9 @@ export default function Subscribe() {
   };
 
   const handleSubscriptionComplete = () => {
-    // Mark that user just completed payment to bypass welcome-trial page
-    localStorage.setItem('justCompletedPayment', 'true');
-    
-    // Give webhook time to create subscription and update user status
-    setTimeout(() => {
-      queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      
-      // Add another delay before redirect to let queries complete
-      setTimeout(() => {
-        setLocation('/');
-      }, 500);
-    }, 3000); // Longer delay for webhook processing
+    // Subscription is active immediately - no processing screen needed
+    // Just redirect to home
+    setLocation('/');
   };
 
   // Show loading state when auto-flow is processing

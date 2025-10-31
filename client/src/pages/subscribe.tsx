@@ -233,6 +233,22 @@ export default function Subscribe() {
     },
   });
 
+  // Check for plan parameter in URL and auto-proceed to payment
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const planParam = urlParams.get('plan');
+    
+    if (planParam && (planParam === 'monthly' || planParam === 'annual')) {
+      setSelectedPlan(planParam);
+      // Auto-trigger payment flow after a brief delay to ensure plan is set
+      setTimeout(() => {
+        if (!subscriptionCreated && !clientSecret) {
+          createSubscriptionMutation.mutate(planParam);
+        }
+      }, 100);
+    }
+  }, []);
+
   const handlePlanSelect = async () => {
     if (!selectedPlan) return;
     createSubscriptionMutation.mutate(selectedPlan);

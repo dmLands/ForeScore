@@ -369,7 +369,7 @@ export default function ManageSubscription() {
                   data-testid="button-start-subscription"
                 >
                   <CreditCard className="w-4 h-4 mr-2" />
-                  Start Free Trial
+                  Subscribe Now
                 </Button>
                 
                 {plans && (

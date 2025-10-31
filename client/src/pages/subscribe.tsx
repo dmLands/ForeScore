@@ -238,16 +238,12 @@ export default function Subscribe() {
     const urlParams = new URLSearchParams(window.location.search);
     const planParam = urlParams.get('plan');
     
-    if (planParam && (planParam === 'monthly' || planParam === 'annual')) {
+    if (planParam && (planParam === 'monthly' || planParam === 'annual') && !subscriptionCreated) {
       setSelectedPlan(planParam);
-      // Auto-trigger payment flow after a brief delay to ensure plan is set
-      setTimeout(() => {
-        if (!subscriptionCreated && !clientSecret) {
-          createSubscriptionMutation.mutate(planParam);
-        }
-      }, 100);
+      // Auto-trigger payment flow immediately
+      createSubscriptionMutation.mutate(planParam);
     }
-  }, []);
+  }, [subscriptionCreated]);
 
   const handlePlanSelect = async () => {
     if (!selectedPlan) return;

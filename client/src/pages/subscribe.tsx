@@ -196,7 +196,20 @@ const PlanCard = ({
 export default function Subscribe() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const [selectedPlan, setSelectedPlan] = useState<string>('annual');
+  
+  // Initialize plan and auto-flow from URL parameter BEFORE first render
+  const [selectedPlan, setSelectedPlan] = useState<string>(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const planParam = urlParams.get('plan');
+    return (planParam === 'monthly' || planParam === 'annual') ? planParam : 'annual';
+  });
+  
+  const [isAutoFlow] = useState<boolean>(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const planParam = urlParams.get('plan');
+    return planParam === 'monthly' || planParam === 'annual';
+  });
+  
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [subscriptionCreated, setSubscriptionCreated] = useState(false);
 
@@ -216,7 +229,6 @@ export default function Subscribe() {
         setClientSecret(data.clientSecret);
         setSubscriptionCreated(true);
       } else {
-        // This should never happen with payment_behavior: 'default_incomplete'
         toast({
           title: "Setup Error",
           description: "Payment setup failed. Please try again or contact support.",
@@ -233,17 +245,12 @@ export default function Subscribe() {
     },
   });
 
-  // Check for plan parameter in URL and auto-proceed to payment
+  // Auto-trigger payment flow for users coming from welcome-trial page
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const planParam = urlParams.get('plan');
-    
-    if (planParam && (planParam === 'monthly' || planParam === 'annual') && !subscriptionCreated) {
-      setSelectedPlan(planParam);
-      // Auto-trigger payment flow immediately
-      createSubscriptionMutation.mutate(planParam);
+    if (isAutoFlow && !subscriptionCreated && !createSubscriptionMutation.isPending) {
+      createSubscriptionMutation.mutate(selectedPlan);
     }
-  }, [subscriptionCreated]);
+  }, [isAutoFlow]);
 
   const handlePlanSelect = async () => {
     if (!selectedPlan) return;
@@ -263,6 +270,28 @@ export default function Subscribe() {
     }, 3000); // Longer delay for webhook processing
   };
 
+  // Show loading state when auto-flow is processing
+  if (isAutoFlow && !subscriptionCreated) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="max-w-md w-full">
+          <Card>
+            <CardHeader className="text-center">
+              <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+              </div>
+              <CardTitle className="text-2xl">Setting Up Your Subscription</CardTitle>
+              <CardDescription>
+                Preparing your payment form...
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Show payment form when ready
   if (subscriptionCreated && clientSecret) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -303,6 +332,7 @@ export default function Subscribe() {
     );
   }
 
+  // Manual plan selection flow (when no plan parameter in URL)
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}

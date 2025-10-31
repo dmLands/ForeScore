@@ -150,18 +150,12 @@ export class StripeService {
     
     const plan = SUBSCRIPTION_PLANS[planKey];
     
-    // Calculate trial end date (7 days from now)
-    const trialEnd = new Date();
-    trialEnd.setDate(trialEnd.getDate() + plan.trialDays);
-    
-    // Create subscription with PROPER TRIAL SETUP to prevent immediate charging
+    // Create subscription - charge immediately (no trial for paid users)
     const subscriptionData: any = {
       customer: customerId,
       items: [{
         price: plan.priceId,
       }],
-      // Use trial_period_days instead of trial_end to prevent immediate charging
-      trial_period_days: plan.trialDays,
       metadata: {
         userId,
         planKey,
@@ -198,7 +192,6 @@ export class StripeService {
     await storage.updateUserSubscription(userId, {
       stripeSubscriptionId: subscription.id,
       subscriptionStatus: subscription.status as any,
-      trialEndsAt: trialEnd,
     });
     
     console.log(`✅ Created subscription ${subscription.id} for user ${userId} - canonical table updated`);

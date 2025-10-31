@@ -71,15 +71,15 @@ const SubscribeForm = ({ selectedPlan, onSubscriptionComplete }: {
           }
           
           toast({
-            title: "Trial Started!",
-            description: "Your 7-day free trial has begun. Enjoy ForeScore!",
+            title: "Payment Complete!",
+            description: "Your subscription is now active. Welcome to ForeScore!",
           });
           onSubscriptionComplete();
         } catch (error) {
           console.error('Subscription creation error after payment:', error);
           toast({
-            title: "Setup Complete",
-            description: "Payment method saved. Your trial will be activated shortly.",
+            title: "Payment Complete",
+            description: "Your subscription is being activated.",
           });
           onSubscriptionComplete();
         }
@@ -104,17 +104,6 @@ const SubscribeForm = ({ selectedPlan, onSubscriptionComplete }: {
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-gray-900">Payment Information</h3>
-        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-          <div className="flex items-center space-x-2">
-            <Clock className="h-5 w-5 text-blue-600" />
-            <p className="text-sm text-blue-800">
-              <strong>Start your trial now!</strong> No charge for 7 days.
-            </p>
-          </div>
-          <p className="text-xs text-blue-600 mt-1">
-            Full access to all features included.
-          </p>
-        </div>
         <PaymentElement 
           options={{
             fields: {
@@ -133,9 +122,9 @@ const SubscribeForm = ({ selectedPlan, onSubscriptionComplete }: {
         type="submit"
         className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
         disabled={!stripe || isLoading}
-        data-testid="button-start-trial"
+        data-testid="button-complete-payment"
       >
-        {isLoading ? "Starting Trial..." : "Start 7-Day Free Trial"}
+        {isLoading ? "Processing..." : "Complete Payment Now"}
       </Button>
     </form>
   );
@@ -195,10 +184,6 @@ const PlanCard = ({
       
       <CardContent className="pt-0">
         <div className="text-center">
-          <div className="flex items-center justify-center space-x-1 mb-2">
-            <Clock className="h-3 w-3 text-blue-600" />
-            <span className="text-xs font-medium text-blue-600">7-day trial</span>
-          </div>
           <div className="text-xs text-gray-500">
             All features included
           </div>
@@ -277,7 +262,7 @@ export default function Subscribe() {
               </div>
               <CardTitle className="text-2xl">Complete Your Setup</CardTitle>
               <CardDescription>
-                Add your payment method to activate your 7-day free trial
+                Add your payment to begin your recurring subscription.
               </CardDescription>
             </CardHeader>
             
@@ -351,8 +336,8 @@ export default function Subscribe() {
             data-testid="button-select-plan"
           >
             {createSubscriptionMutation.isPending 
-              ? "Setting up trial..." 
-              : "Start 7-Day Free Trial"
+              ? "Processing..." 
+              : "Proceed to Payment"
             }
           </Button>
           

@@ -70,16 +70,16 @@ const SubscribeForm = ({ selectedPlan, onSubscriptionComplete }: {
             });
             const data = await response.json();
             
-            // Subscription is now active - invalidate queries to refresh auth state
-            queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
-            queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+            // Subscription is now active - invalidate queries and redirect
+            await queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
+            await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
             
             toast({
               title: "Payment Complete!",
               description: "Your subscription is now active. Welcome to ForeScore!",
             });
             
-            // Don't set the processing flag - subscription is active immediately
+            // Redirect to home - subscription is active
             onSubscriptionComplete();
           }
         } catch (error) {

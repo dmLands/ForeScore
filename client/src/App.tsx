@@ -41,16 +41,18 @@ function ProtectedHome() {
     return <Landing />;
   }
   
+  // If user has active subscription (paid or trial), go straight to app
+  if (hasActiveSubscription) {
+    return <Home />;
+  }
+  
   // If user is new (eligible for trial), show welcome page
   if (user && autoTrialStatus === 'eligible') {
     return <WelcomeTrial />;
   }
 
-  if (!hasActiveSubscription) {
-    return <Subscribe />;
-  }
-
-  return <Home />;
+  // No subscription - show subscribe page
+  return <Subscribe />;
 }
 
 function Router() {

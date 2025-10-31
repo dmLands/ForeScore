@@ -257,17 +257,7 @@ export class StripeService {
       }
     }
     
-    // Check if user is eligible for auto-trial (not activated yet)
-    if (user.autoTrialStatus === 'eligible') {
-      console.log(`ℹ️ User ${userId} is eligible for auto-trial (not activated)`);
-      return {
-        hasAccess: false, // No access until they activate
-        subscriptionStatus: 'trial_eligible',
-        reason: 'Trial eligible - needs activation'
-      };
-    }
-    
-    // THIRD PRIORITY: Get canonical subscription data from our database (webhook-synced)
+    // THIRD PRIORITY: Get canonical subscription data from our database (PAID subscriptions take precedence)
     const subscription = await storage.getStripeSubscription(userId);
     
     if (!subscription) {
@@ -280,6 +270,17 @@ export class StripeService {
           return { hasAccess: true, trialEndsAt: trialEnd, subscriptionStatus: 'trialing' };
         }
       }
+      
+      // No paid subscription - check if user is eligible for free trial as fallback
+      if (user.autoTrialStatus === 'eligible') {
+        console.log(`ℹ️ User ${userId} is eligible for auto-trial (not activated)`);
+        return {
+          hasAccess: false,
+          subscriptionStatus: 'trial_eligible',
+          reason: 'Trial eligible - needs activation'
+        };
+      }
+      
       console.log(`❌ User ${userId} has no subscription record`);
       return { hasAccess: false, reason: 'No subscription' };
     }
@@ -363,7 +364,6 @@ export class StripeService {
       return { hasAccess: false, reason: 'Payment failed' };
     }
     
-    // Default: no access
     console.log(`❌ User ${userId} subscription status '${subscription.status}' - no access`);
     return { hasAccess: false, reason: 'No active subscription' };
   }

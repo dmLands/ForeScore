@@ -20,6 +20,10 @@ interface UserData {
   'Auth Method': string;
   'Marketing Preference Status': string;
   'Subscription Status': string;
+  'Subscription Type': string;
+  'Trial End Date': string;
+  'Next Invoice Date': string;
+  'Next Invoice Amount': string;
   'Created At': string;
 }
 
@@ -715,6 +719,10 @@ export default function AdminPage() {
                     <TableHead>Auth Method</TableHead>
                     <TableHead>Marketing Status</TableHead>
                     <TableHead>Subscription Status</TableHead>
+                    <TableHead>Subscription Type</TableHead>
+                    <TableHead>Trial End Date</TableHead>
+                    <TableHead>Next Invoice Date</TableHead>
+                    <TableHead>Next Invoice Amount</TableHead>
                     <TableHead>Created At</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -784,6 +792,18 @@ export default function AdminPage() {
                         >
                           {user['Subscription Status']}
                         </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-gray-600">
+                        {user['Subscription Type'] || 'None'}
+                      </TableCell>
+                      <TableCell className="text-sm text-gray-600">
+                        {user['Trial End Date'] || '-'}
+                      </TableCell>
+                      <TableCell className="text-sm text-gray-600">
+                        {user['Next Invoice Date'] || '-'}
+                      </TableCell>
+                      <TableCell className="text-sm text-gray-600 font-mono">
+                        {user['Next Invoice Amount'] || '-'}
                       </TableCell>
                       <TableCell className="text-sm text-gray-600">
                         {formatDate(user['Created At'])}

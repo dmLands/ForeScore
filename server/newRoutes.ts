@@ -2802,37 +2802,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Found ${allUsers.length} users for export - fetching live subscription data...`);
 
-      // Format for CSV export with live subscription information
+      // Format for CSV export with comprehensive subscription information
       const csvData = await Promise.all(allUsers.map(async (user) => {
         // Get live subscription status for each user
         let subscriptionDisplay = 'No Subscription';
-        let nextRenewal = '';
+        let subscriptionType = 'None';
+        let trialEndDate = '';
+        let nextInvoiceDate = '';
+        let nextInvoiceAmount = '';
         
         try {
-          const accessInfo = await stripeService.hasAccess(user.id);
-          
-          if (accessInfo.subscriptionStatus === 'active') {
-            subscriptionDisplay = 'Active';
-            if (accessInfo.nextRenewalDate) {
-              nextRenewal = new Date(accessInfo.nextRenewalDate).toLocaleDateString();
-            }
-          } else if (accessInfo.subscriptionStatus === 'trialing') {
-            if (accessInfo.trialEndsAt) {
-              const trialEnd = new Date(accessInfo.trialEndsAt);
-              subscriptionDisplay = `Trial (ends ${trialEnd.toLocaleDateString()})`;
+          // Check for manual trial first
+          const fullUser = await storage.getUser(user.id);
+          if (fullUser?.manualTrialEndsAt) {
+            const manualTrialEnd = new Date(fullUser.manualTrialEndsAt);
+            const now = new Date();
+            if (now < manualTrialEnd) {
+              subscriptionDisplay = 'Manual Trial (Active)';
+              subscriptionType = 'Manual (Admin-granted)';
+              trialEndDate = manualTrialEnd.toLocaleDateString();
             } else {
-              subscriptionDisplay = 'Trial';
-            }
-          } else if (!accessInfo.hasAccess) {
-            // Check the reason to determine status
-            if (accessInfo.reason?.includes('Trial expired')) {
-              subscriptionDisplay = 'Trial Expired';
-            } else if (accessInfo.reason?.includes('Payment required')) {
-              subscriptionDisplay = 'Payment Required';
-            } else {
-              subscriptionDisplay = 'No Subscription';
+              subscriptionDisplay = 'Manual Trial (Expired)';
+              subscriptionType = 'Manual (Admin-granted)';
+              trialEndDate = manualTrialEnd.toLocaleDateString();
             }
           }
+          
+          // Check for Stripe subscription
+          const stripeSubscription = await storage.getStripeSubscription(user.id);
+          if (stripeSubscription) {
+            subscriptionType = 'Stripe Subscription';
+            
+            // Set subscription status
+            if (stripeSubscription.status === 'active') {
+              subscriptionDisplay = 'Active';
+            } else if (stripeSubscription.status === 'trialing') {
+              subscriptionDisplay = 'Trial';
+            } else if (stripeSubscription.status === 'incomplete') {
+              subscriptionDisplay = 'Incomplete';
+            } else if (stripeSubscription.status === 'past_due') {
+              subscriptionDisplay = 'Past Due';
+            } else if (stripeSubscription.status === 'canceled') {
+              subscriptionDisplay = 'Canceled';
+            } else {
+              subscriptionDisplay = stripeSubscription.status;
+            }
+            
+            // Get trial end date if in trial
+            if (stripeSubscription.trialEnd) {
+              trialEndDate = new Date(stripeSubscription.trialEnd).toLocaleDateString();
+            }
+            
+            // Get next invoice info from Stripe
+            if (stripeSubscription.stripeSubscriptionId && stripeSubscription.status !== 'canceled') {
+              try {
+                const upcomingInvoice = await stripe.invoices.retrieveUpcoming({
+                  subscription: stripeSubscription.stripeSubscriptionId,
+                });
+                
+                if (upcomingInvoice.next_payment_attempt) {
+                  nextInvoiceDate = new Date(upcomingInvoice.next_payment_attempt * 1000).toLocaleDateString();
+                }
+                
+                if (upcomingInvoice.amount_due) {
+                  nextInvoiceAmount = `$${(upcomingInvoice.amount_due / 100).toFixed(2)}`;
+                }
+              } catch (invoiceError) {
+                // If can't fetch upcoming invoice, use current period end
+                if (stripeSubscription.currentPeriodEnd) {
+                  nextInvoiceDate = new Date(stripeSubscription.currentPeriodEnd).toLocaleDateString();
+                }
+              }
+            }
+          }
+          
+          // If manual trial overrides Stripe, keep manual type
+          if (fullUser?.manualTrialEndsAt && new Date() < new Date(fullUser.manualTrialEndsAt)) {
+            subscriptionType = 'Manual (Admin-granted)';
+          }
+          
         } catch (error) {
           console.error(`Error fetching subscription for user ${user.id}:`, error);
           subscriptionDisplay = 'Status Check Failed';
@@ -2845,7 +2893,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'Auth Method': user.authMethod || '',
           'Marketing Preference Status': user.marketingPreferenceStatus || 'pending',
           'Subscription Status': subscriptionDisplay,
-          'Next Renewal': nextRenewal,
+          'Subscription Type': subscriptionType,
+          'Trial End Date': trialEndDate,
+          'Next Invoice Date': nextInvoiceDate,
+          'Next Invoice Amount': nextInvoiceAmount,
           'Created At': user.createdAt?.toISOString() || ''
         };
       }));

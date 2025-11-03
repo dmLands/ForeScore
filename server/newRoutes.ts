@@ -2856,22 +2856,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Get next invoice info from Stripe
             if (stripeSubscription.stripeSubscriptionId && stripeSubscription.status !== 'canceled') {
               try {
-                console.log(`Fetching upcoming invoice for subscription: ${stripeSubscription.stripeSubscriptionId}`);
-                const upcomingInvoice = await stripe.invoices.retrieveUpcoming({
+                const upcomingInvoice = await stripe.invoices.upcoming({
                   subscription: stripeSubscription.stripeSubscriptionId,
                 });
-                
-                console.log(`Invoice fetched - next_payment_attempt: ${upcomingInvoice.next_payment_attempt}, amount_due: ${upcomingInvoice.amount_due}`);
                 
                 if (upcomingInvoice.next_payment_attempt) {
                   nextInvoiceDate = new Date(upcomingInvoice.next_payment_attempt * 1000).toLocaleDateString();
                 }
                 
-                if (upcomingInvoice.amount_due) {
+                if (upcomingInvoice.amount_due !== null && upcomingInvoice.amount_due !== undefined) {
                   nextInvoiceAmount = `$${(upcomingInvoice.amount_due / 100).toFixed(2)}`;
                 }
-                
-                console.log(`Processed invoice data - date: ${nextInvoiceDate}, amount: ${nextInvoiceAmount}`);
               } catch (invoiceError) {
                 console.error(`Error fetching invoice for subscription ${stripeSubscription.stripeSubscriptionId}:`, invoiceError);
                 // If can't fetch upcoming invoice, use current period end

@@ -2856,7 +2856,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Get next invoice info from Stripe
             if (stripeSubscription.stripeSubscriptionId && stripeSubscription.status !== 'canceled' && stripeSubscription.stripeCustomerId) {
               try {
-                const upcomingInvoice = await stripe.invoices.retrieveUpcoming({
+                const upcomingInvoice = await stripe.invoices.createPreview({
                   customer: stripeSubscription.stripeCustomerId,
                   subscription: stripeSubscription.stripeSubscriptionId,
                 });

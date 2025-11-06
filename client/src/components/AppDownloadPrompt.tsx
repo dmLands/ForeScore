@@ -62,10 +62,10 @@ export default function AppDownloadPrompt() {
       
       <div className="flex items-center space-x-2 mb-2">
         <Smartphone className="h-5 w-5 text-emerald-600" />
-        <h3 className="font-semibold text-emerald-900">Get the ForeScore App</h3>
+        <h3 className="font-semibold text-emerald-900">Get the ForeScore WebApp</h3>
       </div>
       <p className="text-sm text-emerald-700 mb-3">
-        Install ForeScore for faster access, offline scoring, and a native app experience.
+        Bookmark ForeScore for faster access, offline scoring, and a native app experience.
       </p>
       <Button
         onClick={handleDownloadClick}

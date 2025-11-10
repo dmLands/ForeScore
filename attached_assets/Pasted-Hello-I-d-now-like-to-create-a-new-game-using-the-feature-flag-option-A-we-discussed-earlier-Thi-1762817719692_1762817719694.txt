@@ -1,0 +1,15 @@
+Hello, I’d now like to create a new game using the feature flag (option A) we discussed earlier. This will be separate from the Admin Panel feature, and only the following accounts should have access to the new feature, which we will call “GIR Game”:
+•	grassy@forescore.xyz
+•	daniel@danonano.com
+However, this game is different than the one we discussed earlier. Here are the game rules and UI instructions:
+Game Rules:
+This game is simple: the goal is to hit a “green in regulation [GIR]”, and the users simply indicate which player(s) a. hit a GIR (indicated by YES in the UI) or b. did not hit a GIR (indicated by NO in the UI) on each hole. Users either earn +1 point for a YES result on each hole, or 0 points for a NO results on each hole, with 2 exceptions:
+1.	holes 1, 8, 13, and 16 penalize a player with a score of -1 for a NO result. A YES result yields a score of +1
+2.	holes 6, 9, 17, and 18 award a player with a score of +2 for a YES result. A NO result yields a score of 0
+UI Instructions
+1.	Create a new option “GIR” in the Games tab popout. Recommend an icon, we can review other options as necessary later
+2.	Use the same Select Hole interface we used for 2/9/16 and BBB games. Holes 1, 8, 13, and 16 should have a red outline on the hole selector interface (to indicate possibility for a -1 result), while holes 6,9,17, and 18 should have a blue outlined (to indicate the possibility for a +2 result)
+3.	Use the same Payouts tiles (that includes both Points and FBT payout options), and the option to assign GIR Points Value and GIR FBT Value
+4.	Use the same UI (buttons) that we use in BBB to input results for each player per hole
+5.	Add scores a publish to the leaderboard in the new GIR game interface as we have for other games (running scores with pay-up-the-ladder logic)
+Please review these instructions thoroughly, call in an architect as necessary, and let me know what questions you have. At this time, DO NOT incorporate the GIR game in the Payouts tab for multi-game aggregation. We will complete these after we have created and tested the GIR game as a standalone game in the games tab

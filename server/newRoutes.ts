@@ -1093,6 +1093,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       await storage.createPointsGame(bbbGameData);
       
+      // Automatically create a GIR points game linked to this card game session
+      const girGameData = {
+        groupId,
+        gameStateId: gameState.id, // Link to the newly created card game
+        gameType: 'gir' as const,
+        name: `${name} - GIR`,
+        holes: {}, // Initialize empty holes object
+        points: {}, // Initialize empty points object  
+        settings: { pointValue: 1, fbtValue: 10 }, // Default settings
+        createdBy: userId
+      };
+      
+      await storage.createPointsGame(girGameData);
+      
       res.status(201).json(gameState);
     } catch (error) {
       console.error('Error creating game state:', error);
@@ -1887,6 +1901,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GIR-specific hole update endpoint with comprehensive security and validation
+  app.put('/api/gir-games/:gameId/hole/:hole', isAuthenticated, subscriptionProtected, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Validate request parameters
+      const paramsSchema = z.object({
+        gameId: z.string().uuid('Invalid game ID format'),
+        hole: z.string().transform((val) => {
+          const holeNumber = parseInt(val);
+          if (isNaN(holeNumber) || holeNumber < 1 || holeNumber > 18) {
+            throw new Error('Hole number must be between 1 and 18');
+          }
+          return holeNumber;
+        })
+      });
+      
+      // Validate request body - expects playerGirData: { [playerId]: boolean }
+      const bodySchema = z.object({
+        playerGirData: z.record(z.boolean()).refine(data => 
+          Object.keys(data).length > 0,
+          { message: 'At least one player GIR status must be provided' }
+        )
+      });
+      
+      const { gameId, hole } = paramsSchema.parse(req.params);
+      const { playerGirData } = bodySchema.parse(req.body);
+      
+      const game = await storage.getPointsGame(gameId);
+      if (!game) {
+        return res.status(404).json({ message: 'GIR game not found' });
+      }
+
+      // Verify this is a GIR game
+      if (game.gameType !== 'gir') {
+        return res.status(400).json({ message: 'This endpoint is only for GIR games' });
+      }
+
+      // Get group to get player list and verify user access
+      const group = await storage.getGroup(game.groupId);
+      if (!group) {
+        return res.status(404).json({ message: 'Group not found' });
+      }
+      
+      // CRITICAL SECURITY: Verify user is member of this group
+      if (group.createdBy !== userId) {
+        const userIsMember = group.players.some(player => player.id === userId);
+        if (!userIsMember) {
+          return res.status(403).json({ message: 'Access denied: You are not a member of this group' });
+        }
+      }
+      
+      // Validate that all provided player IDs exist in the group
+      const validPlayerIds = new Set(group.players.map(p => p.id));
+      
+      for (const playerId of Object.keys(playerGirData)) {
+        if (!validPlayerIds.has(playerId)) {
+          return res.status(400).json({ 
+            message: `Invalid player ID: ${playerId}. Player must be a member of this group.` 
+          });
+        }
+      }
+
+      // Calculate GIR points using server-side logic
+      const penaltyHoles = new Set([1, 8, 13, 16]);
+      const bonusHoles = new Set([6, 9, 17, 18]);
+      const girPoints: Record<string, number> = {};
+      
+      // Initialize all players to 0 points for this hole
+      group.players.forEach(player => {
+        girPoints[player.id] = 0;
+      });
+
+      // Calculate points based on GIR status and hole type
+      Object.entries(playerGirData).forEach(([playerId, hitGir]) => {
+        if (penaltyHoles.has(hole)) {
+          // Penalty hole: YES = +1, NO = -1
+          girPoints[playerId] = hitGir ? 1 : -1;
+        } else if (bonusHoles.has(hole)) {
+          // Bonus hole: YES = +2, NO = 0
+          girPoints[playerId] = hitGir ? 2 : 0;
+        } else {
+          // Standard hole: YES = +1, NO = 0
+          girPoints[playerId] = hitGir ? 1 : 0;
+        }
+      });
+
+      // Update the holes and points data
+      const updatedHoles = { ...game.holes };
+      const updatedPoints = { ...game.points };
+      
+      updatedHoles[hole] = playerGirData;
+      updatedPoints[hole] = girPoints;
+
+      const updatedGame = await storage.updatePointsGame(gameId, {
+        holes: updatedHoles,
+        points: updatedPoints
+      });
+
+      res.json(updatedGame);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: 'Invalid data', 
+          errors: error.errors 
+        });
+      }
+      console.error('Error updating GIR hole data:', error);
+      res.status(500).json({ message: 'Failed to update GIR hole data' });
+    }
+  });
+
   // BBB Who Owes Who calculation endpoint with comprehensive security and validation
   app.get('/api/bbb-games/:gameId/who-owes-who', isAuthenticated, subscriptionProtected, async (req: any, res) => {
     try {
@@ -2072,6 +2198,117 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       console.error('Error calculating BBB payouts:', error);
       res.status(500).json({ message: 'Failed to calculate BBB payouts' });
+    }
+  });
+
+  // GIR Who Owes Who calculation endpoint with comprehensive security and validation
+  app.get('/api/gir-games/:gameId/who-owes-who', isAuthenticated, subscriptionProtected, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Validate request parameters
+      const paramsSchema = z.object({
+        gameId: z.string().uuid('Invalid game ID format')
+      });
+      
+      // Validate query parameters
+      const querySchema = z.object({
+        pointValue: z.string().optional().transform((val) => {
+          if (!val) return 0;
+          const num = parseFloat(val);
+          if (isNaN(num) || num < 0) {
+            throw new Error('Point value must be a non-negative number');
+          }
+          return num;
+        }),
+        payoutMode: z.enum(['points', 'fbt'], {
+          errorMap: () => ({ message: 'Payout mode must be "points" or "fbt"' })
+        }),
+        fbtValue: z.string().optional().transform((val) => {
+          if (!val) return 0;
+          const num = parseFloat(val);
+          if (isNaN(num) || num < 0) {
+            throw new Error('FBT value must be a non-negative number');
+          }
+          return num;
+        })
+      }).refine(data => 
+        (data.payoutMode === 'points' && data.pointValue > 0) ||
+        (data.payoutMode === 'fbt' && data.fbtValue > 0),
+        { message: 'Point value required for points mode, FBT value required for FBT mode' }
+      );
+      
+      const { gameId } = paramsSchema.parse(req.params);
+      const { pointValue, payoutMode, fbtValue } = querySchema.parse(req.query);
+
+      const game = await storage.getPointsGame(gameId);
+      if (!game) {
+        return res.status(404).json({ message: 'GIR game not found' });
+      }
+
+      // Verify this is a GIR game
+      if (game.gameType !== 'gir') {
+        return res.status(400).json({ message: 'This endpoint is only for GIR games' });
+      }
+
+      // Get group to access players and verify user access
+      const group = await storage.getGroup(game.groupId);
+      if (!group) {
+        return res.status(404).json({ message: 'Group not found' });
+      }
+      
+      // CRITICAL SECURITY: Verify user is member of this group
+      if (group.createdBy !== userId) {
+        const userIsMember = group.players.some(player => player.id === userId);
+        if (!userIsMember) {
+          return res.status(403).json({ message: 'Access denied: You are not a member of this group' });
+        }
+      }
+
+      const players = group.players;
+      const playerIds = players.map(p => p.id);
+
+      // Use the canonical GIR calculation functions
+      let payouts: Record<string, number>;
+
+      if (payoutMode === 'points' && pointValue > 0) {
+        // Use calculateGIRPointsGame for points mode
+        payouts = calculateGIRPointsGame(game.holes || {}, playerIds, pointValue);
+      } else if (payoutMode === 'fbt' && fbtValue > 0) {
+        // Use calculateGIRFbtGame for FBT mode
+        payouts = calculateGIRFbtGame(game.holes || {}, playerIds, fbtValue);
+      } else {
+        return res.status(400).json({ message: 'Invalid payout mode or value' });
+      }
+
+      // Use canonical settlement logic to ensure consistency
+      const whoOwesWho = settleWhoOwesWho(payouts).map(tx => ({
+        fromPlayerId: tx.from,
+        toPlayerId: tx.to,
+        amount: tx.amount,
+        fromPlayerName: players.find(p => p.id === tx.from)?.name || 'Unknown',
+        toPlayerName: players.find(p => p.id === tx.to)?.name || 'Unknown'
+      }));
+
+      // Return same data structure as BBB/2916 payouts for consistency
+      res.json({
+        whoOwesWho,
+        payouts,
+        selectedGames: [payoutMode],
+        success: true,
+        totalTransactions: whoOwesWho.length,
+        summary: payouts,
+        cardGameDetails: null
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: 'Invalid data', 
+          errors: error.errors 
+        });
+      }
+      console.error('Error calculating GIR payouts:', error);
+      res.status(500).json({ message: 'Failed to calculate GIR payouts' });
     }
   });
 

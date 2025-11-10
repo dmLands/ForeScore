@@ -40,6 +40,8 @@ export const users = pgTable("users", {
   manualTrialEndsAt: timestamp("manual_trial_ends_at"),
   manualTrialDays: integer("manual_trial_days"),
   manualTrialReason: text("manual_trial_reason"),
+  // Feature flags
+  hasGirGameAccess: integer("has_gir_game_access").notNull().default(0), // 0 = no access, 1 = access (for GIR game feature)
   // Auto-trial fields for self-serve registration (V9.0)
   autoTrialStatus: varchar("auto_trial_status").$type<'eligible' | 'active' | 'expired' | null>(),
   autoTrialActivatedAt: timestamp("auto_trial_activated_at"),
@@ -209,7 +211,7 @@ export const pointsGames = pgTable("points_games", {
   groupId: varchar("group_id").notNull().references(() => groups.id, { onDelete: "cascade" }),
   gameStateId: varchar("game_state_id").references(() => gameStates.id, { onDelete: "cascade" }), // Link to specific card game session
   name: varchar("name").notNull(),
-  gameType: varchar("game_type").$type<'points' | 'bbb'>().notNull().default('points'), // NEW: Distinguish between 2/9/16 and BBB
+  gameType: varchar("game_type").$type<'points' | 'bbb' | 'gir'>().notNull().default('points'), // Distinguish between 2/9/16, BBB, and GIR
   holes: jsonb("holes").$type<Record<number, Record<string, number | string>>>().default({}), // For 2/9/16: hole -> playerId -> strokes; For BBB: hole -> category -> playerId
   points: jsonb("points").$type<Record<number, Record<string, number>>>().default({}), // hole -> playerId -> points (calculated for both game types)
   settings: jsonb("settings").$type<{ pointValue?: number; fbtValue?: number }>().default({ pointValue: 1, fbtValue: 10 }), // Point and FBT values

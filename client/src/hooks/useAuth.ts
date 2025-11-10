@@ -51,6 +51,7 @@ export function useAuth() {
   const isAuthenticated = !!user && !userError;
   const isLoading = userLoading || (isAuthenticated && subscriptionLoading);
   const userIsAdmin = isAdmin(user);
+  const hasGirAccess = !!user?.hasGirGameAccess; // GIR game feature flag
   
   // Only check subscription status if we have data and no error
   const hasActiveSubscription = subscriptionAccess?.hasAccess ?? false;
@@ -65,5 +66,6 @@ export function useAuth() {
     hasActiveSubscription,
     subscriptionAccess,
     isAdmin: userIsAdmin,
+    hasGirAccess,
   };
 }

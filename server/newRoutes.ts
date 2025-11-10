@@ -4,7 +4,7 @@ import { createServer, type Server } from "http";
 import { z } from "zod";
 import { storage } from "./storage.js";
 import { setupAuth, isAuthenticated, generateRoomToken, requireAdmin } from "./replitAuth.js";
-import { calculateCardGameDetails, calculate2916Points, validateCardAssignment, calculateCardsGame, calculatePointsGame, calculateFbtGame, buildFbtNetsFromPointsGame, combineGames, settleWhoOwesWho, combineTotals, generateSettlement, calculateBBBPointsGame, calculateBBBFbtGame } from "./secureGameLogic.js";
+import { calculateCardGameDetails, calculate2916Points, validateCardAssignment, calculateCardsGame, calculatePointsGame, calculateFbtGame, buildFbtNetsFromPointsGame, combineGames, settleWhoOwesWho, combineTotals, generateSettlement, calculateBBBPointsGame, calculateBBBFbtGame, calculateGIRPointsGame, calculateGIRFbtGame, calculateGIRPoints } from "./secureGameLogic.js";
 import { SecureWebSocketManager } from "./secureWebSocket.js";
 import { registerUser, authenticateUser, registerSchema, loginSchema } from "./localAuth.js";
 import { insertGroupSchema, insertGameStateSchema, insertPointsGameSchema, cardValuesSchema, pointsGameSettingsSchema, gameStates, roomStates, userPreferences, insertUserPreferencesSchema, passwordResetTokens, insertPasswordResetTokenSchema, users, type Card, type CardAssignment } from "@shared/schema";

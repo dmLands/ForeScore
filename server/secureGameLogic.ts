@@ -511,3 +511,107 @@ export function calculateBBBFbtGame(
 
   return calculateFbtGame(frontPoints, backPoints, totalPoints, potValue);
 }
+
+/**
+ * Calculate GIR (Green in Regulation) points from hole data
+ * Scoring rules:
+ * - Standard holes: YES = +1, NO = 0
+ * - Penalty holes (1, 8, 13, 16): YES = +1, NO = -1
+ * - Bonus holes (6, 9, 17, 18): YES = +2, NO = 0
+ */
+export function calculateGIRPoints(
+  girHoleData: Record<number, Record<string, boolean>>,
+  playerIds: string[]
+): Record<string, number> {
+  const points: Record<string, number> = {};
+  playerIds.forEach(id => points[id] = 0);
+
+  const penaltyHoles = new Set([1, 8, 13, 16]);
+  const bonusHoles = new Set([6, 9, 17, 18]);
+
+  Object.entries(girHoleData).forEach(([holeStr, holeData]) => {
+    const hole = parseInt(holeStr, 10);
+    
+    Object.entries(holeData).forEach(([playerId, hitGir]) => {
+      if (!playerIds.includes(playerId)) return;
+      
+      if (penaltyHoles.has(hole)) {
+        // Penalty hole: YES = +1, NO = -1
+        points[playerId] += hitGir ? 1 : -1;
+      } else if (bonusHoles.has(hole)) {
+        // Bonus hole: YES = +2, NO = 0
+        points[playerId] += hitGir ? 2 : 0;
+      } else {
+        // Standard hole: YES = +1, NO = 0
+        points[playerId] += hitGir ? 1 : 0;
+      }
+    });
+  });
+
+  return points;
+}
+
+/**
+ * GIR Points Game calculation (pairwise comparison like BBB)
+ * Uses same pairwise logic as calculatePointsGame
+ */
+export function calculateGIRPointsGame(
+  girHoleData: Record<number, Record<string, boolean>>,
+  playerIds: string[],
+  valuePerPoint: number = 1
+): Record<string, number> {
+  const girPoints = calculateGIRPoints(girHoleData, playerIds);
+  return calculatePointsGame(girPoints, valuePerPoint);
+}
+
+/**
+ * GIR FBT Game calculation (Front/Back/Total like BBB)
+ * Front = holes 1-9, Back = holes 10-18, Total = all holes
+ */
+export function calculateGIRFbtGame(
+  girHoleData: Record<number, Record<string, boolean>>,
+  playerIds: string[],
+  potValue: number = 10
+): Record<string, number> {
+  const frontPoints: Record<string, number> = {};
+  const backPoints: Record<string, number> = {};
+  const totalPoints: Record<string, number> = {};
+  
+  // Initialize all players with 0 points
+  playerIds.forEach(id => {
+    frontPoints[id] = 0;
+    backPoints[id] = 0;
+    totalPoints[id] = 0;
+  });
+
+  const penaltyHoles = new Set([1, 8, 13, 16]);
+  const bonusHoles = new Set([6, 9, 17, 18]);
+
+  // Aggregate points by segment
+  Object.entries(girHoleData).forEach(([holeStr, holeData]) => {
+    const hole = parseInt(holeStr, 10);
+    const isFront = hole <= 9;
+
+    Object.entries(holeData).forEach(([playerId, hitGir]) => {
+      if (!playerIds.includes(playerId)) return;
+      
+      let holePoints = 0;
+      if (penaltyHoles.has(hole)) {
+        holePoints = hitGir ? 1 : -1;
+      } else if (bonusHoles.has(hole)) {
+        holePoints = hitGir ? 2 : 0;
+      } else {
+        holePoints = hitGir ? 1 : 0;
+      }
+      
+      totalPoints[playerId] += holePoints;
+      if (isFront) {
+        frontPoints[playerId] += holePoints;
+      } else {
+        backPoints[playerId] += holePoints;
+      }
+    });
+  });
+
+  return calculateFbtGame(frontPoints, backPoints, totalPoints, potValue);
+}

@@ -1906,6 +1906,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       
+      // FEATURE FLAG CHECK: Verify user has GIR game access
+      const currentUser = await storage.getUser(userId);
+      if (!currentUser || !currentUser.hasGirGameAccess) {
+        return res.status(403).json({ 
+          message: 'Access denied: GIR game feature not available for this account' 
+        });
+      }
+      
       // Validate request parameters
       const paramsSchema = z.object({
         gameId: z.string().uuid('Invalid game ID format'),
@@ -2205,6 +2213,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/gir-games/:gameId/who-owes-who', isAuthenticated, subscriptionProtected, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      
+      // FEATURE FLAG CHECK: Verify user has GIR game access
+      const currentUser = await storage.getUser(userId);
+      if (!currentUser || !currentUser.hasGirGameAccess) {
+        return res.status(403).json({ 
+          message: 'Access denied: GIR game feature not available for this account' 
+        });
+      }
       
       // Validate request parameters
       const paramsSchema = z.object({

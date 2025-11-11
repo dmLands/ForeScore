@@ -17,6 +17,7 @@ import { Tutorial } from "@/components/tutorial";
 import AppDownloadPrompt from "@/components/AppDownloadPrompt";
 import OfflineIndicator from "@/components/OfflineIndicator";
 import TrialCountdownBanner from "@/components/TrialCountdownBanner";
+import { GIRGame } from "@/features/games";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useGameState } from "@/hooks/use-game-state";
@@ -199,7 +200,7 @@ function CardGamePayouts({ selectedGroup, gameState, payoutData, selectedPointsG
 }
 
 export default function Home() {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, hasGirAccess } = useAuth();
   
   // Track payout data readiness for the restoration logic
   const [payoutDataReady, setPayoutDataReady] = useState(true);
@@ -244,7 +245,7 @@ export default function Home() {
   const [showAboutForescore, setShowAboutForescore] = useState(false);
   
   // Games tab submenu state
-  const [selectedSubGame, setSelectedSubGame] = useState<'cards' | 'points' | 'bbb'>('cards');
+  const [selectedSubGame, setSelectedSubGame] = useState<'cards' | 'points' | 'bbb' | 'gir'>('cards');
   const [showGamesOverlay, setShowGamesOverlay] = useState(false);
 
   // V6.5: Save point/FBT values to server
@@ -4339,6 +4340,11 @@ export default function Home() {
           </div>
         )}
 
+        {/* GIR Tab - Feature Flagged */}
+        {currentTab === 'games' && selectedSubGame === 'gir' && hasGirAccess && selectedGroup && (
+          <GIRGame selectedGroup={selectedGroup} />
+        )}
+
         {/* Rules Tab */}
         {currentTab === 'rules' && (
           <div className="p-4 space-y-4" ref={(el) => {
@@ -5626,6 +5632,24 @@ export default function Home() {
                     <div className="text-sm text-gray-500">Bingo Bango Bongo</div>
                   </div>
                 </button>
+                
+                {hasGirAccess && (
+                  <button
+                    data-testid="button-game-gir"
+                    className="w-full flex items-center gap-3 p-3 rounded-md hover:bg-gray-50 transition-colors text-left"
+                    onClick={() => {
+                      changeTab('games');
+                      setSelectedSubGame('gir');
+                      setShowGamesOverlay(false);
+                    }}
+                  >
+                    <Flag className="h-5 w-5 text-gray-600" />
+                    <div>
+                      <div className="font-medium text-gray-900">GIR</div>
+                      <div className="text-sm text-gray-500">Greens in Regulation</div>
+                    </div>
+                  </button>
+                )}
                 
                 <button
                   data-testid="button-game-2916"

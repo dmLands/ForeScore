@@ -122,15 +122,15 @@ export function GIRGame({ selectedGroup }: GIRGameProps) {
           <div className="mb-4 p-3 bg-gray-50 rounded-md text-sm">
             <div className="font-medium text-gray-700 mb-1">Scoring:</div>
             {PENALTY_HOLES.includes(selectedHole) ? (
-              <div className="text-red-600">❗ Penalty Hole: YES = +1, NO = -1</div>
+              <div className="text-red-600">❗ Penalty Hole: HIT = +1, MISS = -1</div>
             ) : BONUS_HOLES.includes(selectedHole) ? (
-              <div className="text-blue-600">⭐ Bonus Hole: YES = +2, NO = 0</div>
+              <div className="text-blue-600">⭐ Bonus Hole: HIT = +2, MISS = 0</div>
             ) : (
-              <div className="text-gray-600">Standard Hole: YES = +1, NO = 0</div>
+              <div className="text-gray-600">Standard Hole: HIT = +1, MISS = 0</div>
             )}
           </div>
 
-          {/* Player YES/NO Grid */}
+          {/* Player HIT/MISS Grid */}
           <PlayerActionGrid
             players={players}
             selectedValues={holeData}
@@ -138,8 +138,8 @@ export function GIRGame({ selectedGroup }: GIRGameProps) {
               setHoleData(prev => ({ ...prev, [playerId]: value as boolean }));
             }}
             options={[
-              { label: 'YES', value: true },
-              { label: 'NO', value: false }
+              { label: 'HIT', value: true },
+              { label: 'MISS', value: false }
             ]}
             testIdPrefix="gir"
           />

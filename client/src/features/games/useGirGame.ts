@@ -12,14 +12,14 @@ export function useGirGame(selectedGroup: Group | null) {
   const [fbtValue, setFbtValue] = useState<string>("10.00");
   const [payoutMode, setPayoutMode] = useState<'points' | 'fbt'>('points');
 
-  // Fetch GIR games for the selected group
-  const { data: girGames = [], isLoading: girGamesLoading } = useQuery<PointsGame[]>({
-    queryKey: ['/api/points-games', selectedGroup?.id, 'gir'],
-    enabled: !!selectedGroup?.id,
-    select: (data) => data.filter(game => game.gameType === 'gir')
+  // Fetch all points games for the selected group (matching BBB/2916 pattern)
+  const { data: pointsGames = [], isLoading: girGamesLoading } = useQuery<PointsGame[]>({
+    queryKey: ['/api/points-games', selectedGroup?.id],
+    enabled: !!selectedGroup?.id
   });
 
-  const selectedGirGame = girGames.length > 0 ? girGames[0] : null;
+  // Filter to find GIR game from the points games array
+  const selectedGirGame = pointsGames.find(game => game.gameType === 'gir') || null;
 
   // Update hole data mutation
   const updateHoleMutation = useMutation({

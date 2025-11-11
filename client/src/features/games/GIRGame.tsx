@@ -259,24 +259,33 @@ export function GIRGame({ selectedGroup }: GIRGameProps) {
                 </div>
               )}
               
-              {/* Total Summary */}
-              {payoutData.summary && (
+              {/* Player Totals - GIR Points */}
+              {payoutData.girPoints && (
                 <div className="mt-4 pt-4 border-t">
-                  <h4 className="font-medium text-gray-800 mb-2">Player Totals</h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    {Object.entries(payoutData.summary).map(([playerId, amount]: [string, any]) => {
-                      const player = players.find(p => p.id === playerId);
-                      return (
-                        <div key={playerId} className="text-sm">
-                          <span className="font-medium" style={{ color: player?.color }}>
-                            {player?.name}:
-                          </span>{' '}
-                          <span className={amount >= 0 ? 'text-green-600' : 'text-red-600'}>
-                            ${Math.abs(amount).toFixed(2)}
-                          </span>
-                        </div>
-                      );
-                    })}
+                  <h4 className="font-medium text-gray-800 mb-2">Player Totals (GIR Points)</h4>
+                  <div className="space-y-2">
+                    {Object.entries(payoutData.girPoints)
+                      .sort(([, a]: [string, any], [, b]: [string, any]) => b - a)
+                      .map(([playerId, points]: [string, any]) => {
+                        const player = players.find(p => p.id === playerId);
+                        if (!player) return null;
+                        return (
+                          <div key={playerId} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                            <div className="flex items-center gap-2">
+                              <div 
+                                className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                                style={{ backgroundColor: player.color }}
+                              >
+                                {player.initials}
+                              </div>
+                              <span className="font-medium text-gray-800">{player.name}</span>
+                            </div>
+                            <span className={`font-bold ${points > 0 ? 'text-green-600' : points < 0 ? 'text-red-600' : 'text-gray-600'}`}>
+                              {points > 0 ? '+' : ''}{points} pts
+                            </span>
+                          </div>
+                        );
+                      })}
                   </div>
                 </div>
               )}

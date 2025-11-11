@@ -2284,7 +2284,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const players = group.players;
       const playerIds = players.map(p => p.id);
 
-      // Use the canonical GIR calculation functions
+      // Calculate raw GIR points first (always needed for display)
+      const girPoints = calculateGIRPoints(game.holes || {}, playerIds);
+
+      // Use the canonical GIR calculation functions for dollar payouts
       let payouts: Record<string, number>;
 
       if (payoutMode === 'points' && pointValue > 0) {
@@ -2310,6 +2313,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         whoOwesWho,
         payouts,
+        girPoints, // Raw GIR points for Player Totals display
         selectedGames: [payoutMode],
         success: true,
         totalTransactions: whoOwesWho.length,

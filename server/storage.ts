@@ -459,8 +459,11 @@ export class DatabaseStorage implements IStorage {
         .orderBy(sql`${pointsGames.createdAt} DESC`);
       return result;
     } else {
-      // When no gameStateId is provided, don't return any games to enforce proper scoping
-      return [];
+      // When no gameStateId is provided, return ALL points games for the group
+      const result = await db.select().from(pointsGames)
+        .where(eq(pointsGames.groupId, groupId))
+        .orderBy(sql`${pointsGames.createdAt} DESC`);
+      return result;
     }
   }
 

@@ -151,7 +151,7 @@ export function GIRGame({ selectedGroup }: GIRGameProps) {
             className="w-full mt-4 bg-emerald-500 hover:bg-emerald-600 text-white"
             data-testid="button-save-gir-data"
           >
-            {isSaving ? 'Saving...' : 'Save GIR Data'}
+            {isSaving ? 'Saving...' : 'Save GIR Scores'}
           </Button>
         </CardContent>
       </Card>

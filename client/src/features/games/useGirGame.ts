@@ -35,7 +35,7 @@ export function useGirGame(selectedGroup: Group | null) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/points-games'] });
-      toast({ title: "Success", description: "GIR data saved successfully" });
+      queryClient.invalidateQueries({ queryKey: ['/api/gir-games', selectedGirGame?.id], exact: false });
     },
     onError: (error: any) => {
       toast({ 

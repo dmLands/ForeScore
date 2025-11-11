@@ -1,7 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { HoleSelector } from "@/components/HoleSelector";
 import { PlayerActionGrid } from "./PlayerActionGrid";
 import { useGirGame } from "./useGirGame";
@@ -166,15 +165,26 @@ export function GIRGame({ selectedGroup }: GIRGameProps) {
             <label className="text-sm font-medium text-gray-700 mb-2 block">
               Payout Mode
             </label>
-            <Select value={payoutMode} onValueChange={(val) => setPayoutMode(val as 'points' | 'fbt')}>
-              <SelectTrigger data-testid="select-gir-payout-mode">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="points">Points</SelectItem>
-                <SelectItem value="fbt">FBT (Front/Back/Total)</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex gap-2">
+              <Button
+                variant={payoutMode === 'points' ? 'default' : 'outline'}
+                onClick={() => setPayoutMode('points')}
+                size="sm"
+                className="flex-1"
+                data-testid="button-gir-mode-points"
+              >
+                Points
+              </Button>
+              <Button
+                variant={payoutMode === 'fbt' ? 'default' : 'outline'}
+                onClick={() => setPayoutMode('fbt')}
+                size="sm"
+                className="flex-1"
+                data-testid="button-gir-mode-fbt"
+              >
+                FBT
+              </Button>
+            </div>
           </div>
 
           {/* Value Inputs */}
@@ -238,11 +248,12 @@ export function GIRGame({ selectedGroup }: GIRGameProps) {
                       className="flex items-center justify-between p-2 bg-gray-50 rounded"
                       data-testid={`transaction-${idx}`}
                     >
-                      <span className="text-sm text-gray-700">
-                        <span className="font-medium">{tx.fromPlayerName}</span> owes{' '}
-                        <span className="font-medium">{tx.toPlayerName}</span>
-                      </span>
-                      <span className="font-bold text-emerald-600">${tx.amount.toFixed(2)}</span>
+                      <div className="text-sm">
+                        <span className="font-medium text-red-600">{tx.fromPlayerName}</span>
+                        <span className="text-gray-600"> owes </span>
+                        <span className="font-medium text-green-600">{tx.toPlayerName}</span>
+                      </div>
+                      <span className="font-bold text-black">${tx.amount.toFixed(2)}</span>
                     </div>
                   ))}
                 </div>

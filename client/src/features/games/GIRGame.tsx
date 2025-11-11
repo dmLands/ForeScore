@@ -87,7 +87,8 @@ export function GIRGame({ selectedGroup }: GIRGameProps) {
   const players = selectedGroup.players.map(p => ({
     id: p.id,
     name: p.name,
-    color: p.color
+    color: p.color,
+    initials: p.initials || p.name.substring(0, 2).toUpperCase()
   }));
 
   return (

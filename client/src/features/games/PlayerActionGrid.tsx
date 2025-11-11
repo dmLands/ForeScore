@@ -4,6 +4,7 @@ interface Player {
   id: string;
   name: string;
   color?: string;
+  initials?: string;
 }
 
 interface PlayerActionGridProps {
@@ -12,6 +13,7 @@ interface PlayerActionGridProps {
   onPlayerSelect: (playerId: string, value: boolean | string) => void;
   options: Array<{ label: string; value: boolean | string }>;
   testIdPrefix?: string;
+  showAvatar?: boolean;
 }
 
 export function PlayerActionGrid({ 
@@ -19,18 +21,31 @@ export function PlayerActionGrid({
   selectedValues, 
   onPlayerSelect, 
   options,
-  testIdPrefix = 'player-action'
+  testIdPrefix = 'player-action',
+  showAvatar = false
 }: PlayerActionGridProps) {
   return (
     <div className="space-y-3">
       {players.map(player => (
         <div key={player.id} className="flex items-center justify-between">
-          <span 
-            className="font-medium text-gray-700"
-            style={{ color: player.color }}
-          >
-            {player.name}
-          </span>
+          {showAvatar ? (
+            <div className="flex items-center gap-2">
+              <div 
+                className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                style={{ backgroundColor: player.color }}
+              >
+                {player.initials}
+              </div>
+              <span className="font-medium text-gray-800">{player.name}</span>
+            </div>
+          ) : (
+            <span 
+              className="font-medium text-gray-700"
+              style={{ color: player.color }}
+            >
+              {player.name}
+            </span>
+          )}
           <div className="flex gap-2">
             {options.map(option => {
               const isSelected = selectedValues[player.id] === option.value;

@@ -552,8 +552,49 @@ export function calculateGIRPoints(
 }
 
 /**
- * GIR Points Game calculation (pairwise comparison like BBB)
- * Uses same pairwise logic as calculatePointsGame
+ * Pay-up-the-ladder settlement: Each player pays all players above them
+ * based on point differences. Used for GIR and similar games.
+ * 
+ * Example: Points [10, 5, -2, -3] with $1/point
+ * - Player D (-3) owes: C $1, B $8, A $13 
+ * - Player C (-2) owes: B $7, A $12
+ * - Player B (5) owes: A $5
+ */
+export function calculateLadderSettlement(
+  points: Record<string, number>,
+  valuePerPoint: number = 1
+): Record<string, number> {
+  const players = Object.keys(points);
+  const net: Record<string, number> = Object.fromEntries(players.map(p => [p, 0]));
+  
+  // Sort players by points (descending - highest first)
+  const sortedPlayers = players.sort((a, b) => points[b] - points[a]);
+  
+  // Each player pays all players above them
+  for (let i = 0; i < sortedPlayers.length; i++) {
+    for (let j = i + 1; j < sortedPlayers.length; j++) {
+      const higherPlayer = sortedPlayers[i];
+      const lowerPlayer = sortedPlayers[j];
+      
+      const pointDiff = points[higherPlayer] - points[lowerPlayer];
+      const payment = pointDiff * valuePerPoint;
+      
+      // Lower player pays higher player
+      net[higherPlayer] += payment;
+      net[lowerPlayer] -= payment;
+    }
+  }
+  
+  // Round all results
+  for (const p of players) {
+    net[p] = round2(net[p]);
+  }
+  
+  return net;
+}
+
+/**
+ * GIR Points Game calculation using pay-up-the-ladder method
  */
 export function calculateGIRPointsGame(
   girHoleData: Record<number, Record<string, boolean>>,
@@ -561,12 +602,13 @@ export function calculateGIRPointsGame(
   valuePerPoint: number = 1
 ): Record<string, number> {
   const girPoints = calculateGIRPoints(girHoleData, playerIds);
-  return calculatePointsGame(girPoints, valuePerPoint);
+  return calculateLadderSettlement(girPoints, valuePerPoint);
 }
 
 /**
  * GIR FBT Game calculation (Front/Back/Total like BBB)
  * Front = holes 1-9, Back = holes 10-18, Total = all holes
+ * Uses traditional FBT winner-takes-pot logic (not ladder)
  */
 export function calculateGIRFbtGame(
   girHoleData: Record<number, Record<string, boolean>>,
@@ -613,5 +655,6 @@ export function calculateGIRFbtGame(
     });
   });
 
+  // Use traditional FBT pot logic (winner-takes-all per segment)
   return calculateFbtGame(frontPoints, backPoints, totalPoints, potValue);
 }

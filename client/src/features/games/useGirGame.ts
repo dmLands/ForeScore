@@ -60,7 +60,6 @@ export function useGirGame(selectedGroup: Group | null) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/points-games'] });
-      toast({ title: "Success", description: "Values saved successfully" });
     },
     onError: (error: any) => {
       toast({ 

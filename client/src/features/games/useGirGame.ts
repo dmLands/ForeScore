@@ -94,10 +94,7 @@ export function useGirGame(selectedGroup: Group | null) {
     },
     onSuccess: (updatedGame) => {
       queryClient.invalidateQueries({ queryKey: ['/api/points-games'] });
-      toast({
-        title: "Configuration Saved",
-        description: "Penalty and bonus holes have been updated.",
-      });
+      queryClient.invalidateQueries({ queryKey: ['/api/gir-games'] });
       // Update local state with the saved config
       if (updatedGame.girHoleConfig) {
         setHoleConfig(updatedGame.girHoleConfig);
@@ -112,9 +109,9 @@ export function useGirGame(selectedGroup: Group | null) {
     }
   });
 
-  // Fetch payouts
+  // Fetch payouts - includes holeConfig in queryKey to auto-recalculate when penalty/bonus holes change
   const { data: payoutData, isLoading: payoutsLoading } = useQuery({
-    queryKey: ['/api/gir-games', selectedGirGame?.id, 'who-owes-who', payoutMode, pointValue, nassauValue],
+    queryKey: ['/api/gir-games', selectedGirGame?.id, 'who-owes-who', payoutMode, pointValue, nassauValue, holeConfig],
     enabled: !!selectedGirGame && ((payoutMode === 'points' && parseFloat(pointValue) > 0) || (payoutMode === 'nassau' && parseFloat(nassauValue) > 0)),
     queryFn: async () => {
       const params = new URLSearchParams({

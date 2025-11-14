@@ -516,18 +516,19 @@ export function calculateBBBNassauGame(
  * Calculate GIR (Green in Regulation) points from hole data
  * Scoring rules:
  * - Standard holes: YES = +1, NO = 0
- * - Penalty holes (1, 8, 13, 16): YES = +1, NO = -1
- * - Bonus holes (6, 9, 17, 18): YES = +2, NO = 0
+ * - Penalty holes (user-configured): YES = +1, NO = -1
+ * - Bonus holes (user-configured): YES = +2, NO = 0
  */
 export function calculateGIRPoints(
   girHoleData: Record<number, Record<string, boolean>>,
-  playerIds: string[]
+  playerIds: string[],
+  girHoleConfig: { penalty: number[]; bonus: number[] } = { penalty: [], bonus: [] }
 ): Record<string, number> {
   const points: Record<string, number> = {};
   playerIds.forEach(id => points[id] = 0);
 
-  const penaltyHoles = new Set([1, 8, 13, 16]);
-  const bonusHoles = new Set([6, 9, 17, 18]);
+  const penaltyHoles = new Set(girHoleConfig.penalty);
+  const bonusHoles = new Set(girHoleConfig.bonus);
 
   Object.entries(girHoleData).forEach(([holeStr, holeData]) => {
     const hole = parseInt(holeStr, 10);
@@ -599,9 +600,10 @@ export function calculateLadderSettlement(
 export function calculateGIRPointsGame(
   girHoleData: Record<number, Record<string, boolean>>,
   playerIds: string[],
-  valuePerPoint: number = 1
+  valuePerPoint: number = 1,
+  girHoleConfig: { penalty: number[]; bonus: number[] } = { penalty: [], bonus: [] }
 ): Record<string, number> {
-  const girPoints = calculateGIRPoints(girHoleData, playerIds);
+  const girPoints = calculateGIRPoints(girHoleData, playerIds, girHoleConfig);
   return calculateLadderSettlement(girPoints, valuePerPoint);
 }
 
@@ -613,7 +615,8 @@ export function calculateGIRPointsGame(
 export function calculateGIRNassauGame(
   girHoleData: Record<number, Record<string, boolean>>,
   playerIds: string[],
-  potValue: number = 10
+  potValue: number = 10,
+  girHoleConfig: { penalty: number[]; bonus: number[] } = { penalty: [], bonus: [] }
 ): Record<string, number> {
   const frontPoints: Record<string, number> = {};
   const backPoints: Record<string, number> = {};
@@ -626,8 +629,8 @@ export function calculateGIRNassauGame(
     totalPoints[id] = 0;
   });
 
-  const penaltyHoles = new Set([1, 8, 13, 16]);
-  const bonusHoles = new Set([6, 9, 17, 18]);
+  const penaltyHoles = new Set(girHoleConfig.penalty);
+  const bonusHoles = new Set(girHoleConfig.bonus);
 
   // Aggregate points by segment
   Object.entries(girHoleData).forEach(([holeStr, holeData]) => {

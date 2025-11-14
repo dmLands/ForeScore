@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import type { PointsGame, Group } from "@shared/schema";
+import type { PointsGame, Group, GIRHoleConfig } from "@shared/schema";
 
 export function useGirGame(selectedGroup: Group | null) {
   const { toast } = useToast();
@@ -11,6 +11,7 @@ export function useGirGame(selectedGroup: Group | null) {
   const [pointValue, setPointValue] = useState<string>("1.00");
   const [nassauValue, setNassauValue] = useState<string>("10.00");
   const [payoutMode, setPayoutMode] = useState<'points' | 'nassau'>('points');
+  const [holeConfig, setHoleConfig] = useState<GIRHoleConfig>({ penalty: [], bonus: [] });
 
   // Fetch all points games for the selected group (matching BBB/2916 pattern)
   const { data: pointsGames = [], isLoading: girGamesLoading } = useQuery<PointsGame[]>({
@@ -20,6 +21,15 @@ export function useGirGame(selectedGroup: Group | null) {
 
   // Filter to find GIR game from the points games array
   const selectedGirGame = pointsGames.find(game => game.gameType === 'gir') || null;
+
+  // Initialize hole configuration from saved game data
+  useEffect(() => {
+    if (selectedGirGame?.girHoleConfig) {
+      setHoleConfig(selectedGirGame.girHoleConfig);
+    } else {
+      setHoleConfig({ penalty: [], bonus: [] });
+    }
+  }, [selectedGirGame]);
 
   // Update hole data mutation
   const updateHoleMutation = useMutation({
@@ -70,6 +80,38 @@ export function useGirGame(selectedGroup: Group | null) {
     }
   });
 
+  // Save hole configuration mutation
+  const saveHoleConfigMutation = useMutation({
+    mutationFn: async (config: GIRHoleConfig) => {
+      if (!selectedGirGame) throw new Error('No GIR game selected');
+      
+      const response = await apiRequest(
+        'PUT',
+        `/api/gir-games/${selectedGirGame.id}/hole-config`,
+        config
+      );
+      return response.json();
+    },
+    onSuccess: (updatedGame) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/points-games'] });
+      toast({
+        title: "Configuration Saved",
+        description: "Penalty and bonus holes have been updated.",
+      });
+      // Update local state with the saved config
+      if (updatedGame.girHoleConfig) {
+        setHoleConfig(updatedGame.girHoleConfig);
+      }
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Error", 
+        description: error.message || "Failed to save hole configuration", 
+        variant: "destructive" 
+      });
+    }
+  });
+
   // Fetch payouts
   const { data: payoutData, isLoading: payoutsLoading } = useQuery({
     queryKey: ['/api/gir-games', selectedGirGame?.id, 'who-owes-who', payoutMode, pointValue, nassauValue],
@@ -98,6 +140,10 @@ export function useGirGame(selectedGroup: Group | null) {
     });
   };
 
+  const saveHoleConfig = (config: GIRHoleConfig) => {
+    saveHoleConfigMutation.mutate(config);
+  };
+
   return {
     selectedGirGame,
     girGamesLoading,
@@ -111,10 +157,14 @@ export function useGirGame(selectedGroup: Group | null) {
     setNassauValue,
     payoutMode,
     setPayoutMode,
+    holeConfig,
+    setHoleConfig,
     saveHoleData,
     saveValues,
+    saveHoleConfig,
     payoutData,
     payoutsLoading,
     isSaving: updateHoleMutation.isPending || saveValuesMutation.isPending,
+    isConfigSaving: saveHoleConfigMutation.isPending,
   };
 }

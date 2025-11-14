@@ -1906,14 +1906,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       
-      // FEATURE FLAG CHECK: Verify user has GIR game access
-      const currentUser = await storage.getUser(userId);
-      if (!currentUser || !currentUser.hasGirGameAccess) {
-        return res.status(403).json({ 
-          message: 'Access denied: GIR game feature not available for this account' 
-        });
-      }
-      
       // Validate request parameters
       const paramsSchema = z.object({
         gameId: z.string().uuid('Invalid game ID format'),
@@ -1972,9 +1964,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Calculate GIR points using server-side logic
-      const penaltyHoles = new Set([1, 8, 13, 16]);
-      const bonusHoles = new Set([6, 9, 17, 18]);
+      // Calculate GIR points using server-side logic with user-configured hole types
+      const holeConfig = game.girHoleConfig || { penalty: [], bonus: [] };
+      const penaltyHoles = new Set(holeConfig.penalty);
+      const bonusHoles = new Set(holeConfig.bonus);
       const girPoints: Record<string, number> = {};
       
       // Initialize all players to 0 points for this hole
@@ -2018,6 +2011,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       console.error('Error updating GIR hole data:', error);
       res.status(500).json({ message: 'Failed to update GIR hole data' });
+    }
+  });
+
+  // GIR hole configuration endpoint - save penalty/bonus hole selections
+  app.put('/api/gir-games/:gameId/hole-config', isAuthenticated, subscriptionProtected, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      
+      // Validate request parameters
+      const paramsSchema = z.object({
+        gameId: z.string().uuid('Invalid game ID format')
+      });
+      
+      // Validate request body - expects penalty and bonus hole arrays
+      const bodySchema = z.object({
+        penalty: z.array(z.number().int().min(1).max(18)).refine(
+          (holes) => new Set(holes).size === holes.length,
+          { message: 'Penalty holes must be unique' }
+        ),
+        bonus: z.array(z.number().int().min(1).max(18)).refine(
+          (holes) => new Set(holes).size === holes.length,
+          { message: 'Bonus holes must be unique' }
+        )
+      }).refine(
+        (data) => {
+          // Ensure no overlap between penalty and bonus holes
+          const penaltySet = new Set(data.penalty);
+          const overlap = data.bonus.some(hole => penaltySet.has(hole));
+          return !overlap;
+        },
+        { message: 'A hole cannot be both penalty and bonus' }
+      );
+      
+      const { gameId } = paramsSchema.parse(req.params);
+      const girHoleConfig = bodySchema.parse(req.body);
+      
+      const game = await storage.getPointsGame(gameId);
+      if (!game) {
+        return res.status(404).json({ message: 'GIR game not found' });
+      }
+
+      // Verify this is a GIR game
+      if (game.gameType !== 'gir') {
+        return res.status(400).json({ message: 'This endpoint is only for GIR games' });
+      }
+
+      // Get group to verify user access
+      const group = await storage.getGroup(game.groupId);
+      if (!group) {
+        return res.status(404).json({ message: 'Group not found' });
+      }
+      
+      // CRITICAL SECURITY: Verify user is member of this group
+      if (group.createdBy !== userId) {
+        const userIsMember = group.players.some(player => player.id === userId);
+        if (!userIsMember) {
+          return res.status(403).json({ message: 'Access denied: You are not a member of this group' });
+        }
+      }
+
+      // Update the hole configuration
+      const updatedGame = await storage.updatePointsGame(gameId, {
+        girHoleConfig
+      });
+
+      console.log(`✅ GIR hole configuration updated for game ${gameId}:`, girHoleConfig);
+      res.json(updatedGame);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: 'Invalid hole configuration', 
+          errors: error.errors 
+        });
+      }
+      console.error('Error updating GIR hole configuration:', error);
+      res.status(500).json({ message: 'Failed to update hole configuration' });
     }
   });
 
@@ -2226,14 +2295,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       
-      // FEATURE FLAG CHECK: Verify user has GIR game access
-      const currentUser = await storage.getUser(userId);
-      if (!currentUser || !currentUser.hasGirGameAccess) {
-        return res.status(403).json({ 
-          message: 'Access denied: GIR game feature not available for this account' 
-        });
-      }
-      
       // Validate request parameters
       const paramsSchema = z.object({
         gameId: z.string().uuid('Invalid game ID format')
@@ -2308,18 +2369,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const players = group.players;
       const playerIds = players.map(p => p.id);
 
+      // Get user-configured penalty/bonus holes
+      const girHoleConfig = game.girHoleConfig || { penalty: [], bonus: [] };
+
       // Calculate raw GIR points first (always needed for display)
-      const girPoints = calculateGIRPoints(game.holes || {}, playerIds);
+      const girPoints = calculateGIRPoints(game.holes || {}, playerIds, girHoleConfig);
 
       // Use the canonical GIR calculation functions for dollar payouts
       let payouts: Record<string, number>;
 
       if (payoutMode === 'points' && pointValue > 0) {
         // Use calculateGIRPointsGame for points mode
-        payouts = calculateGIRPointsGame(game.holes || {}, playerIds, pointValue);
+        payouts = calculateGIRPointsGame(game.holes || {}, playerIds, pointValue, girHoleConfig);
       } else if (payoutMode === 'nassau' && nassauValue > 0) {
         // Use calculateGIRNassauGame for Nassau mode
-        payouts = calculateGIRNassauGame(game.holes || {}, playerIds, nassauValue);
+        payouts = calculateGIRNassauGame(game.holes || {}, playerIds, nassauValue, girHoleConfig);
       } else {
         return res.status(400).json({ message: 'Invalid payout mode or value' });
       }

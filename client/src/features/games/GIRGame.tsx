@@ -6,14 +6,11 @@ import { PlayerActionGrid } from "./PlayerActionGrid";
 import { useGirGame } from "./useGirGame";
 import { useToast } from "@/hooks/use-toast";
 import type { Group } from "@shared/schema";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 interface GIRGameProps {
   selectedGroup: Group | null;
 }
-
-const PENALTY_HOLES = [1, 8, 13, 16];
-const BONUS_HOLES = [6, 9, 17, 18];
 
 export function GIRGame({ selectedGroup }: GIRGameProps) {
   const { toast } = useToast();
@@ -30,12 +27,25 @@ export function GIRGame({ selectedGroup }: GIRGameProps) {
     setNassauValue,
     payoutMode,
     setPayoutMode,
+    holeConfig,
+    setHoleConfig,
     saveHoleData,
     saveValues,
+    saveHoleConfig,
     payoutData,
     payoutsLoading,
     isSaving,
+    isConfigSaving,
   } = useGirGame(selectedGroup);
+
+  // Configuration mode state (UI-only)
+  const [isConfigMode, setIsConfigMode] = useState(false);
+  const [tempConfig, setTempConfig] = useState(holeConfig);
+
+  // Sync temp config when hole config changes
+  useEffect(() => {
+    setTempConfig(holeConfig);
+  }, [holeConfig]);
 
   // Load existing hole data when hole changes
   useEffect(() => {
@@ -131,6 +141,50 @@ export function GIRGame({ selectedGroup }: GIRGameProps) {
     }
   };
 
+  // Configuration mode handlers
+  const handleEnterConfigMode = () => {
+    setIsConfigMode(true);
+    setTempConfig(holeConfig); // Reset temp config to current saved config
+  };
+
+  const handleExitConfigMode = () => {
+    setIsConfigMode(false);
+    setTempConfig(holeConfig); // Reset to saved config
+  };
+
+  const handleToggleHoleConfig = (hole: number) => {
+    if (!isConfigMode) return;
+
+    const isPenalty = tempConfig.penalty.includes(hole);
+    const isBonus = tempConfig.bonus.includes(hole);
+
+    // Cycle: neutral → penalty → bonus → neutral
+    if (!isPenalty && !isBonus) {
+      // neutral → penalty
+      setTempConfig({
+        ...tempConfig,
+        penalty: [...tempConfig.penalty, hole]
+      });
+    } else if (isPenalty) {
+      // penalty → bonus
+      setTempConfig({
+        penalty: tempConfig.penalty.filter(h => h !== hole),
+        bonus: [...tempConfig.bonus, hole]
+      });
+    } else if (isBonus) {
+      // bonus → neutral
+      setTempConfig({
+        ...tempConfig,
+        bonus: tempConfig.bonus.filter(h => h !== hole)
+      });
+    }
+  };
+
+  const handleSaveHoleConfig = () => {
+    saveHoleConfig(tempConfig);
+    setIsConfigMode(false);
+  };
+
   return (
     <div className="p-4 space-y-4">
       {/* Game Header */}
@@ -143,32 +197,78 @@ export function GIRGame({ selectedGroup }: GIRGameProps) {
         </p>
       </div>
 
-      {/* Hole Selector */}
-      <HoleSelector
-        selectedHole={selectedHole}
-        onHoleSelect={(hole) => setSelectedHole(hole)}
-        penaltyHoles={PENALTY_HOLES}
-        bonusHoles={BONUS_HOLES}
-      />
+      {/* Configuration Button / Hole Selector Container */}
+      <div className="space-y-2">
+        {/* Penalty/Bonus Configuration Button */}
+        {!isConfigMode && (
+          <Button
+            onClick={handleEnterConfigMode}
+            variant="outline"
+            className="w-full border-emerald-500 text-emerald-600 hover:bg-emerald-50"
+            data-testid="button-enter-config-mode"
+          >
+            ⚙️ Penalty / Bonus
+          </Button>
+        )}
 
-      {/* GIR Scoring Card */}
-      <Card>
-        <CardContent className="p-4">
-          <h3 className="text-lg font-semibold text-gray-800 mb-3">
-            🏌️ Hole {selectedHole} - GIR Status
-          </h3>
-          
-          {/* Scoring Rules Info */}
-          <div className="mb-4 p-3 bg-gray-50 rounded-md text-sm">
-            <div className="font-medium text-gray-700 mb-1">Scoring:</div>
-            {PENALTY_HOLES.includes(selectedHole) ? (
-              <div className="text-red-600">❗ Penalty Hole: HIT = +1, MISS = -1</div>
-            ) : BONUS_HOLES.includes(selectedHole) ? (
-              <div className="text-blue-600">⭐ Bonus Hole: HIT = +2, MISS = 0</div>
-            ) : (
-              <div className="text-gray-600">Standard Hole: HIT = +1, MISS = 0</div>
-            )}
+        {/* Hole Selector */}
+        <HoleSelector
+          selectedHole={selectedHole}
+          onHoleSelect={isConfigMode ? handleToggleHoleConfig : (hole) => setSelectedHole(hole)}
+          penaltyHoles={isConfigMode ? tempConfig.penalty : holeConfig.penalty}
+          bonusHoles={isConfigMode ? tempConfig.bonus : holeConfig.bonus}
+        />
+
+        {/* Save Configuration Button (shown in config mode) */}
+        {isConfigMode && (
+          <div className="flex gap-2">
+            <Button
+              onClick={handleSaveHoleConfig}
+              disabled={isConfigSaving}
+              className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white"
+              data-testid="button-save-hole-config"
+            >
+              {isConfigSaving ? 'Saving...' : 'Save Hole Configuration'}
+            </Button>
+            <Button
+              onClick={handleExitConfigMode}
+              variant="outline"
+              disabled={isConfigSaving}
+              data-testid="button-cancel-config-mode"
+            >
+              Cancel
+            </Button>
           </div>
+        )}
+
+        {/* Config Mode Instructions */}
+        {isConfigMode && (
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-800">
+            <div className="font-medium mb-1">⚙️ Configuration Mode</div>
+            <div>Click holes to cycle: <span className="font-semibold">Neutral</span> → <span className="font-semibold text-red-600">Penalty</span> → <span className="font-semibold text-blue-600">Bonus</span> → Neutral</div>
+          </div>
+        )}
+      </div>
+
+      {/* GIR Scoring Card - hidden in config mode */}
+      {!isConfigMode && (
+        <Card>
+          <CardContent className="p-4">
+            <h3 className="text-lg font-semibold text-gray-800 mb-3">
+              🏌️ Hole {selectedHole} - GIR Status
+            </h3>
+            
+            {/* Scoring Rules Info */}
+            <div className="mb-4 p-3 bg-gray-50 rounded-md text-sm">
+              <div className="font-medium text-gray-700 mb-1">Scoring:</div>
+              {holeConfig.penalty.includes(selectedHole) ? (
+                <div className="text-red-600">❗ Penalty Hole: HIT = +1, MISS = -1</div>
+              ) : holeConfig.bonus.includes(selectedHole) ? (
+                <div className="text-blue-600">⭐ Bonus Hole: HIT = +2, MISS = 0</div>
+              ) : (
+                <div className="text-gray-600">Standard Hole: HIT = +1, MISS = 0</div>
+              )}
+            </div>
 
           {/* Player HIT/MISS Grid */}
           <PlayerActionGrid
@@ -185,17 +285,18 @@ export function GIRGame({ selectedGroup }: GIRGameProps) {
             showAvatar={true}
           />
 
-          {/* Save Button */}
-          <Button
-            onClick={handleSaveGirScores}
-            disabled={isSaving}
-            className="w-full mt-4 bg-emerald-500 hover:bg-emerald-600 text-white"
-            data-testid="button-save-gir-data"
-          >
-            {isSaving ? 'Saving...' : 'Save GIR Scores'}
-          </Button>
-        </CardContent>
-      </Card>
+            {/* Save Button */}
+            <Button
+              onClick={handleSaveGirScores}
+              disabled={isSaving}
+              className="w-full mt-4 bg-emerald-500 hover:bg-emerald-600 text-white"
+              data-testid="button-save-gir-data"
+            >
+              {isSaving ? 'Saving...' : 'Save GIR Scores'}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Greens Hit Card */}
       {payoutData && payoutData.girPoints && (

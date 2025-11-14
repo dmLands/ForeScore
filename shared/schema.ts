@@ -205,6 +205,12 @@ export type Group = typeof groups.$inferSelect;
 export type InsertGameState = z.infer<typeof insertGameStateSchema>;
 export type GameState = typeof gameStates.$inferSelect;
 
+// GIR Hole Configuration Interface
+export interface GIRHoleConfig {
+  penalty: number[];  // Array of hole numbers designated as penalty holes
+  bonus: number[];    // Array of hole numbers designated as bonus holes
+}
+
 // Points Game Tables - Extended to support both 2/9/16 and BBB games
 export const pointsGames = pgTable("points_games", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -215,6 +221,7 @@ export const pointsGames = pgTable("points_games", {
   holes: jsonb("holes").$type<Record<number, Record<string, number | string>>>().default({}), // For 2/9/16: hole -> playerId -> strokes; For BBB: hole -> category -> playerId
   points: jsonb("points").$type<Record<number, Record<string, number>>>().default({}), // hole -> playerId -> points (calculated for both game types)
   settings: jsonb("settings").$type<{ pointValue?: number; nassauValue?: number }>().default({ pointValue: 1, nassauValue: 10 }), // Point and Nassau values
+  girHoleConfig: jsonb("gir_hole_config").$type<GIRHoleConfig>().default({ penalty: [], bonus: [] }), // User-configured penalty/bonus holes for GIR games
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

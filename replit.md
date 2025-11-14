@@ -1,9 +1,20 @@
-# ForeScore V9.0 - Frictionless Trial Registration
+# ForeScore V9.1 - GIR Game with User-Configurable Penalty/Bonus Holes
 
 ## Overview
-ForeScore V9.0 is a secure, full-stack Progressive Web App designed as a companion for the golf penalty game "Animal." It provides enterprise-grade local authentication with complete password recovery functionality, server-side security validation, enhanced payout visualization, and now features a frictionless trial registration system with automatic 7-day trials. The application supports complete group management, card game mechanics utilizing a Proportional Share Algorithm, isolated 2/9/16 points games per session, and multiple payout calculation views. All game calculations are performed server-side to prevent tampering, ensuring secure user authentication, session management, and subscription access control. The project's vision is to offer a robust, reliable, and secure platform for managing golf penalty games, with ambitions to become the leading digital tool in this niche.
+ForeScore V9.1 is a secure, full-stack Progressive Web App designed as a companion for the golf penalty game "Animal." It provides enterprise-grade local authentication with complete password recovery functionality, server-side security validation, enhanced payout visualization, frictionless trial registration with automatic 7-day trials, and now includes a comprehensive GIR (Greens in Regulation) game with user-configurable penalty and bonus holes. The application supports complete group management, card game mechanics utilizing a Proportional Share Algorithm, isolated 2/9/16 points games per session, multiple payout calculation views, and full GIR game tracking. All game calculations are performed server-side to prevent tampering, ensuring secure user authentication, session management, and subscription access control. The project's vision is to offer a robust, reliable, and secure platform for managing golf penalty games, with ambitions to become the leading digital tool in this niche.
 
 ## Recent Changes
+### V9.1 (COMPLETED) - November 2025
+- **GIR Game Enhancement - User-Configurable Penalty/Bonus Holes**:
+  - **Database Schema**: Added `girHoleConfig` JSON column to pointsGames table storing user-defined penalty and bonus hole arrays
+  - **Configuration UI**: Implemented intuitive hole configuration mode with "Penalty / Bonus" button that toggles configuration/scoring modes
+  - **Tri-State Hole System**: Click holes to cycle neutral (gray) → penalty (red) → bonus (blue) → neutral with immediate visual feedback
+  - **Server-Side Integration**: Updated all GIR calculation functions to use user-configured holes instead of hardcoded presets
+  - **API Endpoint**: Created PUT `/api/gir-games/:gameId/hole-config` with validation ensuring mutual exclusivity and proper hole ranges
+  - **Feature Flag Removal**: GIR game now available to all users (removed hasGirGameAccess checks from backend and frontend)
+  - **Scoring Flexibility**: Users can define any combination of penalty/bonus holes or none at all, defaulting to neutral scoring
+  - **Persistent Configuration**: Hole configurations save per game and persist across sessions for consistent gameplay
+
 ### V9.0 (COMPLETED) - October 2025
 - **Frictionless Trial Registration**:
   - **Automatic Trial Grant**: New users automatically receive a 7-day free trial on registration without requiring payment information upfront

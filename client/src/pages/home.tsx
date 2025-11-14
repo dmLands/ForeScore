@@ -1601,7 +1601,7 @@ export default function Home() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <img 
-              src="/forescore-logo.png" 
+              src={new URL('@assets/ForeScore_Logo_transparent_1763148840628.png', import.meta.url).href}
               alt="ForeScore Logo" 
               className="h-8 w-8"
               data-testid="img-logo"

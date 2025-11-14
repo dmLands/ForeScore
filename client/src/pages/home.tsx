@@ -4357,13 +4357,13 @@ export default function Home() {
             <Tutorial />
             
             {/* Game Rules Accordion */}
-            <Accordion type="multiple" defaultValue={['gir']} className="space-y-4">
+            <Accordion type="multiple" className="space-y-4">
               
               {/* GIR Game Rules */}
               <AccordionItem value="gir" data-testid="accordion-item-gir">
                 <Card>
                   <AccordionTrigger className="px-6 pt-6 pb-4 hover:no-underline" data-testid="accordion-trigger-gir">
-                    <h2 className="text-lg font-bold text-gray-800">🏌️ Greens in Regulation Rules</h2>
+                    <h2 className="text-lg font-bold text-gray-800">🚩 Greens in Regulation Rules</h2>
                   </AccordionTrigger>
                   <AccordionContent>
                     <CardContent className="px-6 pb-6 pt-0">
@@ -4584,7 +4584,7 @@ export default function Home() {
               <AccordionItem value="2916" data-testid="accordion-item-2916">
                 <Card>
                   <AccordionTrigger className="px-6 pt-6 pb-4 hover:no-underline" data-testid="accordion-trigger-2916">
-                    <h2 className="text-lg font-bold text-gray-800">2/9/16 Game Rules</h2>
+                    <h2 className="text-lg font-bold text-gray-800"># 2/9/16 Game Rules</h2>
                   </AccordionTrigger>
                   <AccordionContent>
                     <CardContent className="px-6 pb-6 pt-0">
@@ -4708,7 +4708,7 @@ export default function Home() {
               <AccordionItem value="cards" data-testid="accordion-item-cards">
                 <Card>
                   <AccordionTrigger className="px-6 pt-6 pb-4 hover:no-underline" data-testid="accordion-trigger-cards">
-                    <h2 className="text-lg font-bold text-gray-800">Card Game Rules</h2>
+                    <h2 className="text-lg font-bold text-gray-800">🃏 Card Game Rules</h2>
                   </AccordionTrigger>
                   <AccordionContent>
                     <CardContent className="px-6 pb-6 pt-0">

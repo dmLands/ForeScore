@@ -2540,37 +2540,37 @@ export default function Home() {
                             </Button>
                           ) : (
                             <div className="space-y-4">
+                              {/* Combined Settlement Title */}
+                              <h4 className="text-md font-semibold text-gray-700">Combined Settlement</h4>
+                              
                               {/* Edit Payouts Button & Scorecard Button */}
-                              <div className="flex justify-between items-center">
-                                <h4 className="text-md font-semibold text-gray-700">Combined Settlement</h4>
-                                <div className="flex gap-2">
+                              <div className="flex gap-2">
+                                <Button 
+                                  onClick={() => {
+                                    setTempSelectedGames(multiSelectGames); // Set current selection as temp
+                                    setShowPayoutModal(true);
+                                  }}
+                                  variant="outline"
+                                  size="sm"
+                                  className="btn-interactive hover-lift border-emerald-500 text-emerald-600 hover:bg-emerald-50"
+                                  data-testid="button-edit-payouts"
+                                >
+                                  Edit Payouts
+                                </Button>
+                                {isAdmin && (
                                   <Button 
                                     onClick={() => {
-                                      setTempSelectedGames(multiSelectGames); // Set current selection as temp
-                                      setShowPayoutModal(true);
+                                      setTempSelectedGamesForScorecard(multiSelectGames); // Set current selection for scorecard
+                                      setShowScorecardModal(true);
                                     }}
                                     variant="outline"
                                     size="sm"
-                                    className="btn-interactive hover-lift border-emerald-500 text-emerald-600 hover:bg-emerald-50"
-                                    data-testid="button-edit-payouts"
+                                    className="btn-interactive hover-lift border-blue-500 text-blue-600 hover:bg-blue-50"
+                                    data-testid="button-scorecard"
                                   >
-                                    Edit Payouts
+                                    📊 Scorecard
                                   </Button>
-                                  {isAdmin && (
-                                    <Button 
-                                      onClick={() => {
-                                        setTempSelectedGamesForScorecard(multiSelectGames); // Set current selection for scorecard
-                                        setShowScorecardModal(true);
-                                      }}
-                                      variant="outline"
-                                      size="sm"
-                                      className="btn-interactive hover-lift border-blue-500 text-blue-600 hover:bg-blue-50"
-                                      data-testid="button-scorecard"
-                                    >
-                                      📊 Scorecard
-                                    </Button>
-                                  )}
-                                </div>
+                                )}
                               </div>
                               
                               {/* Selected Games Display */}
@@ -2582,32 +2582,49 @@ export default function Home() {
                                   const hasFbtValues = parseFloat(nassauValue) > 0;
                                   const hasBBBPointsValues = parseFloat(bbbPointValue) > 0;
                                   const hasBBBFbtValues = parseFloat(bbbNassauValue) > 0;
+                                  const hasGIRPointsValues = selectedGIRGame && selectedGIRGame.settings && parseFloat(String(selectedGIRGame.settings.pointValue || 0)) > 0;
+                                  const hasGIRNassauValues = selectedGIRGame && selectedGIRGame.settings && parseFloat(String(selectedGIRGame.settings.nassauValue || 0)) > 0;
 
                                   return (
                                     <>
-                                      {multiSelectGames.includes('cards') && isCardsActive && (
-                                        <div className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium fade-in">
-                                          🎴 Card Game
-                                        </div>
-                                      )}
-                                      {multiSelectGames.includes('points') && selectedPointsGame && hasPointsValues && (
-                                        <div className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium fade-in stagger-1">
-                                          🎯 2/9/16 Points
-                                        </div>
-                                      )}
-                                      {multiSelectGames.includes('nassau') && selectedPointsGame && hasFbtValues && (
-                                        <div className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium fade-in stagger-2">
-                                          ⛳ 2/9/16 Nassau
-                                        </div>
-                                      )}
+                                      {/* Points Games Group */}
                                       {multiSelectGames.includes('bbb-points') && selectedBBBGame && hasBBBPointsValues && (
-                                        <div className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium fade-in stagger-3">
+                                        <div className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium fade-in">
                                           🎲 BBB Points
                                         </div>
                                       )}
+                                      {multiSelectGames.includes('gir-points') && selectedGIRGame && hasGIRPointsValues && (
+                                        <div className="px-3 py-1 bg-teal-100 text-teal-800 rounded-full text-sm font-medium fade-in stagger-1">
+                                          🎯 GIR Points
+                                        </div>
+                                      )}
+                                      {multiSelectGames.includes('points') && selectedPointsGame && hasPointsValues && (
+                                        <div className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium fade-in stagger-2">
+                                          🎯 2/9/16 Points
+                                        </div>
+                                      )}
+                                      
+                                      {/* Nassau Games Group */}
                                       {multiSelectGames.includes('bbb-nassau') && selectedBBBGame && hasBBBFbtValues && (
-                                        <div className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-medium fade-in stagger-4">
+                                        <div className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-medium fade-in stagger-3">
                                           🏌️ BBB Nassau
+                                        </div>
+                                      )}
+                                      {multiSelectGames.includes('gir-nassau') && selectedGIRGame && hasGIRNassauValues && (
+                                        <div className="px-3 py-1 bg-cyan-100 text-cyan-800 rounded-full text-sm font-medium fade-in stagger-4">
+                                          ⛳ GIR Nassau
+                                        </div>
+                                      )}
+                                      {multiSelectGames.includes('nassau') && selectedPointsGame && hasFbtValues && (
+                                        <div className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium fade-in stagger-5">
+                                          ⛳ 2/9/16 Nassau
+                                        </div>
+                                      )}
+                                      
+                                      {/* Card Game */}
+                                      {multiSelectGames.includes('cards') && isCardsActive && (
+                                        <div className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium fade-in stagger-6">
+                                          🎴 Card Game
                                         </div>
                                       )}
                                     </>

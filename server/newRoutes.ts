@@ -1372,7 +1372,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Fetch all points games linked to this game state
-      const pointsGames = await storage.getPointsGamesByGroupId(group.id);
+      const pointsGames = await storage.getPointsGamesByGroup(group.id);
       const linkedGames = pointsGames.filter(pg => pg.gameStateId === gameStateId);
 
       // Find each game type

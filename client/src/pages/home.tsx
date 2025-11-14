@@ -3416,46 +3416,6 @@ export default function Home() {
                       </CardContent>
                     </Card>
 
-                    {/* Score Summary */}
-                    {(() => {
-                      const totalPoints: Record<string, number> = {};
-                      selectedGroup.players.forEach(player => {
-                        totalPoints[player.id] = 0;
-                        Object.values(selectedPointsGame.points || {}).forEach(holePoints => {
-                          totalPoints[player.id] += holePoints[player.id] || 0;
-                        });
-                      });
-
-                      return (
-                        <Card>
-                          <CardContent className="p-4">
-                            <h3 className="text-lg font-semibold text-gray-800 mb-3">2/9/16 Scores</h3>
-                            <div className="space-y-2">
-                              {[...selectedGroup.players]
-                                .sort((a, b) => (totalPoints[b.id] || 0) - (totalPoints[a.id] || 0))
-                                .map((player) => (
-                                <div key={player.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                  <div className="flex items-center gap-3">
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold`}
-                                         style={{ backgroundColor: player.color }}>
-                                      {player.initials}
-                                    </div>
-                                    <span className="font-medium text-gray-800">{player.name}</span>
-                                  </div>
-                                  <div className="text-right">
-                                    <p className="text-lg font-bold text-gray-800">
-                                      {totalPoints[player.id] || 0}
-                                    </p>
-                                    <p className="text-xs text-gray-600">points</p>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    })()}
-
                     {/* Payouts Calculator */}
                     {(() => {
                       const totalPoints: Record<string, number> = {};

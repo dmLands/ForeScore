@@ -4,6 +4,14 @@
 ForeScore is a secure, full-stack Progressive Web App designed as a companion for golf penalty games like "Animal." It provides enterprise-grade local authentication, server-side security validation, and comprehensive game management. The application supports group management, card game mechanics using a Proportional Share Algorithm, isolated 2/9/16 points games, and multiple payout calculation views. A key feature is the GIR (Greens in Regulation) game with user-configurable penalty and bonus holes. All game calculations are performed server-side to prevent tampering, ensuring secure user authentication, session management, and subscription access control. The project aims to be a robust, reliable, and secure platform for managing golf penalty games, aspiring to be the leading digital tool in this niche.
 
 ## Recent Changes
+### V9.3 (COMPLETED) - November 2025
+- **Subscription Status Fix & Sync Infrastructure**:
+  - **Fixed Legacy User Issue**: Resolved mikejover@hotmail.com showing "Trial" instead of "Active" despite active Stripe subscription
+  - **Admin Sync Endpoint**: Added `/api/admin/sync-user-subscription` for manual subscription sync by email (admin-only)
+  - **Enhanced Webhook Logging**: Implemented detailed logging for all Stripe webhook events (setup_intent, invoice payments, subscription updates/deletions)
+  - **Sync Verification**: Database now correctly shows status='active' for paid subscriptions, synced from Stripe canonical source
+  - **Root Cause**: Webhook wasn't firing/processing when trial converted to active subscription (Oct 31 → Nov 7)
+
 ### V9.2 (COMPLETED) - November 2025
 - **UI Standardization - Consistent Game Structure Across All Three Games**:
   - **Unified Section Flow**: Standardized all three game tabs (2/9/16, BBB, GIR) to follow identical structure: Payouts → Scores → Who Owes Who

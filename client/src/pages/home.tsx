@@ -2655,7 +2655,7 @@ export default function Home() {
                       <Card className="mb-4">
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold text-gray-800">🎯 BBB - Who Owes Who</h3>
+                            <h3 className="text-lg font-semibold text-gray-800">🎲 BBB - Who Owes Who</h3>
                             <Select value={bbbPayoutMode} onValueChange={(value: 'points' | 'nassau' | 'both') => setBBBPayoutMode(value)}>
                               <SelectTrigger className="w-32">
                                 <SelectValue />
@@ -2812,7 +2812,7 @@ export default function Home() {
                           {bbbPointValueNum > 0 && (
                             <Card className="mb-4">
                               <CardContent className="p-4">
-                                <h3 className="text-lg font-semibold text-gray-800 mb-3">🎯 BBB Points Only Payouts</h3>
+                                <h3 className="text-lg font-semibold text-gray-800 mb-3">🎲 BBB Points Only Payouts</h3>
                                 <div className="space-y-2">
                                   {[...selectedGroup.players]
                                     .sort((a, b) => {
@@ -2856,7 +2856,7 @@ export default function Home() {
                           {bbbNassauValueNum > 0 && (
                             <Card className="mb-4">
                               <CardContent className="p-4">
-                                <h3 className="text-lg font-semibold text-gray-800 mb-3">⛳ BBB Nassau Only Payouts</h3>
+                                <h3 className="text-lg font-semibold text-gray-800 mb-3">🎲 BBB Nassau Only Payouts</h3>
                                 <div className="space-y-2">
                                   {[...selectedGroup.players]
                                     .sort((a, b) => {
@@ -2910,7 +2910,7 @@ export default function Home() {
                       <Card className="mb-4">
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold text-gray-800">🎯 2/9/16 - Who Owes Who</h3>
+                            <h3 className="text-lg font-semibold text-gray-800"># 2/9/16 - Who Owes Who</h3>
                             <Select value={combinedPayoutMode} onValueChange={(value: 'points' | 'nassau' | 'both') => setCombinedPayoutMode(value)}>
                               <SelectTrigger className="w-32">
                                 <SelectValue />
@@ -3085,7 +3085,7 @@ export default function Home() {
                           {/* 6. Points Only Tile - ALWAYS SHOW */}
                           <Card className="mb-4">
                             <CardContent className="p-4">
-                              <h3 className="text-lg font-semibold text-gray-800 mb-3">🎯 2/9/16 – Points Only</h3>
+                              <h3 className="text-lg font-semibold text-gray-800 mb-3"># 2/9/16 – Points Only</h3>
                               <div className="space-y-2">
                                 {[...selectedGroup.players]
                                   .sort((a, b) => {
@@ -3128,7 +3128,7 @@ export default function Home() {
                           {/* 7. FBT Only Tile - ALWAYS SHOW */}
                           <Card className="mb-4">
                             <CardContent className="p-4">
-                              <h3 className="text-lg font-semibold text-gray-800 mb-3">⛳ 2/9/16 – FBT Only</h3>
+                              <h3 className="text-lg font-semibold text-gray-800 mb-3"># 2/9/16 – Nassau Only</h3>
                               <div className="space-y-2">
                                 {[...selectedGroup.players]
                                   .sort((a, b) => {
@@ -3203,99 +3203,7 @@ export default function Home() {
                         });
                       }
 
-                      return (
-                        <>
-                          {/* BBB Points Only Tile */}
-                          {bbbPointValueNum > 0 && (
-                            <Card className="mb-4">
-                              <CardContent className="p-4">
-                                <h3 className="text-lg font-semibold text-gray-800 mb-3">🎯 BBB Points Only Payouts</h3>
-                                <div className="space-y-2">
-                                  {[...selectedGroup.players]
-                                    .sort((a, b) => {
-                                      const payoutA = bbbPointsPayouts[a.id] || 0;
-                                      const payoutB = bbbPointsPayouts[b.id] || 0;
-                                      return payoutB - payoutA; // Most profitable first
-                                    })
-                                    .map((player) => {
-                                      const netAmount = bbbPointsPayouts[player.id] || 0;
-                                      const isEven = Math.abs(netAmount) < 0.01;
-                                      const payout = {
-                                        amount: Math.abs(netAmount),
-                                        type: netAmount >= 0 ? 'receives' : 'pays'
-                                      };
-                                      
-                                      return (
-                                        <div key={player.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                          <div className="flex items-center gap-3">
-                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold`}
-                                                 style={{ backgroundColor: player.color }}>
-                                              {player.initials}
-                                            </div>
-                                            <span className="font-medium text-gray-800">{player.name}</span>
-                                          </div>
-                                          <div className="text-right">
-                                            <p className={`text-lg font-bold ${isEven ? 'text-gray-600' : payout.type === 'receives' ? 'text-green-600' : 'text-red-600'}`}>
-                                              ${payout.amount.toFixed(2)}
-                                            </p>
-                                            <p className="text-xs text-gray-600">
-                                              {isEven ? 'Even' : payout.type === 'receives' ? 'Receives' : 'Pays'}
-                                            </p>
-                                          </div>
-                                        </div>
-                                      );
-                                    })}
-                                </div>
-                              </CardContent>
-                            </Card>
-                          )}
-
-                          {/* BBB FBT Only Tile */}
-                          {bbbNassauValueNum > 0 && (
-                            <Card className="mb-4">
-                              <CardContent className="p-4">
-                                <h3 className="text-lg font-semibold text-gray-800 mb-3">⛳ BBB Nassau Only Payouts</h3>
-                                <div className="space-y-2">
-                                  {[...selectedGroup.players]
-                                    .sort((a, b) => {
-                                      const payoutA = bbbFbtPayouts[a.id] || 0;
-                                      const payoutB = bbbFbtPayouts[b.id] || 0;
-                                      return payoutB - payoutA; // Most profitable first
-                                    })
-                                    .map((player) => {
-                                      const netAmount = bbbFbtPayouts[player.id] || 0;
-                                      const isEven = Math.abs(netAmount) < 0.01;
-                                      const payout = {
-                                        amount: Math.abs(netAmount),
-                                        type: netAmount >= 0 ? 'receives' : 'pays'
-                                      };
-                                      
-                                      return (
-                                        <div key={player.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                          <div className="flex items-center gap-3">
-                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold`}
-                                                 style={{ backgroundColor: player.color }}>
-                                              {player.initials}
-                                            </div>
-                                            <span className="font-medium text-gray-800">{player.name}</span>
-                                          </div>
-                                          <div className="text-right">
-                                            <p className={`text-lg font-bold ${isEven ? 'text-gray-600' : payout.type === 'receives' ? 'text-green-600' : 'text-red-600'}`}>
-                                              ${payout.amount.toFixed(2)}
-                                            </p>
-                                            <p className="text-xs text-gray-600">
-                                              {isEven ? 'Even' : payout.type === 'receives' ? 'Receives' : 'Pays'}
-                                            </p>
-                                          </div>
-                                        </div>
-                                      );
-                                    })}
-                                </div>
-                              </CardContent>
-                            </Card>
-                          )}
-                        </>
-                      );
+                      return null;
                     })()}
 
                     {/* REMOVED - BBB duplicate section cleaned up */}

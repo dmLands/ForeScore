@@ -1600,6 +1600,12 @@ export default function Home() {
       <header className="bg-emerald-600 text-white p-4 shadow-md">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
+            <img 
+              src="/forescore-logo.png" 
+              alt="ForeScore Logo" 
+              className="h-8 w-8"
+              data-testid="img-logo"
+            />
             <h1 className="text-xl font-bold">
               ForeScore
               {selectedGame && (

@@ -93,9 +93,12 @@ export default function Login() {
       <Card className="w-full max-w-md shadow-xl bg-white/95 backdrop-blur-sm">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-700 rounded-full flex items-center justify-center text-2xl text-white shadow-lg">
-              ⛳
-            </div>
+            <img 
+              src="/forescore-logo.png" 
+              alt="ForeScore Logo" 
+              className="h-16 w-16"
+              data-testid="img-logo"
+            />
           </div>
           <CardTitle className="text-2xl font-bold text-gray-900">Welcome Back</CardTitle>
           <CardDescription className="text-gray-600">

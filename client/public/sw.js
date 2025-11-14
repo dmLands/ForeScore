@@ -1,4 +1,8 @@
-// NOTE: Update this version number when deploying - should match shared/version.ts
+/**
+ * IMPORTANT: When deploying a new version, update this to match shared/version.ts
+ * Both files must have the same version number for cache invalidation to work.
+ * See DEPLOYMENT.md for deployment instructions.
+ */
 const APP_VERSION = '1.0.0';
 const CACHE_NAME = `forescore-v${APP_VERSION}`;
 const STATIC_CACHE_URLS = [

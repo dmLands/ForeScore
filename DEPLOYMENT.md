@@ -6,19 +6,25 @@ ForeScore uses a multi-layered caching strategy to ensure users always get the l
 
 ### Version Update Process
 
-When deploying a new version, update the version number in **ONE PLACE**:
+When deploying a new version, update the version number in **TWO PLACES**:
 
-1. **Update `shared/version.ts`:**
+1. **Update `shared/version.ts` (line 8):**
    ```typescript
    export const APP_VERSION = '1.0.1'; // Increment version
    ```
 
-2. **Update `client/public/sw.js`:**
+2. **Update `client/public/sw.js` (line 6):**
    ```javascript
    const APP_VERSION = '1.0.1'; // Must match shared/version.ts
    ```
 
-⚠️ **IMPORTANT:** Both files must have the same version number for the update detection to work.
+⚠️ **CRITICAL:** Both files must have **EXACTLY** the same version number for cache invalidation to work.
+
+**Why two files?**
+Service workers run in a separate context and cannot import ES modules. While not ideal, this two-file approach is the most reliable way to ensure cache invalidation works correctly given these constraints.
+
+**Version Validation:**
+The VersionChecker component will detect mismatches and prompt users to update, so if you forget to update one file, users will see the update prompt after deployment.
 
 ### How It Works
 

@@ -1449,6 +1449,11 @@ export default function Home() {
       queryClient.invalidateQueries({ queryKey: ['/api/points-games', selectedGroup?.id] });
       queryClient.refetchQueries({ queryKey: ['/api/points-games', selectedGroup?.id] });
       
+      // Invalidate scorecard cache to update admin view
+      if (selectedGame?.id) {
+        queryClient.invalidateQueries({ queryKey: ['/api/game-state', selectedGame.id, 'scorecard'] });
+      }
+      
       // CRITICAL: Invalidate payout calculation queries to update FBT and Points payouts immediately
       queryClient.invalidateQueries({ 
         queryKey: ['/api/calculate-combined-games', selectedGroup?.id, 'fbt-only', updatedGame.id, nassauValue]
@@ -2571,65 +2576,6 @@ export default function Home() {
                                     📊 Scorecard
                                   </Button>
                                 )}
-                              </div>
-                              
-                              {/* Selected Games Display */}
-                              <div className="flex flex-wrap gap-2 mb-4">
-                                {(() => {
-                                  // Check if games are actually active, not just selected
-                                  const isCardsActive = selectedGame && safeGameState && safeGameState.cardHistory?.length > 0;
-                                  const hasPointsValues = parseFloat(pointValue) > 0;
-                                  const hasFbtValues = parseFloat(nassauValue) > 0;
-                                  const hasBBBPointsValues = parseFloat(bbbPointValue) > 0;
-                                  const hasBBBFbtValues = parseFloat(bbbNassauValue) > 0;
-                                  const hasGIRPointsValues = selectedGIRGame && selectedGIRGame.settings && parseFloat(String(selectedGIRGame.settings.pointValue || 0)) > 0;
-                                  const hasGIRNassauValues = selectedGIRGame && selectedGIRGame.settings && parseFloat(String(selectedGIRGame.settings.nassauValue || 0)) > 0;
-
-                                  return (
-                                    <>
-                                      {/* Points Games Group */}
-                                      {multiSelectGames.includes('bbb-points') && selectedBBBGame && hasBBBPointsValues && (
-                                        <div className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium fade-in">
-                                          🎲 BBB Points
-                                        </div>
-                                      )}
-                                      {multiSelectGames.includes('gir-points') && selectedGIRGame && hasGIRPointsValues && (
-                                        <div className="px-3 py-1 bg-teal-100 text-teal-800 rounded-full text-sm font-medium fade-in stagger-1">
-                                          🎯 GIR Points
-                                        </div>
-                                      )}
-                                      {multiSelectGames.includes('points') && selectedPointsGame && hasPointsValues && (
-                                        <div className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium fade-in stagger-2">
-                                          🎯 2/9/16 Points
-                                        </div>
-                                      )}
-                                      
-                                      {/* Nassau Games Group */}
-                                      {multiSelectGames.includes('bbb-nassau') && selectedBBBGame && hasBBBFbtValues && (
-                                        <div className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-medium fade-in stagger-3">
-                                          🏌️ BBB Nassau
-                                        </div>
-                                      )}
-                                      {multiSelectGames.includes('gir-nassau') && selectedGIRGame && hasGIRNassauValues && (
-                                        <div className="px-3 py-1 bg-cyan-100 text-cyan-800 rounded-full text-sm font-medium fade-in stagger-4">
-                                          ⛳ GIR Nassau
-                                        </div>
-                                      )}
-                                      {multiSelectGames.includes('nassau') && selectedPointsGame && hasFbtValues && (
-                                        <div className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium fade-in stagger-5">
-                                          ⛳ 2/9/16 Nassau
-                                        </div>
-                                      )}
-                                      
-                                      {/* Card Game */}
-                                      {multiSelectGames.includes('cards') && isCardsActive && (
-                                        <div className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium fade-in stagger-6">
-                                          🎴 Card Game
-                                        </div>
-                                      )}
-                                    </>
-                                  );
-                                })()}
                               </div>
                               
                               {(() => {
@@ -5978,7 +5924,7 @@ export default function Home() {
       {/* Scorecard Modal (Admin Feature) */}
       {isAdmin && (
         <Dialog open={showScorecardModal} onOpenChange={setShowScorecardModal}>
-          <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-6xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-xl font-semibold text-gray-800">📊 Scorecard</DialogTitle>
               <DialogDescription>
@@ -5990,6 +5936,7 @@ export default function Home() {
               <ScorecardTable
                 gameStateId={selectedGame.id}
                 selectedGames={tempSelectedGamesForScorecard}
+                onSelectedGamesChange={setTempSelectedGamesForScorecard}
               />
             )}
             
@@ -6017,7 +5964,15 @@ export default function Home() {
 }
 
 // Scorecard Table Component (Admin Feature)
-function ScorecardTable({ gameStateId, selectedGames }: { gameStateId: string; selectedGames: string[] }) {
+function ScorecardTable({ 
+  gameStateId, 
+  selectedGames, 
+  onSelectedGamesChange 
+}: { 
+  gameStateId: string; 
+  selectedGames: string[]; 
+  onSelectedGamesChange: (games: string[]) => void;
+}) {
   const { data: scorecardData, isLoading } = useQuery({
     queryKey: ['/api/game-state', gameStateId, 'scorecard'],
     queryFn: async () => {
@@ -6038,64 +5993,132 @@ function ScorecardTable({ gameStateId, selectedGames }: { gameStateId: string; s
     return <div className="text-center py-8 text-gray-500">No scorecard data available</div>;
   }
 
-  const { players, scorecard, availableGames } = scorecardData;
+  const { players, scorecard, playerCards, availableGames } = scorecardData;
+
+  // Toggle game selection
+  const toggleGame = (gameType: string) => {
+    if (selectedGames.includes(gameType)) {
+      onSelectedGamesChange(selectedGames.filter(g => g !== gameType));
+    } else {
+      onSelectedGamesChange([...selectedGames, gameType]);
+    }
+  };
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full border-collapse text-sm">
-        <thead>
-          <tr>
-            <th className="sticky left-0 bg-white border border-gray-300 p-2 font-semibold">Player</th>
-            {[...Array(18)].map((_, i) => (
-              <th key={i} className="border border-gray-300 p-2 font-semibold min-w-[80px]">
-                Hole {i + 1}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {players.map((player: any) => (
-            <tr key={player.id} className="hover:bg-gray-50">
-              <td className="sticky left-0 bg-white border border-gray-300 p-2 font-medium">
-                {player.name}
-              </td>
-              {[...Array(18)].map((_, holeIndex) => {
-                const holeNum = holeIndex + 1;
-                const holeData = scorecard[holeNum] || {};
-                
-                return (
-                  <td key={holeIndex} className="border border-gray-300 p-2 align-top">
-                    <div className="space-y-1 text-xs">
-                      {/* Strokes (2/9/16) */}
-                      {holeData.strokes?.[player.id] !== undefined && (
-                        <div className="text-gray-700">
-                          ⛳ {holeData.strokes[player.id]}
-                        </div>
-                      )}
-                      
-                      {/* BBB Events */}
-                      {holeData.bbb && (
-                        <div className="text-blue-600">
-                          {holeData.bbb.firstIn === player.id && <span>1st In</span>}
-                          {holeData.bbb.firstOn === player.id && <span>1st On</span>}
-                          {holeData.bbb.closestTo === player.id && <span>Closest</span>}
-                        </div>
-                      )}
-                      
-                      {/* GIR */}
-                      {holeData.gir?.[player.id] !== undefined && (
-                        <div className={holeData.gir[player.id] ? 'text-green-600' : 'text-red-600'}>
-                          {holeData.gir[player.id] ? '✅ GIR' : '❌ Miss'}
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                );
-              })}
+    <div className="space-y-4">
+      {/* Game Selection Checkboxes */}
+      <div className="flex flex-wrap gap-2 pb-2 border-b">
+        {availableGames.has2916 && (
+          <label className="flex items-center gap-2 px-3 py-2 rounded-md border cursor-pointer hover:bg-gray-50">
+            <input
+              type="checkbox"
+              checked={selectedGames.includes('2916')}
+              onChange={() => toggleGame('2916')}
+              className="rounded"
+            />
+            <span className="text-sm font-medium">🎯 2/9/16</span>
+          </label>
+        )}
+        {availableGames.hasBBB && (
+          <label className="flex items-center gap-2 px-3 py-2 rounded-md border cursor-pointer hover:bg-gray-50">
+            <input
+              type="checkbox"
+              checked={selectedGames.includes('bbb')}
+              onChange={() => toggleGame('bbb')}
+              className="rounded"
+            />
+            <span className="text-sm font-medium">🎲 BBB</span>
+          </label>
+        )}
+        {availableGames.hasGIR && (
+          <label className="flex items-center gap-2 px-3 py-2 rounded-md border cursor-pointer hover:bg-gray-50">
+            <input
+              type="checkbox"
+              checked={selectedGames.includes('gir')}
+              onChange={() => toggleGame('gir')}
+              className="rounded"
+            />
+            <span className="text-sm font-medium">🏌️ GIR</span>
+          </label>
+        )}
+        {availableGames.hasCards && (
+          <label className="flex items-center gap-2 px-3 py-2 rounded-md border cursor-pointer hover:bg-gray-50">
+            <input
+              type="checkbox"
+              checked={selectedGames.includes('cards')}
+              onChange={() => toggleGame('cards')}
+              className="rounded"
+            />
+            <span className="text-sm font-medium">🎴 Cards</span>
+          </label>
+        )}
+      </div>
+
+      {/* Scorecard Table */}
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse text-sm">
+          <thead>
+            <tr>
+              <th className="sticky left-0 bg-white border border-gray-300 p-2 font-semibold z-10">Player</th>
+              {selectedGames.includes('cards') && (
+                <th className="sticky left-[100px] bg-gray-50 border border-gray-300 p-2 font-semibold z-10">Cards</th>
+              )}
+              {[...Array(18)].map((_, i) => (
+                <th key={i} className="border border-gray-300 p-2 font-semibold min-w-[100px]">
+                  Hole {i + 1}
+                </th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {players.map((player: any) => (
+              <tr key={player.id} className="hover:bg-gray-50">
+                <td className="sticky left-0 bg-white border border-gray-300 p-2 font-medium z-10">
+                  {player.name}
+                </td>
+                {selectedGames.includes('cards') && (
+                  <td className="sticky left-[100px] bg-gray-50 border border-gray-300 p-2 text-center z-10">
+                    <span className="text-lg">{playerCards?.[player.id] || '-'}</span>
+                  </td>
+                )}
+                {[...Array(18)].map((_, holeIndex) => {
+                  const holeNum = holeIndex + 1;
+                  const holeData = scorecard[holeNum] || {};
+                  
+                  return (
+                    <td key={holeIndex} className="border border-gray-300 p-2 align-top">
+                      <div className="space-y-1 text-xs">
+                        {/* 2/9/16 Strokes */}
+                        {selectedGames.includes('2916') && holeData.strokes?.[player.id] !== undefined && (
+                          <div className="text-gray-700 font-medium">
+                            <span className="text-gray-500">2/9/16:</span> {holeData.strokes[player.id]}
+                          </div>
+                        )}
+                        
+                        {/* BBB Events */}
+                        {selectedGames.includes('bbb') && holeData.bbb && (
+                          <div className="text-blue-600 space-y-0.5">
+                            {holeData.bbb.firstOn === player.id && <div>🎯 1st On</div>}
+                            {holeData.bbb.closestTo === player.id && <div>🎯 Closest</div>}
+                            {holeData.bbb.firstIn === player.id && <div>🎯 1st In</div>}
+                          </div>
+                        )}
+                        
+                        {/* GIR */}
+                        {selectedGames.includes('gir') && holeData.gir?.[player.id] !== undefined && (
+                          <div className={holeData.gir[player.id] ? 'text-green-600 font-medium' : 'text-red-600'}>
+                            {holeData.gir[player.id] ? '✅ Hit' : '❌ Miss'}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

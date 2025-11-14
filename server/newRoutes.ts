@@ -1437,15 +1437,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Aggregate card assignments by hole
-      // For now, pass all cards - frontend will handle grouping by hole if needed
-      // Future enhancement: add holeNumber to CardAssignment type
+      // Build playerCards mapping (current card each player holds)
+      const playerCards: Record<string, string> = {};
+      if (gameState.cardHistory && gameState.cardHistory.length > 0) {
+        // Track current card holder for each card type
+        const currentHolders: Record<string, string> = {};
+        
+        // Process card history chronologically
+        for (const assignment of gameState.cardHistory) {
+          currentHolders[assignment.cardType] = assignment.playerId;
+        }
+        
+        // Invert to get player -> card emoji mapping
+        for (const [cardType, playerId] of Object.entries(currentHolders)) {
+          if (!playerCards[playerId]) {
+            playerCards[playerId] = '';
+          }
+          // Convert card type to emoji
+          const cardEmojis: Record<string, string> = {
+            'camel': '🐪',
+            'fish': '🐟',
+            'roadrunner': '🏃',
+            'ghost': '👻',
+            'skunk': '🦨',
+            'snake': '🐍',
+            'yeti': '👹'
+          };
+          const emoji = cardEmojis[cardType] || cardType;
+          playerCards[playerId] += emoji;
+        }
+      }
 
       res.json({
         gameStateId,
         groupId: group.id,
         players: group.players,
         scorecard,
+        playerCards,
         cardHistory: gameState.cardHistory || [],
         availableGames: {
           has2916: !!regular2916Game,

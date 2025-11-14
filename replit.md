@@ -4,6 +4,15 @@
 ForeScore is a secure, full-stack Progressive Web App designed as a companion for golf penalty games like "Animal." It provides enterprise-grade local authentication, server-side security validation, and comprehensive game management. The application supports group management, card game mechanics using a Proportional Share Algorithm, isolated 2/9/16 points games, and multiple payout calculation views. A key feature is the GIR (Greens in Regulation) game with user-configurable penalty and bonus holes. All game calculations are performed server-side to prevent tampering, ensuring secure user authentication, session management, and subscription access control. The project aims to be a robust, reliable, and secure platform for managing golf penalty games, aspiring to be the leading digital tool in this niche.
 
 ## Recent Changes
+### V9.4 (COMPLETED) - November 2025
+- **Admin Scorecard Enhancements**:
+  - **Button-Based Game Selection**: Replaced checkboxes with styled Button components showing active/outline variants, added descriptive helper text
+  - **Custom Card Name Display**: Updated card badges to show user-input names for custom cards instead of generic "Custom" label
+  - **Fixed Cards Column Layout**: Proper sticky positioning with explicit column widths (Player: 140px, Cards: 160px at left-[140px])
+  - **Auto-Select Available Games**: Added useEffect to automatically select all available games when scorecard loads, fixing empty data display issue
+  - **Points/Nassau Mode Labels**: Backend now provides gameMetadata with mode information (Points/Nassau/Both) and dollar values, displayed in button subtitles
+  - **Live Data Updates**: Scorecard cache properly invalidates when hole scores are updated
+
 ### V9.3 (COMPLETED) - November 2025
 - **Subscription Status Fix & Sync Infrastructure**:
   - **Fixed Legacy User Issue**: Resolved mikejover@hotmail.com showing "Trial" instead of "Active" despite active Stripe subscription

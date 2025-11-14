@@ -164,24 +164,31 @@ function CardGamePayouts({ selectedGroup, gameState, payoutData, selectedPointsG
                         variant="outline"
                         className="px-3 py-1 text-sm font-medium bg-gray-100 text-gray-800 border-gray-200"
                       >
-                        <span className="mr-1">{card.type === 'custom' ? card.emoji : getCardEmoji(card.type)}</span>
-                        {(() => {
-                          // Always use current game state values first
-                          if (card.type === 'custom' && card.name) {
-                            const customCard = selectedGroup?.customCards?.find(c => c.name.toLowerCase() === card.name?.toLowerCase());
-                            if (customCard) {
-                              const customCardKey = customCard.name.toLowerCase();
-                              const value = gameState?.cardValues[customCardKey] ?? customCard.value;
-                              return `$${value}`;
-                            }
-                          } else {
-                            const value = gameState?.cardValues[card.type as keyof typeof gameState.cardValues];
-                            if (value !== undefined) {
-                              return `$${value}`;
-                            }
-                          }
-                          return '$2';
-                        })()}
+                        {card.type === 'custom' ? (
+                          // For custom cards, show emoji (if exists) + name + value
+                          <>
+                            {card.emoji && <span className="mr-1">{card.emoji}</span>}
+                            {card.name && <span className="mr-1">{card.name}</span>}
+                            {(() => {
+                              const customCard = selectedGroup?.customCards?.find(c => c.name.toLowerCase() === card.name?.toLowerCase());
+                              if (customCard) {
+                                const customCardKey = customCard.name.toLowerCase();
+                                const value = gameState?.cardValues[customCardKey] ?? customCard.value;
+                                return ` $${value}`;
+                              }
+                              return ' $2';
+                            })()}
+                          </>
+                        ) : (
+                          // For standard cards, show emoji + value
+                          <>
+                            <span className="mr-1">{getCardEmoji(card.type)}</span>
+                            {(() => {
+                              const value = gameState?.cardValues[card.type as keyof typeof gameState.cardValues];
+                              return `$${value !== undefined ? value : 2}`;
+                            })()}
+                          </>
+                        )}
                       </Badge>
                     ))}
                     {playerCards.length === 0 && (

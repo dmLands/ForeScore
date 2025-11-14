@@ -194,7 +194,7 @@ export function Tutorial() {
               <div className="text-6xl mb-4">🎓</div>
               <h2 className="text-2xl font-bold text-gray-800 mb-2">Learn ForeScore</h2>
               <p className="text-gray-600">
-                New to ForeScore? Learn how to add exciting competition to your golf rounds with two fun game options!
+                New to ForeScore? Learn how to add exciting competition to your golf rounds with multiple games!
               </p>
             </div>
             

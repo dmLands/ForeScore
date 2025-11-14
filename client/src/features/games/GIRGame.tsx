@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { HoleSelector } from "@/components/HoleSelector";
 import { PlayerActionGrid } from "./PlayerActionGrid";
 import { useGirGame } from "./useGirGame";
+import { useToast } from "@/hooks/use-toast";
 import type { Group } from "@shared/schema";
 import { useEffect } from "react";
 
@@ -15,6 +16,7 @@ const PENALTY_HOLES = [1, 8, 13, 16];
 const BONUS_HOLES = [6, 9, 17, 18];
 
 export function GIRGame({ selectedGroup }: GIRGameProps) {
+  const { toast } = useToast();
   const {
     selectedGirGame,
     girGamesLoading,
@@ -100,6 +102,35 @@ export function GIRGame({ selectedGroup }: GIRGameProps) {
     initials: p.initials || getInitials(p.name)
   }));
 
+  // Validation function to check if all players have a selection
+  const validateHoleData = (): boolean => {
+    const selectedPlayerIds = Object.keys(holeData);
+    const allPlayerIds = players.map(p => p.id);
+    
+    // Check if every player has made a selection
+    const allPlayersSelected = allPlayerIds.every(playerId => 
+      selectedPlayerIds.includes(playerId) && typeof holeData[playerId] === 'boolean'
+    );
+    
+    if (!allPlayersSelected) {
+      toast({
+        title: "Incomplete Selection",
+        description: "Please select HIT or MISS for all players before saving.",
+        variant: "destructive"
+      });
+      return false;
+    }
+    
+    return true;
+  };
+
+  // Handler for save button with validation
+  const handleSaveGirScores = () => {
+    if (validateHoleData()) {
+      saveHoleData(selectedHole, holeData);
+    }
+  };
+
   return (
     <div className="p-4 space-y-4">
       {/* Game Header */}
@@ -156,8 +187,8 @@ export function GIRGame({ selectedGroup }: GIRGameProps) {
 
           {/* Save Button */}
           <Button
-            onClick={() => saveHoleData(selectedHole, holeData)}
-            disabled={isSaving || Object.keys(holeData).length === 0}
+            onClick={handleSaveGirScores}
+            disabled={isSaving}
             className="w-full mt-4 bg-emerald-500 hover:bg-emerald-600 text-white"
             data-testid="button-save-gir-data"
           >

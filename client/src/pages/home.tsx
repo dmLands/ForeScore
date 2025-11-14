@@ -201,7 +201,7 @@ function CardGamePayouts({ selectedGroup, gameState, payoutData, selectedPointsG
 }
 
 export default function Home() {
-  const { user, isAdmin, hasGirAccess } = useAuth();
+  const { user, isAdmin } = useAuth();
   
   // Track payout data readiness for the restoration logic
   const [payoutDataReady, setPayoutDataReady] = useState(true);
@@ -4249,8 +4249,8 @@ export default function Home() {
           </div>
         )}
 
-        {/* GIR Tab - Feature Flagged */}
-        {currentTab === 'games' && selectedSubGame === 'gir' && hasGirAccess && selectedGroup && (
+        {/* GIR Tab */}
+        {currentTab === 'games' && selectedSubGame === 'gir' && selectedGroup && (
           <GIRGame selectedGroup={selectedGroup} />
         )}
 
@@ -5672,23 +5672,21 @@ export default function Home() {
                   </div>
                 </button>
                 
-                {hasGirAccess && (
-                  <button
-                    data-testid="button-game-gir"
-                    className="w-full flex items-center gap-3 p-3 rounded-md hover:bg-gray-50 transition-colors text-left"
-                    onClick={() => {
-                      changeTab('games');
-                      setSelectedSubGame('gir');
-                      setShowGamesOverlay(false);
-                    }}
-                  >
-                    <Flag className="h-5 w-5 text-gray-600" />
-                    <div>
-                      <div className="font-medium text-gray-900">GIR</div>
-                      <div className="text-sm text-gray-500">Greens in Regulation</div>
-                    </div>
-                  </button>
-                )}
+                <button
+                  data-testid="button-game-gir"
+                  className="w-full flex items-center gap-3 p-3 rounded-md hover:bg-gray-50 transition-colors text-left"
+                  onClick={() => {
+                    changeTab('games');
+                    setSelectedSubGame('gir');
+                    setShowGamesOverlay(false);
+                  }}
+                >
+                  <Flag className="h-5 w-5 text-gray-600" />
+                  <div>
+                    <div className="font-medium text-gray-900">GIR</div>
+                    <div className="text-sm text-gray-500">Greens in Regulation</div>
+                  </div>
+                </button>
                 
                 <button
                   data-testid="button-game-2916"

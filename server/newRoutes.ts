@@ -1448,13 +1448,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
           currentHolders[assignment.cardType] = assignment;
         }
         
+        // Build custom card lookup maps from group metadata
+        // Map by both ID and lowercase name for flexible lookup
+        const customCardById = new Map<string, { name: string; emoji: string }>();
+        const customCardByName = new Map<string, { name: string; emoji: string }>();
+        
+        if (group.customCards && Array.isArray(group.customCards)) {
+          for (const customCard of group.customCards) {
+            const cardInfo = { 
+              name: customCard.name, 
+              emoji: customCard.emoji 
+            };
+            // Store by ID for legacy lookups
+            customCardById.set(customCard.id, cardInfo);
+            // Store by lowercase name for name-based lookups
+            if (customCard.name) {
+              customCardByName.set(customCard.name.toLowerCase().trim(), cardInfo);
+            }
+          }
+        }
+        
         // Invert to get player -> card display mapping
         for (const assignment of Object.values(currentHolders)) {
           if (!playerCards[assignment.playerId]) {
             playerCards[assignment.playerId] = '';
           }
           
-          // For standard cards, use emoji; for custom cards, use the card emoji or name
+          // For standard cards, use emoji; for custom cards, look up from group metadata
           const cardEmojis: Record<string, string> = {
             'camel': '🐪',
             'fish': '🐟',
@@ -1465,16 +1485,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
             'yeti': '👹'
           };
           
-          // Priority: cardEmoji > emoji lookup > cardName > cardType
+          // Priority: assignment fields > standard emoji > custom card lookup (by ID then name)
           let displayValue = '';
-          if (assignment.cardEmoji) {
+          
+          if (assignment.cardEmoji && assignment.cardEmoji !== '') {
+            // Use emoji from assignment if available
             displayValue = assignment.cardEmoji;
-          } else if (cardEmojis[assignment.cardType]) {
-            displayValue = cardEmojis[assignment.cardType];
-          } else if (assignment.cardName) {
+          } else if (assignment.cardName && assignment.cardName !== '') {
+            // Use name from assignment if available
             displayValue = assignment.cardName;
+          } else if (cardEmojis[assignment.cardType]) {
+            // Standard card - use emoji
+            displayValue = cardEmojis[assignment.cardType];
           } else {
-            displayValue = assignment.cardType;
+            // Custom card - look up from group metadata
+            // Try by cardId first (for legacy entries with cardType="custom")
+            let customCard = customCardById.get(assignment.cardId);
+            
+            // If not found, try by cardType (for newer entries with cardType=lowercase name)
+            if (!customCard && assignment.cardType) {
+              customCard = customCardByName.get(assignment.cardType.toLowerCase().trim());
+            }
+            
+            if (customCard) {
+              displayValue = customCard.emoji || customCard.name;
+            } else {
+              // Final fallback to cardType (shouldn't happen)
+              displayValue = assignment.cardType;
+            }
           }
           
           playerCards[assignment.playerId] += displayValue + ' ';

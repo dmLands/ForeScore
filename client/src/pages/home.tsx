@@ -239,6 +239,11 @@ export default function Home() {
   const [bbbPointValue, setBBBPointValue] = useState<string>("1.00");
   const [bbbNassauValue, setBBBNassauValue] = useState<string>("10.00");
   const [bbbPayoutMode, setBBBPayoutMode] = useState<'points' | 'nassau' | 'both'>('points');
+
+  // GIR game state variables
+  const [selectedGIRGame, setSelectedGIRGame] = useState<PointsGame | null>(null);
+  const [girPointValue, setGIRPointValue] = useState<string>("1.00");
+  const [girNassauValue, setGIRNassauValue] = useState<string>("10.00");
   const [payoutMode, setPayoutMode] = useState<'points' | 'nassau'>('points');
   const [combinedPayoutMode, setCombinedPayoutMode] = useState<'points' | 'nassau' | 'both'>('points');
   const [showTermsOfService, setShowTermsOfService] = useState(false);
@@ -891,6 +896,33 @@ export default function Home() {
       }
     }
   }, [selectedGroup, selectedGame, pointsGames, selectedBBBGame]);
+
+  // Auto-select GIR game for current game session
+  useEffect(() => {
+    if (selectedGroup && selectedGame && pointsGames.length > 0) {
+      const girOnlyGames = pointsGames.filter(game => game.gameType === 'gir');
+      
+      // If we have a selectedGIRGame but it's not in the current game session's GIR games, clear it
+      if (selectedGIRGame && !girOnlyGames.find(game => game.id === selectedGIRGame.id)) {
+        setSelectedGIRGame(null);
+      }
+      // Auto-select the GIR game for this game session
+      if (!selectedGIRGame && girOnlyGames.length > 0) {
+        const existingGame = girOnlyGames[0]; // Get the GIR game specifically
+        if (existingGame) {
+          setSelectedGIRGame(existingGame);
+          console.log(`Auto-selected GIR game: ${existingGame.name} for game session: ${selectedGame.id}`);
+        }
+      }
+    }
+    // Also ensure the selected game persists even when pointsGames array is updated
+    if (selectedGIRGame && pointsGames.length > 0) {
+      const updatedGame = pointsGames.find(game => game.id === selectedGIRGame.id);
+      if (updatedGame) {
+        setSelectedGIRGame(updatedGame); // Update with latest data
+      }
+    }
+  }, [selectedGroup, selectedGame, pointsGames, selectedGIRGame]);
 
   // V6.6: Refetch points games data when switching to Games->2/9/16 to ensure saved scores are visible
   useEffect(() => {
@@ -5270,9 +5302,193 @@ export default function Home() {
           </DialogHeader>
           
           <div className="space-y-4">
-            {/* Available Games */}
-            <div className="space-y-3">
-              <label className="text-sm font-medium text-gray-700">Select Games:</label>
+            {/* Section 1: Points Games */}
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-gray-800">Points Games</label>
+              
+              {/* BBB Points */}
+              {selectedBBBGame && parseFloat(bbbPointValue) > 0 && selectedBBBGame.holes && Object.keys(selectedBBBGame.holes).length > 0 && (
+                <Button 
+                  variant={tempSelectedGames.includes('bbb-points') ? 'default' : 'outline'}
+                  className={`w-full justify-start h-auto p-3 ${
+                    tempSelectedGames.includes('bbb-points') 
+                      ? 'bg-amber-100 hover:bg-amber-200 text-amber-800 border-amber-300' 
+                      : 'hover:bg-gray-50'
+                  }`}
+                  onClick={() => {
+                    if (tempSelectedGames.includes('bbb-points')) {
+                      setTempSelectedGames(tempSelectedGames.filter(g => g !== 'bbb-points'));
+                    } else {
+                      setTempSelectedGames([...tempSelectedGames, 'bbb-points']);
+                    }
+                  }}
+                >
+                  <div className="flex items-center gap-3 w-full">
+                    <span className="text-lg">🎲</span>
+                    <div className="text-left">
+                      <div className="font-medium">BBB Points</div>
+                      <div className={`text-sm ${tempSelectedGames.includes('bbb-points') ? 'text-amber-600' : 'text-gray-600'}`}>
+                        ${bbbPointValue} per point
+                      </div>
+                    </div>
+                  </div>
+                </Button>
+              )}
+
+              {/* GIR Points */}
+              {selectedGIRGame && selectedGIRGame.settings && parseFloat(String(selectedGIRGame.settings.pointValue || 0)) > 0 && selectedGIRGame.holes && Object.keys(selectedGIRGame.holes).length > 0 && (
+                <Button 
+                  variant={tempSelectedGames.includes('gir-points') ? 'default' : 'outline'}
+                  className={`w-full justify-start h-auto p-3 ${
+                    tempSelectedGames.includes('gir-points') 
+                      ? 'bg-amber-100 hover:bg-amber-200 text-amber-800 border-amber-300' 
+                      : 'hover:bg-gray-50'
+                  }`}
+                  onClick={() => {
+                    if (tempSelectedGames.includes('gir-points')) {
+                      setTempSelectedGames(tempSelectedGames.filter(g => g !== 'gir-points'));
+                    } else {
+                      setTempSelectedGames([...tempSelectedGames, 'gir-points']);
+                    }
+                  }}
+                >
+                  <div className="flex items-center gap-3 w-full">
+                    <span className="text-lg">🚩</span>
+                    <div className="text-left">
+                      <div className="font-medium">GIR Points</div>
+                      <div className={`text-sm ${tempSelectedGames.includes('gir-points') ? 'text-amber-600' : 'text-gray-600'}`}>
+                        ${selectedGIRGame.settings.pointValue} per point
+                      </div>
+                    </div>
+                  </div>
+                </Button>
+              )}
+
+              {/* 2/9/16 Points */}
+              {selectedPointsGame && parseFloat(pointValue) > 0 && (
+                <Button 
+                  variant={tempSelectedGames.includes('points') ? 'default' : 'outline'}
+                  className={`w-full justify-start h-auto p-3 ${
+                    tempSelectedGames.includes('points') 
+                      ? 'bg-amber-100 hover:bg-amber-200 text-amber-800 border-amber-300' 
+                      : 'hover:bg-gray-50'
+                  }`}
+                  onClick={() => {
+                    if (tempSelectedGames.includes('points')) {
+                      setTempSelectedGames(tempSelectedGames.filter(g => g !== 'points'));
+                    } else {
+                      setTempSelectedGames([...tempSelectedGames, 'points']);
+                    }
+                  }}
+                >
+                  <div className="flex items-center gap-3 w-full">
+                    <span className="text-lg">#️⃣</span>
+                    <div className="text-left">
+                      <div className="font-medium">2/9/16 Points</div>
+                      <div className={`text-sm ${tempSelectedGames.includes('points') ? 'text-amber-600' : 'text-gray-600'}`}>
+                        ${pointValue} per point
+                      </div>
+                    </div>
+                  </div>
+                </Button>
+              )}
+            </div>
+
+            {/* Section 2: Nassau Games */}
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-gray-800">Nassau Games</label>
+              
+              {/* BBB Nassau */}
+              {selectedBBBGame && parseFloat(bbbNassauValue) > 0 && selectedBBBGame.holes && Object.keys(selectedBBBGame.holes).length > 0 && (
+                <Button 
+                  variant={tempSelectedGames.includes('bbb-nassau') ? 'default' : 'outline'}
+                  className={`w-full justify-start h-auto p-3 ${
+                    tempSelectedGames.includes('bbb-nassau') 
+                      ? 'bg-amber-100 hover:bg-amber-200 text-amber-800 border-amber-300' 
+                      : 'hover:bg-gray-50'
+                  }`}
+                  onClick={() => {
+                    if (tempSelectedGames.includes('bbb-nassau')) {
+                      setTempSelectedGames(tempSelectedGames.filter(g => g !== 'bbb-nassau'));
+                    } else {
+                      setTempSelectedGames([...tempSelectedGames, 'bbb-nassau']);
+                    }
+                  }}
+                >
+                  <div className="flex items-center gap-3 w-full">
+                    <span className="text-lg">🎲</span>
+                    <div className="text-left">
+                      <div className="font-medium">BBB Nassau</div>
+                      <div className={`text-sm ${tempSelectedGames.includes('bbb-nassau') ? 'text-amber-600' : 'text-gray-600'}`}>
+                        ${bbbNassauValue} per victory
+                      </div>
+                    </div>
+                  </div>
+                </Button>
+              )}
+
+              {/* GIR Nassau */}
+              {selectedGIRGame && selectedGIRGame.settings && parseFloat(String(selectedGIRGame.settings.nassauValue || 0)) > 0 && selectedGIRGame.holes && Object.keys(selectedGIRGame.holes).length > 0 && (
+                <Button 
+                  variant={tempSelectedGames.includes('gir-nassau') ? 'default' : 'outline'}
+                  className={`w-full justify-start h-auto p-3 ${
+                    tempSelectedGames.includes('gir-nassau') 
+                      ? 'bg-amber-100 hover:bg-amber-200 text-amber-800 border-amber-300' 
+                      : 'hover:bg-gray-50'
+                  }`}
+                  onClick={() => {
+                    if (tempSelectedGames.includes('gir-nassau')) {
+                      setTempSelectedGames(tempSelectedGames.filter(g => g !== 'gir-nassau'));
+                    } else {
+                      setTempSelectedGames([...tempSelectedGames, 'gir-nassau']);
+                    }
+                  }}
+                >
+                  <div className="flex items-center gap-3 w-full">
+                    <span className="text-lg">🚩</span>
+                    <div className="text-left">
+                      <div className="font-medium">GIR Nassau</div>
+                      <div className={`text-sm ${tempSelectedGames.includes('gir-nassau') ? 'text-amber-600' : 'text-gray-600'}`}>
+                        ${selectedGIRGame.settings.nassauValue} per victory
+                      </div>
+                    </div>
+                  </div>
+                </Button>
+              )}
+
+              {/* 2/9/16 Nassau */}
+              {selectedPointsGame && parseFloat(nassauValue) > 0 && (
+                <Button 
+                  variant={tempSelectedGames.includes('nassau') ? 'default' : 'outline'}
+                  className={`w-full justify-start h-auto p-3 ${
+                    tempSelectedGames.includes('nassau') 
+                      ? 'bg-amber-100 hover:bg-amber-200 text-amber-800 border-amber-300' 
+                      : 'hover:bg-gray-50'
+                  }`}
+                  onClick={() => {
+                    if (tempSelectedGames.includes('nassau')) {
+                      setTempSelectedGames(tempSelectedGames.filter(g => g !== 'nassau'));
+                    } else {
+                      setTempSelectedGames([...tempSelectedGames, 'nassau']);
+                    }
+                  }}
+                >
+                  <div className="flex items-center gap-3 w-full">
+                    <span className="text-lg">#️⃣</span>
+                    <div className="text-left">
+                      <div className="font-medium">2/9/16 Nassau</div>
+                      <div className={`text-sm ${tempSelectedGames.includes('nassau') ? 'text-amber-600' : 'text-gray-600'}`}>
+                        ${nassauValue} per victory
+                      </div>
+                    </div>
+                  </div>
+                </Button>
+              )}
+            </div>
+
+            {/* Section 3: Card Game */}
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-gray-800">Card Game</label>
               
               {/* Card Game Option */}
               {selectedGame && gameState && gameState.cardHistory?.length > 0 && (
@@ -5302,122 +5518,6 @@ export default function Home() {
                   </div>
                 </Button>
               )}
-              
-              {/* Points Game Option */}
-              {selectedPointsGame && parseFloat(pointValue) > 0 && (
-                <Button 
-                  variant={tempSelectedGames.includes('points') ? 'default' : 'outline'}
-                  className={`w-full justify-start h-auto p-3 ${
-                    tempSelectedGames.includes('points') 
-                      ? 'bg-amber-100 hover:bg-amber-200 text-amber-800 border-amber-300' 
-                      : 'hover:bg-gray-50'
-                  }`}
-                  onClick={() => {
-                    if (tempSelectedGames.includes('points')) {
-                      setTempSelectedGames(tempSelectedGames.filter(g => g !== 'points'));
-                    } else {
-                      setTempSelectedGames([...tempSelectedGames, 'points']);
-                    }
-                  }}
-                >
-                  <div className="flex items-center gap-3 w-full">
-                    <span className="text-lg">🎯</span>
-                    <div className="text-left">
-                      <div className="font-medium">2/9/16 Points Game</div>
-                      <div className={`text-sm ${tempSelectedGames.includes('points') ? 'text-amber-600' : 'text-gray-600'}`}>
-                        ${pointValue} per point
-                      </div>
-                    </div>
-                  </div>
-                </Button>
-              )}
-              
-              {/* FBT Game Option */}
-              {selectedPointsGame && parseFloat(nassauValue) > 0 && (
-                <Button 
-                  variant={tempSelectedGames.includes('nassau') ? 'default' : 'outline'}
-                  className={`w-full justify-start h-auto p-3 ${
-                    tempSelectedGames.includes('nassau') 
-                      ? 'bg-amber-100 hover:bg-amber-200 text-amber-800 border-amber-300' 
-                      : 'hover:bg-gray-50'
-                  }`}
-                  onClick={() => {
-                    if (tempSelectedGames.includes('nassau')) {
-                      setTempSelectedGames(tempSelectedGames.filter(g => g !== 'nassau'));
-                    } else {
-                      setTempSelectedGames([...tempSelectedGames, 'nassau']);
-                    }
-                  }}
-                >
-                  <div className="flex items-center gap-3 w-full">
-                    <span className="text-lg">⛳</span>
-                    <div className="text-left">
-                      <div className="font-medium">2/9/16 Nassau Game</div>
-                      <div className={`text-sm ${tempSelectedGames.includes('nassau') ? 'text-amber-600' : 'text-gray-600'}`}>
-                        ${nassauValue} per victory
-                      </div>
-                    </div>
-                  </div>
-                </Button>
-              )}
-
-              {/* BBB Points Game Option */}
-              {selectedBBBGame && parseFloat(bbbPointValue) > 0 && selectedBBBGame.holes && Object.keys(selectedBBBGame.holes).length > 0 && (
-                <Button 
-                  variant={tempSelectedGames.includes('bbb-points') ? 'default' : 'outline'}
-                  className={`w-full justify-start h-auto p-3 ${
-                    tempSelectedGames.includes('bbb-points') 
-                      ? 'bg-amber-100 hover:bg-amber-200 text-amber-800 border-amber-300' 
-                      : 'hover:bg-gray-50'
-                  }`}
-                  onClick={() => {
-                    if (tempSelectedGames.includes('bbb-points')) {
-                      setTempSelectedGames(tempSelectedGames.filter(g => g !== 'bbb-points'));
-                    } else {
-                      setTempSelectedGames([...tempSelectedGames, 'bbb-points']);
-                    }
-                  }}
-                >
-                  <div className="flex items-center gap-3 w-full">
-                    <span className="text-lg">🎲</span>
-                    <div className="text-left">
-                      <div className="font-medium">BBB Points Game</div>
-                      <div className={`text-sm ${tempSelectedGames.includes('bbb-points') ? 'text-amber-600' : 'text-gray-600'}`}>
-                        ${bbbPointValue} per point
-                      </div>
-                    </div>
-                  </div>
-                </Button>
-              )}
-
-              {/* BBB Nassau Game Option */}
-              {selectedBBBGame && parseFloat(bbbNassauValue) > 0 && selectedBBBGame.holes && Object.keys(selectedBBBGame.holes).length > 0 && (
-                <Button 
-                  variant={tempSelectedGames.includes('bbb-nassau') ? 'default' : 'outline'}
-                  className={`w-full justify-start h-auto p-3 ${
-                    tempSelectedGames.includes('bbb-nassau') 
-                      ? 'bg-amber-100 hover:bg-amber-200 text-amber-800 border-amber-300' 
-                      : 'hover:bg-gray-50'
-                  }`}
-                  onClick={() => {
-                    if (tempSelectedGames.includes('bbb-nassau')) {
-                      setTempSelectedGames(tempSelectedGames.filter(g => g !== 'bbb-nassau'));
-                    } else {
-                      setTempSelectedGames([...tempSelectedGames, 'bbb-nassau']);
-                    }
-                  }}
-                >
-                  <div className="flex items-center gap-3 w-full">
-                    <span className="text-lg">🎯</span>
-                    <div className="text-left">
-                      <div className="font-medium">BBB Nassau Game</div>
-                      <div className={`text-sm ${tempSelectedGames.includes('bbb-fbt') ? 'text-amber-600' : 'text-gray-600'}`}>
-                        ${bbbNassauValue} per victory
-                      </div>
-                    </div>
-                  </div>
-                </Button>
-              )}
             </div>
             
             {/* Action Buttons */}
@@ -5441,25 +5541,26 @@ export default function Home() {
                   // V6.5: Trigger calculation with saveResults=true
                   if (tempSelectedGames.length > 0 && selectedGroup?.id) {
                     try {
-                      // FIX: Determine correct game IDs and values based on selected games
+                      // Determine correct game IDs and values based on selected games
                       const hasBBBGames = tempSelectedGames.some(game => game.startsWith('bbb-'));
+                      const hasGIRGames = tempSelectedGames.some(game => game.startsWith('gir-'));
                       const has2916Games = tempSelectedGames.some(game => ['points', 'nassau'].includes(game));
                       
-                      // Use appropriate values based on game types in temp selection
-                      const savePointValue = hasBBBGames ? parseFloat(bbbPointValue) : parseFloat(pointValue);
-                      const saveFbtValue = hasBBBGames ? parseFloat(bbbNassauValue) : parseFloat(nassauValue);
-                      
-                      // Use BBB game ID if BBB games are selected, otherwise use 2/9/16 game ID
+                      // Determine the primary points game ID
+                      // Priority: Use the first game type that's selected in the tempSelectedGames array
                       let correctPointsGameId = null;
-                      if (hasBBBGames && has2916Games) {
-                        // If both types are selected, we need to handle combination differently
-                        // For now, prioritize the BBB game for the main calculation
-                        correctPointsGameId = selectedBBBGame?.id || selectedPointsGame?.id;
-                      } else if (hasBBBGames) {
+                      if (hasBBBGames) {
                         correctPointsGameId = selectedBBBGame?.id;
+                      } else if (hasGIRGames) {
+                        correctPointsGameId = selectedGIRGame?.id;
                       } else if (has2916Games) {
                         correctPointsGameId = selectedPointsGame?.id;
                       }
+                      
+                      // For combined games API, values are no longer used since each game has its own settings
+                      // The backend will fetch the correct values from each game's settings
+                      const savePointValue = 0;
+                      const saveFbtValue = 0;
                       
                       const response = await fetch('/api/calculate-combined-games', {
                         method: 'POST',

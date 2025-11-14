@@ -2612,19 +2612,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let allPointsGames = [];
       let regular2916Game = null;
       let bbbGame = null;
+      let girGame = null;
       
-      // Always fetch all games if we have BBB games OR mixed scenarios
+      // Always fetch all games if we have BBB/GIR games OR mixed scenarios
       const hasBBBGames = selectedGames.includes('bbb-points') || selectedGames.includes('bbb-nassau') || selectedGames.includes('bbb-fbt');
+      const hasGIRGames = selectedGames.includes('gir-points') || selectedGames.includes('gir-nassau');
       const hasRegularGames = selectedGames.includes('points') || selectedGames.includes('nassau') || selectedGames.includes('fbt');
       
-      if (hasBBBGames || hasRegularGames) {
+      if (hasBBBGames || hasRegularGames || hasGIRGames) {
         // Fetch all games to handle both individual and mixed scenarios - FIXED: pass gameStateId
         allPointsGames = await storage.getPointsGames(groupId, gameStateId || undefined);
         regular2916Game = allPointsGames.find(g => g.gameType === 'points');
         bbbGame = allPointsGames.find(g => g.gameType === 'bbb');
+        girGame = allPointsGames.find(g => g.gameType === 'gir');
         console.log('🔍 MULTI-GAME FETCH - fetched games:', {
           regular2916GameId: regular2916Game?.id,
           bbbGameId: bbbGame?.id,
+          girGameId: girGame?.id,
           selectedGames,
           totalGamesFound: allPointsGames.length,
           gameStateId: gameStateId || 'none'
@@ -2640,8 +2644,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         pointsGameName: pointsGame?.name,
         hasRegular2916Game: !!regular2916Game,
         hasBBBGame: !!bbbGame,
+        hasGIRGame: !!girGame,
         regular2916GameId: regular2916Game?.id,
-        bbbGameId: bbbGame?.id
+        bbbGameId: bbbGame?.id,
+        girGameId: girGame?.id
       });
       if (!group) return res.status(404).json({ message: 'Group not found' });
 
@@ -2747,6 +2753,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         nets.push(bbbNassauResult);
         activeGames.push('bbb-nassau');
+      }
+
+      // GIR POINTS
+      const girGameForPoints = girGame || (pointsGame?.gameType === 'gir' ? pointsGame : null);
+      const girPointsCondition = selectedGames.includes('gir-points') && girGameForPoints && girGameForPoints.settings && parseFloat(String(girGameForPoints.settings.pointValue || 0)) > 0;
+      console.log('🔍 GIR POINTS CHECK:', {
+        includesGIRPoints: selectedGames.includes('gir-points'),
+        hasGIRGame: !!girGameForPoints,
+        girGameId: girGameForPoints?.id,
+        girGameType: girGameForPoints?.gameType,
+        girPointValue: girGameForPoints?.settings?.pointValue,
+        conditionMet: girPointsCondition
+      });
+      
+      if (girPointsCondition) {
+        const playerIds = group.players.map(p => p.id);
+        // For GIR games, holes contains { [hole]: { [playerId]: boolean } }
+        const girHoleData = girGameForPoints.holes || {};
+        const girHoleConfig = girGameForPoints.girHoleConfig || { penalty: [], bonus: [] };
+        console.log('🔍 GIR POINTS DATA:', {
+          playerIds,
+          girHoleDataKeys: Object.keys(girHoleData),
+          girHoleConfig,
+          pointValue: girGameForPoints.settings?.pointValue
+        });
+        
+        const girPointsResult = calculateGIRPointsGame(girHoleData, playerIds, parseFloat(String(girGameForPoints.settings?.pointValue || 1)), girHoleConfig);
+        console.log('🔍 GIR POINTS RESULT:', girPointsResult);
+        
+        nets.push(girPointsResult);
+        activeGames.push('gir-points');
+      }
+
+      // GIR Nassau
+      const girGameForNassau = girGame || (pointsGame?.gameType === 'gir' ? pointsGame : null);
+      const girNassauCondition = selectedGames.includes('gir-nassau') && girGameForNassau && girGameForNassau.settings && parseFloat(String(girGameForNassau.settings.nassauValue || 0)) > 0;
+      console.log('🔍 GIR NASSAU CHECK:', {
+        includesGIRNassau: selectedGames.includes('gir-nassau'),
+        hasGIRGame: !!girGameForNassau,
+        girGameId: girGameForNassau?.id,
+        girGameType: girGameForNassau?.gameType,
+        girNassauValue: girGameForNassau?.settings?.nassauValue,
+        conditionMet: girNassauCondition
+      });
+      
+      if (girNassauCondition) {
+        const playerIds = group.players.map(p => p.id);
+        // For GIR games, holes contains { [hole]: { [playerId]: boolean } }
+        const girHoleData = girGameForNassau.holes || {};
+        const girHoleConfig = girGameForNassau.girHoleConfig || { penalty: [], bonus: [] };
+        console.log('🔍 GIR NASSAU DATA:', {
+          playerIds,
+          girHoleDataKeys: Object.keys(girHoleData),
+          girHoleConfig,
+          nassauValue: girGameForNassau.settings?.nassauValue
+        });
+        
+        const girNassauResult = calculateGIRNassauGame(girHoleData, playerIds, parseFloat(String(girGameForNassau.settings?.nassauValue || 10)), girHoleConfig);
+        console.log('🔍 GIR NASSAU RESULT:', girNassauResult);
+        
+        nets.push(girNassauResult);
+        activeGames.push('gir-nassau');
       }
 
       // Step 2: Combine nets by player KEY (canonical 3-step pipeline)

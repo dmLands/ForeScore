@@ -13,6 +13,11 @@ ForeScore is a secure, full-stack Progressive Web App designed as a companion fo
   - **Auto-Select All Variants**: Scorecard modal now auto-selects all available game variants when opened (empty initialization triggers useEffect)
   - **Robust Value Parsing**: Defensive splitting of "$/$ /" format with trimming and fallback defaults to handle inconsistent spacing
   - **Custom Card Name Fix**: Card badges in payouts now display user-input names (e.g., "🔥 Hot Card $15") instead of generic "Custom" text
+- **Service Worker Cache Fix (CRITICAL)**:
+  - **Root Cause**: Service worker was caching itself (`/sw.js`), preventing browser from discovering new versions without manual cache clearing
+  - **Solution**: Added network-only fetch with `cache: 'no-store'` for `/sw.js` in fetch handler, ensuring fresh worker script on every check
+  - **Impact**: Updates now appear automatically without manual cache clearing; "Update Available" notification works as designed
+  - **Version Bump**: 1.0.0 → 1.0.1 to trigger cache invalidation and deploy fix
 
 ### V9.4 (COMPLETED) - November 2025
 - **Admin Scorecard Enhancements**:

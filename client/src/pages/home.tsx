@@ -4823,10 +4823,13 @@ export default function Home() {
                       </li>
                     </ul>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-
+                      </div>
+                    </CardContent>
+                  </AccordionContent>
+                </Card>
+              </AccordionItem>
+            
+            </Accordion>
           </div>
         )}
       </main>

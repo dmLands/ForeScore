@@ -92,11 +92,11 @@ const getCardEmoji = (type: string, card?: GameCard) => {
   switch (type) {
     case 'camel': return '🐪';
     case 'fish': return '🐟';
-    case 'roadrunner': return '🐦';
+    case 'roadrunner': return '🏃';
     case 'ghost': return '👻';
     case 'skunk': return '🦨';
     case 'snake': return '🐍';
-    case 'yeti': return '🌲';
+    case 'yeti': return '👹';
     case 'custom': return card?.emoji || '🎴';
     default: return '🎴';
   }
@@ -1550,11 +1550,11 @@ export default function Home() {
     switch (type) {
       case 'camel': return '🐪';
       case 'fish': return '🐟';
-      case 'roadrunner': return '🐦';
+      case 'roadrunner': return '🏃';
       case 'ghost': return '👻';
       case 'skunk': return '🦨';
       case 'snake': return '🐍';
-      case 'yeti': return '🌲';
+      case 'yeti': return '👹';
       case 'custom': return card?.emoji || '🎴';
       default: return '🎴';
     }

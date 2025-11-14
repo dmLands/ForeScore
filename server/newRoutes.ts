@@ -1582,6 +1582,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
+      // Build selectedGames array with variant IDs based on active games
+      // Include variants whenever the game exists, regardless of wager values
+      const selectedGames: string[] = [];
+      
+      // Add card game if card history exists
+      if (gameState.cardHistory && gameState.cardHistory.length > 0) {
+        selectedGames.push('cards');
+      }
+      
+      // Add 2/9/16 variants - always include points and nassau if game exists
+      if (regular2916Game) {
+        selectedGames.push('2916:points');
+        selectedGames.push('2916:nassau');
+      }
+      
+      // Add BBB variants - always include points and nassau if game exists
+      if (bbbGame) {
+        selectedGames.push('bbb:points');
+        selectedGames.push('bbb:nassau');
+      }
+      
+      // Add GIR variants - always include points and nassau if game exists
+      if (girGame) {
+        selectedGames.push('gir:points');
+        selectedGames.push('gir:nassau');
+      }
+
       res.json({
         gameStateId,
         groupId: group.id,
@@ -1589,6 +1616,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         scorecard,
         playerCards,
         cardHistory: gameState.cardHistory || [],
+        selectedGames,
         availableGames: {
           has2916: !!regular2916Game,
           hasBBB: !!bbbGame,

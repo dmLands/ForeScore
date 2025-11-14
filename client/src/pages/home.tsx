@@ -6113,7 +6113,7 @@ function ScorecardTable({
             <tr>
               <th className="sticky left-0 bg-white border border-gray-300 p-2 font-semibold z-10 w-[140px]">Player</th>
               {selectedGames.includes('cards') && (
-                <th className="sticky left-[140px] bg-gray-50 border border-gray-300 p-2 font-semibold z-10 w-[160px]">Cards</th>
+                <th className="bg-gray-50 border border-gray-300 p-2 font-semibold w-[160px]">Cards</th>
               )}
               {[...Array(18)].map((_, i) => (
                 <th key={i} className="border border-gray-300 p-2 font-semibold min-w-[100px]">
@@ -6129,7 +6129,7 @@ function ScorecardTable({
                   {player.name}
                 </td>
                 {selectedGames.includes('cards') && (
-                  <td className="sticky left-[140px] bg-gray-50 border border-gray-300 p-2 text-center z-10 w-[160px]">
+                  <td className="bg-gray-50 border border-gray-300 p-2 text-center w-[160px]">
                     <span className="text-sm">{playerCards?.[player.id]?.trim() || '-'}</span>
                   </td>
                 )}

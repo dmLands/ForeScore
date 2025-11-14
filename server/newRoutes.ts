@@ -1473,6 +1473,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
+      // Build game metadata for display labels
+      const gameMetadata: Record<string, { mode: string; value: string }> = {};
+      
+      if (regular2916Game) {
+        const settings = regular2916Game.settings || {};
+        const pointValue = settings.pointValue ? parseFloat(String(settings.pointValue)) : 0;
+        const nassauValue = settings.nassauValue ? parseFloat(String(settings.nassauValue)) : 0;
+        const isPoints = pointValue > 0;
+        const isNassau = nassauValue > 0;
+        if (isPoints && isNassau) {
+          gameMetadata['2916'] = { 
+            mode: 'Points & Nassau', 
+            value: `$${pointValue} / $${nassauValue}` 
+          };
+        } else if (isPoints) {
+          gameMetadata['2916'] = { mode: 'Points', value: `$${pointValue}` };
+        } else if (isNassau) {
+          gameMetadata['2916'] = { mode: 'Nassau', value: `$${nassauValue}` };
+        } else {
+          gameMetadata['2916'] = { mode: 'Stroke play', value: '' };
+        }
+      }
+      
+      if (bbbGame) {
+        const settings = bbbGame.settings || {};
+        const pointValue = settings.pointValue ? parseFloat(String(settings.pointValue)) : 0;
+        const nassauValue = settings.nassauValue ? parseFloat(String(settings.nassauValue)) : 0;
+        const isPoints = pointValue > 0;
+        const isNassau = nassauValue > 0;
+        if (isPoints && isNassau) {
+          gameMetadata['bbb'] = { 
+            mode: 'Points & Nassau', 
+            value: `$${pointValue} / $${nassauValue}` 
+          };
+        } else if (isPoints) {
+          gameMetadata['bbb'] = { mode: 'Points', value: `$${pointValue}` };
+        } else if (isNassau) {
+          gameMetadata['bbb'] = { mode: 'Nassau', value: `$${nassauValue}` };
+        } else {
+          gameMetadata['bbb'] = { mode: 'Bango Bongo', value: '' };
+        }
+      }
+      
+      if (girGame) {
+        const settings = girGame.settings || {};
+        const pointValue = settings.pointValue ? parseFloat(String(settings.pointValue)) : 0;
+        const nassauValue = settings.nassauValue ? parseFloat(String(settings.nassauValue)) : 0;
+        const isPoints = pointValue > 0;
+        const isNassau = nassauValue > 0;
+        if (isPoints && isNassau) {
+          gameMetadata['gir'] = { 
+            mode: 'Points & Nassau', 
+            value: `$${pointValue} / $${nassauValue}` 
+          };
+        } else if (isPoints) {
+          gameMetadata['gir'] = { mode: 'Points', value: `$${pointValue}` };
+        } else if (isNassau) {
+          gameMetadata['gir'] = { mode: 'Nassau', value: `$${nassauValue}` };
+        } else {
+          gameMetadata['gir'] = { mode: 'Greens in Regulation', value: '' };
+        }
+      }
+
       res.json({
         gameStateId,
         groupId: group.id,
@@ -1485,7 +1548,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           hasBBB: !!bbbGame,
           hasGIR: !!girGame,
           hasCards: (gameState.cardHistory?.length || 0) > 0
-        }
+        },
+        gameMetadata
       });
     } catch (error) {
       console.error('Error fetching scorecard:', error);

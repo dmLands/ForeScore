@@ -6007,7 +6007,7 @@ function ScorecardTable({
     return <div className="text-center py-8 text-gray-500">No scorecard data available</div>;
   }
 
-  const { players, scorecard, playerCards, availableGames } = scorecardData;
+  const { players, scorecard, playerCards, availableGames, gameMetadata } = scorecardData;
 
   // Toggle game selection
   const toggleGame = (gameType: string) => {
@@ -6032,7 +6032,10 @@ function ScorecardTable({
               className="flex flex-col items-start h-auto py-2 px-3"
             >
               <span className="font-medium">🎯 2/9/16</span>
-              <span className="text-xs opacity-80">Stroke play</span>
+              <span className="text-xs opacity-80">
+                {gameMetadata?.['2916']?.mode || 'Stroke play'}
+                {gameMetadata?.['2916']?.value && ` · ${gameMetadata['2916'].value}`}
+              </span>
             </Button>
           )}
           {availableGames.hasBBB && (
@@ -6043,7 +6046,10 @@ function ScorecardTable({
               className="flex flex-col items-start h-auto py-2 px-3"
             >
               <span className="font-medium">🎲 BBB</span>
-              <span className="text-xs opacity-80">Bango Bongo</span>
+              <span className="text-xs opacity-80">
+                {gameMetadata?.['bbb']?.mode || 'Bango Bongo'}
+                {gameMetadata?.['bbb']?.value && ` · ${gameMetadata['bbb'].value}`}
+              </span>
             </Button>
           )}
           {availableGames.hasGIR && (
@@ -6054,7 +6060,10 @@ function ScorecardTable({
               className="flex flex-col items-start h-auto py-2 px-3"
             >
               <span className="font-medium">🏌️ GIR</span>
-              <span className="text-xs opacity-80">Greens in Regulation</span>
+              <span className="text-xs opacity-80">
+                {gameMetadata?.['gir']?.mode || 'Greens in Regulation'}
+                {gameMetadata?.['gir']?.value && ` · ${gameMetadata['gir'].value}`}
+              </span>
             </Button>
           )}
           {availableGames.hasCards && (

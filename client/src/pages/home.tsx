@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -4355,11 +4356,126 @@ export default function Home() {
             {/* Tutorial Section */}
             <Tutorial />
             
-            {/* BBB Game Rules */}
-            <Card>
-              <CardContent className="p-6">
-                <h2 className="text-lg font-bold text-gray-800 mb-4">🎲 Bingo Bango Bongo Rules</h2>
-                <div className="space-y-4 text-gray-600">
+            {/* Game Rules Accordion */}
+            <Accordion type="multiple" defaultValue={['gir']} className="space-y-4">
+              
+              {/* GIR Game Rules */}
+              <AccordionItem value="gir" data-testid="accordion-item-gir">
+                <Card>
+                  <AccordionTrigger className="px-6 pt-6 pb-4 hover:no-underline" data-testid="accordion-trigger-gir">
+                    <h2 className="text-lg font-bold text-gray-800">🏌️ Greens in Regulation Rules</h2>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <CardContent className="px-6 pb-6 pt-0">
+                      <div className="space-y-4 text-gray-600">
+                        <p className="leading-relaxed">
+                          Greens in Regulation (GIR) is a scoring game where players earn points by hitting the green in the regulation number of strokes, creating competitive pressure on approach shots.
+                        </p>
+
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                            <span className="w-6 h-6 bg-emerald-500 text-white rounded-full flex items-center justify-center text-sm font-bold">1</span>
+                            How GIR Is Scored
+                          </h3>
+                          
+                          <div className="ml-4 space-y-3">
+                            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                              <h4 className="font-medium text-gray-800 mb-2">✅ Green in Regulation (Hit)</h4>
+                              <p className="text-sm text-gray-600">Your ball is on the green in regulation strokes: Par 3 = 1 stroke, Par 4 = 2 strokes, Par 5 = 3 strokes. Each hit earns 1 point.</p>
+                            </div>
+                            
+                            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                              <h4 className="font-medium text-gray-800 mb-2">❌ Missed GIR</h4>
+                              <p className="text-sm text-gray-600">Your ball is not on the green within regulation strokes. Each miss earns 0 points.</p>
+                            </div>
+                            
+                            <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                              <p className="text-sm text-gray-700">
+                                <strong>Important:</strong> A ball is considered "on the green" only when any part of it touches the putting surface. Fringe and collar do not count.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                            <span className="w-6 h-6 bg-emerald-500 text-white rounded-full flex items-center justify-center text-sm font-bold">2</span>
+                            Playing the Game
+                          </h3>
+                          <ol className="space-y-2 ml-8">
+                            <li className="flex items-start gap-2">
+                              <span className="text-gray-800 font-bold">1.</span>
+                              <span>After each hole, mark which players hit the green in regulation</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-gray-800 font-bold">2.</span>
+                              <span>Points are automatically calculated and added to the leaderboard</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-gray-800 font-bold">3.</span>
+                              <span>Check the Payouts tab to see money calculations</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <span className="text-gray-800 font-bold">4.</span>
+                              <span>Play with other games simultaneously for maximum competition!</span>
+                            </li>
+                          </ol>
+                        </div>
+
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                            <span className="w-6 h-6 bg-emerald-500 text-white rounded-full flex items-center justify-center text-sm font-bold">3</span>
+                            2 Payout Systems - Nassau and Points
+                          </h3>
+                          <p className="text-gray-600 mb-3">
+                            GIR includes two payout systems that run simultaneously - choose your preferred method:
+                          </p>
+                          
+                          <div className="space-y-4">
+                            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                              <h4 className="font-medium text-gray-800 mb-2">Points System</h4>
+                              <ul className="space-y-1 text-sm text-gray-700">
+                                <li>• Each player pays/receives money based on point differences</li>
+                                <li>• Players with more GIRs receive from players with fewer GIRs</li>
+                                <li>• Set Point Value (e.g., $1.00 per point) to calculate amounts</li>
+                                <li>• Net result shows total amount each player owes or receives</li>
+                              </ul>
+                            </div>
+                            
+                            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                              <h4 className="font-medium text-gray-800 mb-2">Nassau System (Front/Back/Total)</h4>
+                              <ul className="space-y-1 text-sm text-gray-700">
+                                <li>• Winners determined by most GIRs in each segment:</li>
+                                <li className="ml-4">- Front 9 (holes 1-9)</li>
+                                <li className="ml-4">- Back 9 (holes 10-18)</li>
+                                <li className="ml-4">- Total 18 holes</li>
+                                <li>• Winners receive Nassau Value for each category won</li>
+                                <li>• Non-winners split the total cost equally</li>
+                              </ul>
+                            </div>
+                            
+                            <div className="p-3 bg-gray-50 rounded-lg">
+                              <p className="text-sm text-gray-600">
+                                <strong>Pro Tip:</strong> Both systems calculate simultaneously! Toggle between "Points" and "Nassau" modes in the game to see both payout options, or check the Payouts tab to view them side by side.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </AccordionContent>
+                </Card>
+              </AccordionItem>
+
+              {/* BBB Game Rules */}
+              <AccordionItem value="bbb" data-testid="accordion-item-bbb">
+                <Card>
+                  <AccordionTrigger className="px-6 pt-6 pb-4 hover:no-underline" data-testid="accordion-trigger-bbb">
+                    <h2 className="text-lg font-bold text-gray-800">🎲 Bingo Bango Bongo Rules</h2>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <CardContent className="px-6 pb-6 pt-0">
+                      <div className="space-y-4 text-gray-600">
                   <p className="leading-relaxed">
                     Bingo Bango Bongo is a fun points-based game where players earn points by achieving three different objectives on each hole.
                   </p>
@@ -4422,7 +4538,7 @@ export default function Home() {
                   <div>
                     <h3 className="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
                       <span className="w-6 h-6 bg-emerald-500 text-white rounded-full flex items-center justify-center text-sm font-bold">3</span>
-                      2 Payout Systems - Points and FBT
+                      2 Payout Systems - Points and Nassau
                     </h3>
                     <p className="text-gray-600 mb-3">
                       Bingo Bango Bongo includes two payout systems that run simultaneously - choose your preferred method:
@@ -4440,7 +4556,7 @@ export default function Home() {
                       </div>
                       
                       <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                        <h4 className="font-medium text-gray-800 mb-2">FBT System (Front/Back/Total)</h4>
+                        <h4 className="font-medium text-gray-800 mb-2">Nassau System (Front/Back/Total)</h4>
                         <ul className="space-y-1 text-sm text-gray-700">
                           <li>• Winners determined by highest point count:</li>
                           <li className="ml-4">- Front 9 (holes 1-9)</li>
@@ -4453,20 +4569,26 @@ export default function Home() {
                       
                       <div className="p-3 bg-gray-50 rounded-lg">
                         <p className="text-sm text-gray-600">
-                          <strong>Pro Tip:</strong> Both systems calculate simultaneously! Toggle between "Points" and "FBT" modes in the game to see both payout options, or check the Payouts tab to view them side by side.
+                          <strong>Pro Tip:</strong> Both systems calculate simultaneously! Toggle between "Points" and "Nassau" modes in the game to see both payout options, or check the Payouts tab to view them side by side.
                         </p>
                       </div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                      </div>
+                    </CardContent>
+                  </AccordionContent>
+                </Card>
+              </AccordionItem>
             
-            {/* 2/9/16 Game Rules */}
-            <Card>
-              <CardContent className="p-6">
-                <h2 className="text-lg font-bold text-gray-800 mb-4">2/9/16 Game Rules</h2>
-                <div className="space-y-4 text-gray-600">
+              {/* 2/9/16 Game Rules */}
+              <AccordionItem value="2916" data-testid="accordion-item-2916">
+                <Card>
+                  <AccordionTrigger className="px-6 pt-6 pb-4 hover:no-underline" data-testid="accordion-trigger-2916">
+                    <h2 className="text-lg font-bold text-gray-800">2/9/16 Game Rules</h2>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <CardContent className="px-6 pb-6 pt-0">
+                      <div className="space-y-4 text-gray-600">
                   <p className="leading-relaxed">
                     The 2/9/16 Game is a stroke-based competition where players earn points based on their performance relative to other players on each hole.
                   </p>
@@ -4540,7 +4662,7 @@ export default function Home() {
                   <div>
                     <h3 className="text-lg font-semibold text-gray-800 mb-2 flex items-center gap-2">
                       <span className="w-6 h-6 bg-emerald-500 text-white rounded-full flex items-center justify-center text-sm font-bold">3</span>
-                      3 Payout Systems - Points, FBT, Both
+                      3 Payout Systems - Points, Nassau, Both
                     </h3>
                     <p className="text-gray-600 mb-3">
                       The 2/9/16 Game includes three payout systems that run simultaneously - choose your preferred method:
@@ -4558,7 +4680,7 @@ export default function Home() {
                       </div>
                       
                       <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                        <h4 className="font-medium text-gray-800 mb-2">FBT System (Front/Back/Total)</h4>
+                        <h4 className="font-medium text-gray-800 mb-2">Nassau System (Front/Back/Total)</h4>
                         <ul className="space-y-1 text-sm text-gray-700">
                           <li>• Winners determined by lowest stroke count:</li>
                           <li className="ml-4">- Front 9 (holes 1-9)</li>
@@ -4571,19 +4693,25 @@ export default function Home() {
                       
                       <div className="p-3 bg-gray-50 rounded-lg">
                         <p className="text-sm text-gray-600">
-                          <strong>Pro Tip:</strong> Both systems calculate simultaneously! Toggle between "Points" and "FBT" modes in the game to see both payout options, or check the Payouts tab to view them side by side.
+                          <strong>Pro Tip:</strong> Both systems calculate simultaneously! Toggle between "Points" and "Nassau" modes in the game to see both payout options, or check the Payouts tab to view them side by side.
                         </p>
                       </div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                      </div>
+                    </CardContent>
+                  </AccordionContent>
+                </Card>
+              </AccordionItem>
 
-            {/* Card Game Rules Reference */}
-            <Card>
-              <CardContent className="p-6">
-                <h2 className="text-lg font-bold text-gray-800 mb-4">Card Game Rules</h2>
+              {/* Card Game Rules Reference */}
+              <AccordionItem value="cards" data-testid="accordion-item-cards">
+                <Card>
+                  <AccordionTrigger className="px-6 pt-6 pb-4 hover:no-underline" data-testid="accordion-trigger-cards">
+                    <h2 className="text-lg font-bold text-gray-800">Card Game Rules</h2>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <CardContent className="px-6 pb-6 pt-0">
                 
                 <div className="space-y-6">
                   <div>

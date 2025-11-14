@@ -2572,7 +2572,7 @@ export default function Home() {
                                 {isAdmin && (
                                   <Button 
                                     onClick={() => {
-                                      setTempSelectedGamesForScorecard(multiSelectGames); // Set current selection for scorecard
+                                      setTempSelectedGamesForScorecard([]); // Start with empty to trigger auto-select
                                       setShowScorecardModal(true);
                                     }}
                                     variant="outline"
@@ -5992,14 +5992,68 @@ function ScorecardTable({
     enabled: !!gameStateId
   });
 
+  // Helper function to map gameMetadata to selectable variants
+  const mapGameMetadataToVariants = (availableGames: any, gameMetadata: any) => {
+    const variants: Array<{ id: string; label: string; icon: string; amount: string }> = [];
+    
+    // 2/9/16 variants
+    if (availableGames.has2916 && gameMetadata?.['2916']) {
+      const meta = gameMetadata['2916'];
+      const [pointsValue = '', nassauValue = ''] = (meta.value || '').split('/').map(v => v.trim());
+      
+      if (meta.mode === 'Points & Nassau') {
+        variants.push({ id: '2916:points', label: '2/9/16 Points', icon: '🎯', amount: pointsValue });
+        variants.push({ id: '2916:nassau', label: '2/9/16 Nassau', icon: '🎯', amount: nassauValue });
+      } else if (meta.mode === 'Points') {
+        variants.push({ id: '2916:points', label: '2/9/16 Points', icon: '🎯', amount: meta.value || '' });
+      } else if (meta.mode === 'Nassau') {
+        variants.push({ id: '2916:nassau', label: '2/9/16 Nassau', icon: '🎯', amount: meta.value || '' });
+      }
+    }
+    
+    // BBB variants
+    if (availableGames.hasBBB && gameMetadata?.['bbb']) {
+      const meta = gameMetadata['bbb'];
+      const [pointsValue = '', nassauValue = ''] = (meta.value || '').split('/').map(v => v.trim());
+      
+      if (meta.mode === 'Points & Nassau') {
+        variants.push({ id: 'bbb:points', label: 'BBB Points', icon: '🎲', amount: pointsValue });
+        variants.push({ id: 'bbb:nassau', label: 'BBB Nassau', icon: '🎲', amount: nassauValue });
+      } else if (meta.mode === 'Points') {
+        variants.push({ id: 'bbb:points', label: 'BBB Points', icon: '🎲', amount: meta.value || '' });
+      } else if (meta.mode === 'Nassau') {
+        variants.push({ id: 'bbb:nassau', label: 'BBB Nassau', icon: '🎲', amount: meta.value || '' });
+      }
+    }
+    
+    // GIR variants
+    if (availableGames.hasGIR && gameMetadata?.['gir']) {
+      const meta = gameMetadata['gir'];
+      const [pointsValue = '', nassauValue = ''] = (meta.value || '').split('/').map(v => v.trim());
+      
+      if (meta.mode === 'Points & Nassau') {
+        variants.push({ id: 'gir:points', label: 'GIR Points', icon: '🏌️', amount: pointsValue });
+        variants.push({ id: 'gir:nassau', label: 'GIR Nassau', icon: '🏌️', amount: nassauValue });
+      } else if (meta.mode === 'Points') {
+        variants.push({ id: 'gir:points', label: 'GIR Points', icon: '🏌️', amount: meta.value || '' });
+      } else if (meta.mode === 'Nassau') {
+        variants.push({ id: 'gir:nassau', label: 'GIR Nassau', icon: '🏌️', amount: meta.value || '' });
+      }
+    }
+    
+    // Cards (always single button)
+    if (availableGames.hasCards) {
+      variants.push({ id: 'cards', label: 'Cards', icon: '🎴', amount: 'Current holders' });
+    }
+    
+    return variants;
+  };
+
   // Auto-select all available games when scorecard data loads
   useEffect(() => {
     if (scorecardData?.availableGames && selectedGames.length === 0) {
-      const autoSelected: string[] = [];
-      if (scorecardData.availableGames.has2916) autoSelected.push('2916');
-      if (scorecardData.availableGames.hasBBB) autoSelected.push('bbb');
-      if (scorecardData.availableGames.hasGIR) autoSelected.push('gir');
-      if (scorecardData.availableGames.hasCards) autoSelected.push('cards');
+      const variants = mapGameMetadataToVariants(scorecardData.availableGames, scorecardData.gameMetadata);
+      const autoSelected = variants.map(v => v.id);
       if (autoSelected.length > 0) {
         onSelectedGamesChange(autoSelected);
       }
@@ -6015,6 +6069,9 @@ function ScorecardTable({
   }
 
   const { players, scorecard, playerCards, availableGames, gameMetadata } = scorecardData;
+  
+  // Get available variants for button rendering
+  const availableVariants = mapGameMetadataToVariants(availableGames, gameMetadata);
 
   // Toggle game selection
   const toggleGame = (gameType: string) => {
@@ -6024,6 +6081,11 @@ function ScorecardTable({
       onSelectedGamesChange([...selectedGames, gameType]);
     }
   };
+  
+  // Helper to check if any variant of a base game is selected
+  const hasAnyVariant = (baseGame: string) => {
+    return selectedGames.some(g => g.startsWith(baseGame + ':') || g === baseGame);
+  };
 
   return (
     <div className="space-y-4">
@@ -6031,59 +6093,18 @@ function ScorecardTable({
       <div className="space-y-2">
         <p className="text-sm text-gray-600">Select which games to display on the scorecard:</p>
         <div className="flex flex-wrap gap-2">
-          {availableGames.has2916 && (
+          {availableVariants.map((variant) => (
             <Button
-              variant={selectedGames.includes('2916') ? 'default' : 'outline'}
+              key={variant.id}
+              variant={selectedGames.includes(variant.id) ? 'default' : 'outline'}
               size="sm"
-              onClick={() => toggleGame('2916')}
+              onClick={() => toggleGame(variant.id)}
               className="flex flex-col items-start h-auto py-2 px-3"
             >
-              <span className="font-medium">🎯 2/9/16</span>
-              <span className="text-xs opacity-80">
-                {gameMetadata?.['2916']?.mode || 'Stroke play'}
-                {gameMetadata?.['2916']?.value && ` · ${gameMetadata['2916'].value}`}
-              </span>
+              <span className="font-medium">{variant.icon} {variant.label}</span>
+              <span className="text-xs opacity-80">{variant.amount}</span>
             </Button>
-          )}
-          {availableGames.hasBBB && (
-            <Button
-              variant={selectedGames.includes('bbb') ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => toggleGame('bbb')}
-              className="flex flex-col items-start h-auto py-2 px-3"
-            >
-              <span className="font-medium">🎲 BBB</span>
-              <span className="text-xs opacity-80">
-                {gameMetadata?.['bbb']?.mode || 'Bango Bongo'}
-                {gameMetadata?.['bbb']?.value && ` · ${gameMetadata['bbb'].value}`}
-              </span>
-            </Button>
-          )}
-          {availableGames.hasGIR && (
-            <Button
-              variant={selectedGames.includes('gir') ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => toggleGame('gir')}
-              className="flex flex-col items-start h-auto py-2 px-3"
-            >
-              <span className="font-medium">🏌️ GIR</span>
-              <span className="text-xs opacity-80">
-                {gameMetadata?.['gir']?.mode || 'Greens in Regulation'}
-                {gameMetadata?.['gir']?.value && ` · ${gameMetadata['gir'].value}`}
-              </span>
-            </Button>
-          )}
-          {availableGames.hasCards && (
-            <Button
-              variant={selectedGames.includes('cards') ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => toggleGame('cards')}
-              className="flex flex-col items-start h-auto py-2 px-3"
-            >
-              <span className="font-medium">🎴 Cards</span>
-              <span className="text-xs opacity-80">Current holders</span>
-            </Button>
-          )}
+          ))}
         </div>
       </div>
 
@@ -6121,15 +6142,15 @@ function ScorecardTable({
                   return (
                     <td key={holeIndex} className="border border-gray-300 p-2 align-top">
                       <div className="space-y-1 text-xs">
-                        {/* 2/9/16 Strokes */}
-                        {selectedGames.includes('2916') && holeData.strokes?.[player.id] !== undefined && (
+                        {/* 2/9/16 Strokes - show if any 2916 variant is selected */}
+                        {hasAnyVariant('2916') && holeData.strokes?.[player.id] !== undefined && (
                           <div className="text-gray-700 font-medium">
                             <span className="text-gray-500">2/9/16:</span> {holeData.strokes[player.id]}
                           </div>
                         )}
                         
-                        {/* BBB Events */}
-                        {selectedGames.includes('bbb') && holeData.bbb && (
+                        {/* BBB Events - show if any BBB variant is selected */}
+                        {hasAnyVariant('bbb') && holeData.bbb && (
                           <div className="text-blue-600 space-y-0.5">
                             {holeData.bbb.firstOn === player.id && <div>🎯 1st On</div>}
                             {holeData.bbb.closestTo === player.id && <div>🎯 Closest</div>}
@@ -6137,8 +6158,8 @@ function ScorecardTable({
                           </div>
                         )}
                         
-                        {/* GIR */}
-                        {selectedGames.includes('gir') && holeData.gir?.[player.id] !== undefined && (
+                        {/* GIR - show if any GIR variant is selected */}
+                        {hasAnyVariant('gir') && holeData.gir?.[player.id] !== undefined && (
                           <div className={holeData.gir[player.id] ? 'text-green-600 font-medium' : 'text-red-600'}>
                             {holeData.gir[player.id] ? '✅ Hit' : '❌ Miss'}
                           </div>

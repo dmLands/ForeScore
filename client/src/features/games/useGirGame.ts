@@ -9,8 +9,8 @@ export function useGirGame(selectedGroup: Group | null) {
   const [selectedHole, setSelectedHole] = useState<number>(1);
   const [holeData, setHoleData] = useState<Record<string, boolean>>({});
   const [pointValue, setPointValue] = useState<string>("1.00");
-  const [fbtValue, setFbtValue] = useState<string>("10.00");
-  const [payoutMode, setPayoutMode] = useState<'points' | 'fbt'>('points');
+  const [nassauValue, setNassauValue] = useState<string>("10.00");
+  const [payoutMode, setPayoutMode] = useState<'points' | 'nassau'>('points');
 
   // Fetch all points games for the selected group (matching BBB/2916 pattern)
   const { data: pointsGames = [], isLoading: girGamesLoading } = useQuery<PointsGame[]>({
@@ -46,9 +46,9 @@ export function useGirGame(selectedGroup: Group | null) {
     }
   });
 
-  // Save GIR point/FBT values mutation
+  // Save GIR point/Nassau values mutation
   const saveValuesMutation = useMutation({
-    mutationFn: async (values: { pointValue: number; fbtValue: number }) => {
+    mutationFn: async (values: { pointValue: number; nassauValue: number }) => {
       if (!selectedGirGame) throw new Error('No GIR game selected');
       
       const response = await apiRequest(
@@ -72,13 +72,13 @@ export function useGirGame(selectedGroup: Group | null) {
 
   // Fetch payouts
   const { data: payoutData, isLoading: payoutsLoading } = useQuery({
-    queryKey: ['/api/gir-games', selectedGirGame?.id, 'who-owes-who', payoutMode, pointValue, fbtValue],
-    enabled: !!selectedGirGame && ((payoutMode === 'points' && parseFloat(pointValue) > 0) || (payoutMode === 'fbt' && parseFloat(fbtValue) > 0)),
+    queryKey: ['/api/gir-games', selectedGirGame?.id, 'who-owes-who', payoutMode, pointValue, nassauValue],
+    enabled: !!selectedGirGame && ((payoutMode === 'points' && parseFloat(pointValue) > 0) || (payoutMode === 'nassau' && parseFloat(nassauValue) > 0)),
     queryFn: async () => {
       const params = new URLSearchParams({
         payoutMode,
         pointValue: pointValue || '0',
-        fbtValue: fbtValue || '0'
+        nassauValue: nassauValue || '0'
       });
       
       const response = await fetch(`/api/gir-games/${selectedGirGame!.id}/who-owes-who?${params}`);
@@ -94,7 +94,7 @@ export function useGirGame(selectedGroup: Group | null) {
   const saveValues = () => {
     saveValuesMutation.mutate({
       pointValue: parseFloat(pointValue),
-      fbtValue: parseFloat(fbtValue)
+      nassauValue: parseFloat(nassauValue)
     });
   };
 
@@ -107,8 +107,8 @@ export function useGirGame(selectedGroup: Group | null) {
     setHoleData,
     pointValue,
     setPointValue,
-    fbtValue,
-    setFbtValue,
+    nassauValue,
+    setNassauValue,
     payoutMode,
     setPayoutMode,
     saveHoleData,

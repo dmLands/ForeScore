@@ -185,7 +185,7 @@ export const cardValuesSchema = z.object({
 
 export const pointsGameSettingsSchema = z.object({
   pointValue: z.number().min(0).optional(),
-  fbtValue: z.number().min(0).optional(),
+  nassauValue: z.number().min(0).optional(),
 });
 
 // BBB-specific types
@@ -214,7 +214,7 @@ export const pointsGames = pgTable("points_games", {
   gameType: varchar("game_type").$type<'points' | 'bbb' | 'gir'>().notNull().default('points'), // Distinguish between 2/9/16, BBB, and GIR
   holes: jsonb("holes").$type<Record<number, Record<string, number | string>>>().default({}), // For 2/9/16: hole -> playerId -> strokes; For BBB: hole -> category -> playerId
   points: jsonb("points").$type<Record<number, Record<string, number>>>().default({}), // hole -> playerId -> points (calculated for both game types)
-  settings: jsonb("settings").$type<{ pointValue?: number; fbtValue?: number }>().default({ pointValue: 1, fbtValue: 10 }), // Point and FBT values
+  settings: jsonb("settings").$type<{ pointValue?: number; nassauValue?: number }>().default({ pointValue: 1, nassauValue: 10 }), // Point and Nassau values
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -247,9 +247,9 @@ export const combinedPayoutResults = pgTable("combined_payout_results", {
   groupId: varchar("group_id").notNull().references(() => groups.id, { onDelete: "cascade" }),
   gameStateId: varchar("game_state_id").references(() => gameStates.id, { onDelete: "cascade" }),
   pointsGameId: varchar("points_game_id").references(() => pointsGames.id, { onDelete: "cascade" }),
-  selectedGames: json("selected_games").$type<string[]>().notNull(), // Array of game types: ["cards", "points", "fbt"]
+  selectedGames: json("selected_games").$type<string[]>().notNull(), // Array of game types: ["cards", "points", "nassau"]
   pointValue: json("point_value").$type<number>().notNull().default(1),
-  fbtValue: json("fbt_value").$type<number>().notNull().default(10),
+  nassauValue: json("nassau_value").$type<number>().notNull().default(10),
   calculationResult: jsonb("calculation_result").$type<{
     success: boolean;
     totalTransactions: number;

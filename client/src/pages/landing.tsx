@@ -74,7 +74,7 @@ export default function Landing() {
                 </CardHeader>
                 <CardContent className="pt-0">
                   <p className="text-sm text-gray-600 leading-relaxed">
-                    Earn up to 3 points on each hole - first on the green, closest to the pin, and first to hole out! Bing, Bang, and Go have fun with your friends! Includes three payout modes (Points or Front-Back-Total [FBT], or both).
+                    Earn up to 3 points on each hole - first on the green, closest to the pin, and first to hole out! Bing, Bang, and Go have fun with your friends! Includes three payout modes (Points or Front-Back-Total [Nassau], or both).
                   </p>
                 </CardContent>
               </Card>
@@ -91,7 +91,7 @@ export default function Landing() {
                 </CardHeader>
                 <CardContent className="pt-0">
                   <p className="text-sm text-gray-600 leading-relaxed">
-                    The classic points game where players earn 2, 9, or 16 points (match play, threesomes, or foursomes) per hole depending on performance. Includes three payout modes (Points or Front-Back-Total [FBT], or both).
+                    The classic points game where players earn 2, 9, or 16 points (match play, threesomes, or foursomes) per hole depending on performance. Includes three payout modes (Points or Front-Back-Total [Nassau], or both).
                   </p>
                 </CardContent>
               </Card>

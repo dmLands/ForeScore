@@ -102,13 +102,13 @@ const getCardEmoji = (type: string, card?: GameCard) => {
 };
 
 // Reusable Card Game Payouts Component
-function CardGamePayouts({ selectedGroup, gameState, payoutData, selectedPointsGame, pointValue, fbtValue }: { 
+function CardGamePayouts({ selectedGroup, gameState, payoutData, selectedPointsGame, pointValue, nassauValue }: { 
   selectedGroup: Group; 
   gameState: GameState; 
   payoutData: any;
   selectedPointsGame?: any;
   pointValue?: string;
-  fbtValue?: string;
+  nassauValue?: string;
 }) {
   return (
     <>
@@ -223,7 +223,7 @@ export default function Home() {
   const [selectedHole, setSelectedHole] = useState<number>(1);
   const [holeStrokes, setHoleStrokes] = useState<Record<string, string>>({});
   const [pointValue, setPointValue] = useState<string>("1.00");
-  const [fbtValue, setFbtValue] = useState<string>("10.00");
+  const [nassauValue, setNassauValue] = useState<string>("10.00");
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [bbbSaveStatus, setBBBSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
@@ -236,10 +236,10 @@ export default function Home() {
     firstIn?: string;
   }>({});
   const [bbbPointValue, setBBBPointValue] = useState<string>("1.00");
-  const [bbbFbtValue, setBBBFbtValue] = useState<string>("10.00");
-  const [bbbPayoutMode, setBBBPayoutMode] = useState<'points' | 'fbt' | 'both'>('points');
-  const [payoutMode, setPayoutMode] = useState<'points' | 'fbt'>('points');
-  const [combinedPayoutMode, setCombinedPayoutMode] = useState<'points' | 'fbt' | 'both'>('points');
+  const [bbbNassauValue, setBBBNassauValue] = useState<string>("10.00");
+  const [bbbPayoutMode, setBBBPayoutMode] = useState<'points' | 'nassau' | 'both'>('points');
+  const [payoutMode, setPayoutMode] = useState<'points' | 'nassau'>('points');
+  const [combinedPayoutMode, setCombinedPayoutMode] = useState<'points' | 'nassau' | 'both'>('points');
   const [showTermsOfService, setShowTermsOfService] = useState(false);
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const [showAboutForescore, setShowAboutForescore] = useState(false);
@@ -259,7 +259,7 @@ export default function Home() {
     try {
       const response = await apiRequest('PUT', `/api/points-games/${selectedPointsGame.id}/settings`, {
         pointValue: parseFloat(pointValue),
-        fbtValue: parseFloat(fbtValue)
+        nassauValue: parseFloat(nassauValue)
       });
       
       const result = await response.json();
@@ -280,7 +280,7 @@ export default function Home() {
     } catch (error) {
       console.error('Error saving point/FBT values:', error);
       setSaveStatus('error');
-      toast({ title: "Error", description: "Failed to save point and FBT values", variant: "destructive" });
+      toast({ title: "Error", description: "Failed to save point and Nassau values", variant: "destructive" });
       setTimeout(() => setSaveStatus('idle'), 3000);
     }
   };
@@ -296,7 +296,7 @@ export default function Home() {
     try {
       const response = await apiRequest('PUT', `/api/points-games/${selectedBBBGame.id}/settings`, {
         pointValue: parseFloat(bbbPointValue),
-        fbtValue: parseFloat(bbbFbtValue)
+        nassauValue: parseFloat(bbbNassauValue)
       });
       
       const result = await response.json();
@@ -318,7 +318,7 @@ export default function Home() {
     } catch (error) {
       console.error('Error saving BBB point/FBT values:', error);
       setBBBSaveStatus('error');
-      toast({ title: "Error", description: "Failed to save BBB point and FBT values", variant: "destructive" });
+      toast({ title: "Error", description: "Failed to save BBB point and Nassau values", variant: "destructive" });
       setTimeout(() => setBBBSaveStatus('idle'), 3000);
     }
   };
@@ -485,7 +485,7 @@ export default function Home() {
           pointsGameId: selectedPointsGame.id,
           selectedGames: ['points'],
           pointValue: pointValue,
-          fbtValue: '0'
+          nassauValue: '0'
         })
       });
       if (!response.ok) throw new Error('Failed to fetch points payouts');
@@ -503,7 +503,7 @@ export default function Home() {
     payouts: Record<string, number>;
     transactions: Array<any>;
   }>({
-    queryKey: ['/api/calculate-combined-games', selectedGroup?.id, 'fbt-only', selectedPointsGame?.id, fbtValue],
+    queryKey: ['/api/calculate-combined-games', selectedGroup?.id, 'fbt-only', selectedPointsGame?.id, nassauValue],
     queryFn: async () => {
       if (!selectedGroup?.id || !selectedPointsGame?.id) throw new Error('Missing group or points game');
       const response = await fetch('/api/calculate-combined-games', {
@@ -514,9 +514,9 @@ export default function Home() {
           groupId: selectedGroup.id,
           gameStateId: null,
           pointsGameId: selectedPointsGame.id,
-          selectedGames: ['fbt'],
+          selectedGames: ['nassau'],
           pointValue: '0',
-          fbtValue: fbtValue
+          nassauValue: nassauValue
         })
       });
       if (!response.ok) throw new Error('Failed to fetch FBT payouts');
@@ -524,7 +524,7 @@ export default function Home() {
       console.log(`FBT payouts data for ${selectedPointsGame.id}:`, data);
       return data;
     },
-    enabled: !!selectedGroup?.id && !!selectedPointsGame?.id && (payoutMode === 'fbt' || parseFloat(fbtValue) > 0),
+    enabled: !!selectedGroup?.id && !!selectedPointsGame?.id && (payoutMode === 'nassau' || parseFloat(nassauValue) > 0),
     retry: false,
     refetchOnWindowFocus: false,
   });
@@ -548,7 +548,7 @@ export default function Home() {
           pointsGameId: selectedBBBGame.id,
           selectedGames: ['bbb-points'],
           pointValue: savedPointValue.toString(),
-          fbtValue: '0'
+          nassauValue: '0'
         })
       });
       if (!response.ok) throw new Error('Failed to fetch BBB points payouts');
@@ -561,15 +561,15 @@ export default function Home() {
     refetchOnWindowFocus: false,
   });
 
-  // BBB FBT-ONLY PAYOUTS - Uses saved database values, not live input values
+  // BBB NASSAU-ONLY PAYOUTS - Uses saved database values, not live input values
   const { data: selectedBBBFbtPayouts } = useQuery<{
     payouts: Record<string, number>;
     transactions: Array<any>;
   }>({
-    queryKey: ['/api/calculate-combined-games', selectedGroup?.id, 'bbb-fbt-only', selectedBBBGame?.id, selectedBBBGame?.settings?.fbtValue],
+    queryKey: ['/api/calculate-combined-games', selectedGroup?.id, 'bbb-nassau-only', selectedBBBGame?.id, selectedBBBGame?.settings?.nassauValue],
     queryFn: async () => {
       if (!selectedGroup?.id || !selectedBBBGame?.id) throw new Error('Missing group or BBB game');
-      const savedFbtValue = selectedBBBGame.settings?.fbtValue || 10;
+      const savedFbtValue = selectedBBBGame.settings?.nassauValue || 10;
       const response = await fetch('/api/calculate-combined-games', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -578,17 +578,17 @@ export default function Home() {
           groupId: selectedGroup.id,
           gameStateId: null,
           pointsGameId: selectedBBBGame.id,
-          selectedGames: ['bbb-fbt'],
+          selectedGames: ['bbb-nassau'],
           pointValue: '0',
-          fbtValue: savedFbtValue.toString()
+          nassauValue: savedFbtValue.toString()
         })
       });
       if (!response.ok) throw new Error('Failed to fetch BBB FBT payouts');
       const data = await response.json();
-      console.log(`BBB FBT payouts data for ${selectedBBBGame.id} using saved fbtValue ${savedFbtValue}:`, data);
+      console.log(`BBB FBT payouts data for ${selectedBBBGame.id} using saved nassauValue ${savedFbtValue}:`, data);
       return data;
     },
-    enabled: !!selectedGroup?.id && !!selectedBBBGame?.id && (selectedBBBGame?.settings?.fbtValue || 0) > 0,
+    enabled: !!selectedGroup?.id && !!selectedBBBGame?.id && (selectedBBBGame?.settings?.nassauValue || 0) > 0,
     retry: false,
     refetchOnWindowFocus: false,
   });
@@ -608,7 +608,7 @@ export default function Home() {
       selectedPointsGame?.id,
       combinedPayoutMode,
       pointValue,
-      fbtValue
+      nassauValue
     ],
     queryFn: async () => {
       if (!selectedGroup?.id || !selectedPointsGame?.id) {
@@ -616,16 +616,16 @@ export default function Home() {
       }
 
       const pointValueNum = parseFloat(pointValue);
-      const fbtValueNum = parseFloat(fbtValue);
+      const nassauValueNum = parseFloat(nassauValue);
       const selectedGamesForMode = []; // Only 2/9/16 games
       
       if (combinedPayoutMode === 'points' && pointValueNum > 0) {
         selectedGamesForMode.push('points');
-      } else if (combinedPayoutMode === 'fbt' && fbtValueNum > 0) {
-        selectedGamesForMode.push('fbt');
+      } else if (combinedPayoutMode === 'nassau' && nassauValueNum > 0) {
+        selectedGamesForMode.push('nassau');
       } else if (combinedPayoutMode === 'both') {
         if (pointValueNum > 0) selectedGamesForMode.push('points');
-        if (fbtValueNum > 0) selectedGamesForMode.push('fbt');
+        if (nassauValueNum > 0) selectedGamesForMode.push('nassau');
       }
 
       const response = await fetch('/api/calculate-combined-games', {
@@ -640,7 +640,7 @@ export default function Home() {
           pointsGameId: selectedPointsGame.id,
           selectedGames: selectedGamesForMode,
           pointValue,
-          fbtValue
+          nassauValue
         })
       });
 
@@ -650,7 +650,7 @@ export default function Home() {
       return result;
     },
     enabled: !!selectedGroup?.id && !!selectedPointsGame?.id && combinedPayoutMode === 'both' && 
-             (parseFloat(pointValue) > 0 && parseFloat(fbtValue) > 0),
+             (parseFloat(pointValue) > 0 && parseFloat(nassauValue) > 0),
     retry: false,
     refetchOnWindowFocus: false,
   });
@@ -677,9 +677,9 @@ export default function Home() {
       selectedPointsGame?.id,
       multiSelectGames,
       pointValue,
-      fbtValue,
+      nassauValue,
       bbbPointValue,
-      bbbFbtValue
+      bbbNassauValue
     ],
     queryFn: async () => {
       if (!selectedGroup?.id || !multiSelectGames.length) {
@@ -688,11 +688,11 @@ export default function Home() {
 
       // Use appropriate values based on game types in selection
       const hasBBBGames = multiSelectGames.some(game => game.startsWith('bbb-'));
-      const hasRegular2916Games = multiSelectGames.some(game => ['points', 'fbt'].includes(game));
+      const hasRegular2916Games = multiSelectGames.some(game => ['points', 'nassau'].includes(game));
       
       // Determine which values to use (parse to numbers for API consistency)
       const apiPointValue = parseFloat(hasBBBGames ? bbbPointValue : pointValue);
-      const apiFbtValue = parseFloat(hasBBBGames ? bbbFbtValue : fbtValue);
+      const apiFbtValue = parseFloat(hasBBBGames ? bbbNassauValue : nassauValue);
 
       const response = await fetch('/api/calculate-combined-games', {
         method: 'POST',
@@ -706,7 +706,7 @@ export default function Home() {
           pointsGameId: selectedPointsGame?.id,
           selectedGames: multiSelectGames,
           pointValue: apiPointValue,
-          fbtValue: apiFbtValue
+          nassauValue: apiFbtValue
         })
       });
 
@@ -732,7 +732,7 @@ export default function Home() {
   const [customCardValue, setCustomCardValue] = useState("15");
 
   const [showPointValueTooltip, setShowPointValueTooltip] = useState(false);
-  const [showFbtValueTooltip, setShowFbtValueTooltip] = useState(false);
+  const [showNassauValueTooltip, setShowNassauValueTooltip] = useState(false);
   const { toast } = useToast();
 
   // Logout mutation
@@ -930,7 +930,7 @@ export default function Home() {
     id: string;
     selectedGames: string[];
     pointValue: number;
-    fbtValue: number;
+    nassauValue: number;
     calculationResult: any;
     createdAt: string;
   } | null>({
@@ -973,13 +973,13 @@ export default function Home() {
   useEffect(() => {
     if (selectedPointsGame?.settings) {
       const savedPointValue = selectedPointsGame.settings.pointValue;
-      const savedFbtValue = selectedPointsGame.settings.fbtValue;
+      const savedFbtValue = selectedPointsGame.settings.nassauValue;
       
       if (savedPointValue !== undefined) {
         setPointValue(savedPointValue.toFixed(2));
       }
       if (savedFbtValue !== undefined) {
-        setFbtValue(savedFbtValue.toFixed(2));
+        setNassauValue(savedFbtValue.toFixed(2));
       }
       
       console.log('Loaded saved point/FBT values:', { savedPointValue, savedFbtValue });
@@ -990,13 +990,13 @@ export default function Home() {
   useEffect(() => {
     if (selectedBBBGame?.settings) {
       const savedBBBPointValue = selectedBBBGame.settings.pointValue;
-      const savedBBBFbtValue = selectedBBBGame.settings.fbtValue;
+      const savedBBBFbtValue = selectedBBBGame.settings.nassauValue;
       
       if (savedBBBPointValue !== undefined) {
         setBBBPointValue(savedBBBPointValue.toFixed(2));
       }
       if (savedBBBFbtValue !== undefined) {
-        setBBBFbtValue(savedBBBFbtValue.toFixed(2));
+        setBBBNassauValue(savedBBBFbtValue.toFixed(2));
       }
       
       console.log('Loaded saved BBB point/FBT values:', { savedBBBPointValue, savedBBBFbtValue });
@@ -1018,8 +1018,8 @@ export default function Home() {
       if (savedCombinedResults.pointValue !== undefined) {
         setPointValue(savedCombinedResults.pointValue.toFixed(2));
       }
-      if (savedCombinedResults.fbtValue !== undefined) {
-        setFbtValue(savedCombinedResults.fbtValue.toFixed(2));
+      if (savedCombinedResults.nassauValue !== undefined) {
+        setNassauValue(savedCombinedResults.nassauValue.toFixed(2));
       }
     } else {
       // FIX: Only clear selection state if there are no current manual selections
@@ -1053,7 +1053,7 @@ export default function Home() {
       Object.values(selectedPointsGame.holes || {}).some(hole => 
         Object.values(hole as Record<string, any>).some((strokes: any) => strokes > 0)
       );
-    const hasPayoutValues = (parseFloat(pointValue) > 0) || (parseFloat(fbtValue) > 0);
+    const hasPayoutValues = (parseFloat(pointValue) > 0) || (parseFloat(nassauValue) > 0);
     const is2916WithValues = is2916Active && hasPayoutValues;
     
     // If no games are active, payout data is ready (empty state)
@@ -1067,10 +1067,10 @@ export default function Home() {
     // If only 2/9/16 active, need points/fbt payouts
     if (!isCardsActive && is2916WithValues) {
       const pointValueNum = parseFloat(pointValue) || 0;
-      const fbtValueNum = parseFloat(fbtValue) || 0;
+      const nassauValueNum = parseFloat(nassauValue) || 0;
       
       const needPoints = pointValueNum > 0;
-      const needFbt = fbtValueNum > 0;
+      const needFbt = nassauValueNum > 0;
       
       if (needPoints && !selectedPointsPayouts) return false;
       if (needFbt && !selectedFbtPayouts) return false;
@@ -1082,14 +1082,14 @@ export default function Home() {
     // If both games active, need all payout data
     if (isCardsActive && is2916WithValues) {
       const pointValueNum = parseFloat(pointValue) || 0;
-      const fbtValueNum = parseFloat(fbtValue) || 0;
+      const nassauValueNum = parseFloat(nassauValue) || 0;
       
       // Need basic payouts
       if (!payoutData) return false;
       
       // Need points/fbt data
       const needPoints = pointValueNum > 0;
-      const needFbt = fbtValueNum > 0;
+      const needFbt = nassauValueNum > 0;
       
       if (needPoints && !selectedPointsPayouts) return false;
       if (needFbt && !selectedFbtPayouts) return false;
@@ -1110,15 +1110,15 @@ export default function Home() {
     
     const isCardsActive = safeGameState && safeGameState.cardHistory?.length > 0;
     const pointValueNum = parseFloat(pointValue) || 0;
-    const fbtValueNum = parseFloat(fbtValue) || 0;
-    const has2916Values = pointValueNum > 0 || fbtValueNum > 0;
+    const nassauValueNum = parseFloat(nassauValue) || 0;
+    const has2916Values = pointValueNum > 0 || nassauValueNum > 0;
     
     // BBB game detection - check if BBB game exists, not if it's currently selected
     const isBBBGameSelected = selectedPointsGame.gameType === 'bbb';
     const hasBBBGameAvailable = !!selectedBBBGame;
     const bbbPointValueNum = parseFloat(bbbPointValue) || 0;
-    const bbbFbtValueNum = parseFloat(bbbFbtValue) || 0;
-    const hasBBBValues = bbbPointValueNum > 0 || bbbFbtValueNum > 0;
+    const bbbNassauValueNum = parseFloat(bbbNassauValue) || 0;
+    const hasBBBValues = bbbPointValueNum > 0 || bbbNassauValueNum > 0;
     
     // Auto-populate multiSelectGames when games have valid values AND user hasn't made manual selections
     if ((isCardsActive || has2916Values || hasBBBValues) && multiSelectGames.length === 0) {
@@ -1131,12 +1131,12 @@ export default function Home() {
       // Prioritize BBB games if BBB game is currently selected
       if (isBBBGameSelected && hasBBBValues) {
         if (bbbPointValueNum > 0) autoGames.push('bbb-points');
-        if (bbbFbtValueNum > 0) autoGames.push('bbb-fbt');
+        if (bbbNassauValueNum > 0) autoGames.push('bbb-nassau');
       } 
       // Otherwise add regular 2/9/16 games if they have values
       else if (has2916Values) {
         if (pointValueNum > 0) autoGames.push('points');
-        if (fbtValueNum > 0) autoGames.push('fbt');
+        if (nassauValueNum > 0) autoGames.push('nassau');
       }
       
       if (autoGames.length > 0) {
@@ -1144,7 +1144,7 @@ export default function Home() {
         console.log('Auto-populated multiSelectGames:', autoGames);
       }
     }
-  }, [selectedGroup, selectedGame, selectedPointsGame, safeGameState, pointValue, fbtValue, bbbPointValue, bbbFbtValue, multiSelectGames.length]);
+  }, [selectedGroup, selectedGame, selectedPointsGame, safeGameState, pointValue, nassauValue, bbbPointValue, bbbNassauValue, multiSelectGames.length]);
 
   // Now update the payoutDataReady state reactively
   const newPayoutDataReady = calculatePayoutDataReady();
@@ -1416,7 +1416,7 @@ export default function Home() {
       
       // CRITICAL: Invalidate payout calculation queries to update FBT and Points payouts immediately
       queryClient.invalidateQueries({ 
-        queryKey: ['/api/calculate-combined-games', selectedGroup?.id, 'fbt-only', updatedGame.id, fbtValue]
+        queryKey: ['/api/calculate-combined-games', selectedGroup?.id, 'fbt-only', updatedGame.id, nassauValue]
       });
       queryClient.invalidateQueries({ 
         queryKey: ['/api/calculate-combined-games', selectedGroup?.id, 'points-only', updatedGame.id, pointValue]
@@ -2472,7 +2472,7 @@ export default function Home() {
                     {/* 1. 💰 WHO OWES WHO - COMBINED */}
                     {(() => {
                       const isCardsActive = selectedGame && safeGameState && safeGameState.cardHistory?.length > 0;
-                      const hasPayoutValues = (parseFloat(pointValue) > 0) || (parseFloat(fbtValue) > 0);
+                      const hasPayoutValues = (parseFloat(pointValue) > 0) || (parseFloat(nassauValue) > 0);
                       
                       // FIX: Show when cards are active OR when 2/9/16 values are set (regardless of scores)
                       return isCardsActive || (selectedPointsGame && hasPayoutValues);
@@ -2521,9 +2521,9 @@ export default function Home() {
                                   // Check if games are actually active, not just selected
                                   const isCardsActive = selectedGame && safeGameState && safeGameState.cardHistory?.length > 0;
                                   const hasPointsValues = parseFloat(pointValue) > 0;
-                                  const hasFbtValues = parseFloat(fbtValue) > 0;
+                                  const hasFbtValues = parseFloat(nassauValue) > 0;
                                   const hasBBBPointsValues = parseFloat(bbbPointValue) > 0;
-                                  const hasBBBFbtValues = parseFloat(bbbFbtValue) > 0;
+                                  const hasBBBFbtValues = parseFloat(bbbNassauValue) > 0;
 
                                   return (
                                     <>
@@ -2537,9 +2537,9 @@ export default function Home() {
                                           🎯 2/9/16 Points
                                         </div>
                                       )}
-                                      {multiSelectGames.includes('fbt') && selectedPointsGame && hasFbtValues && (
+                                      {multiSelectGames.includes('nassau') && selectedPointsGame && hasFbtValues && (
                                         <div className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium fade-in stagger-2">
-                                          ⛳ 2/9/16 FBT
+                                          ⛳ 2/9/16 Nassau
                                         </div>
                                       )}
                                       {multiSelectGames.includes('bbb-points') && selectedBBBGame && hasBBBPointsValues && (
@@ -2547,9 +2547,9 @@ export default function Home() {
                                           🎲 BBB Points
                                         </div>
                                       )}
-                                      {multiSelectGames.includes('bbb-fbt') && selectedBBBGame && hasBBBFbtValues && (
+                                      {multiSelectGames.includes('bbb-nassau') && selectedBBBGame && hasBBBFbtValues && (
                                         <div className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-medium fade-in stagger-4">
-                                          🏌️ BBB FBT
+                                          🏌️ BBB Nassau
                                         </div>
                                       )}
                                     </>
@@ -2645,8 +2645,8 @@ export default function Home() {
                     {/* 2. 🎯 WHO OWES WHO - BBB GAMES */}
                     {(() => {
                       const bbbPointValueNum = parseFloat(bbbPointValue) || 0;
-                      const bbbFbtValueNum = parseFloat(bbbFbtValue) || 0;
-                      const hasBBBPayoutValues = (bbbPointValueNum > 0) || (bbbFbtValueNum > 0);
+                      const bbbNassauValueNum = parseFloat(bbbNassauValue) || 0;
+                      const hasBBBPayoutValues = (bbbPointValueNum > 0) || (bbbNassauValueNum > 0);
                       const showBBBWhoOwesWho = selectedBBBGame && hasBBBPayoutValues;
                       
                       return showBBBWhoOwesWho;
@@ -2655,33 +2655,33 @@ export default function Home() {
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-semibold text-gray-800">🎯 BBB - Who Owes Who</h3>
-                            <Select value={bbbPayoutMode} onValueChange={(value: 'points' | 'fbt' | 'both') => setBBBPayoutMode(value)}>
+                            <Select value={bbbPayoutMode} onValueChange={(value: 'points' | 'nassau' | 'both') => setBBBPayoutMode(value)}>
                               <SelectTrigger className="w-32">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="points">Points Only</SelectItem>
-                                <SelectItem value="fbt">FBT Only</SelectItem>
+                                <SelectItem value="nassau">Nassau Only</SelectItem>
                                 <SelectItem value="both">Both</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
                           <p className="text-sm text-gray-600 mb-4">
                             {bbbPayoutMode === 'points' ? 'Points-based settlement from BBB games only.' :
-                             bbbPayoutMode === 'fbt' ? 'FBT settlement from BBB games only.' :
-                             'Combined settlement for Points + FBT from BBB games only.'}
+                             bbbPayoutMode === 'nassau' ? 'Nassau settlement from BBB games only.' :
+                             'Combined settlement for Points + Nassau from BBB games only.'}
                           </p>
                           
                           {(() => {
                             const getTransactionsForBBBMode = () => {
                               const bbbPointValueNum = parseFloat(bbbPointValue);
-                              const bbbFbtValueNum = parseFloat(bbbFbtValue);
+                              const bbbNassauValueNum = parseFloat(bbbNassauValue);
                               
                               if (bbbPayoutMode === 'points' && selectedBBBPointsPayouts?.transactions) {
                                 return selectedBBBPointsPayouts.transactions;
                               }
                               
-                              if (bbbPayoutMode === 'fbt' && selectedBBBFbtPayouts?.transactions) {
+                              if (bbbPayoutMode === 'nassau' && selectedBBBFbtPayouts?.transactions) {
                                 return selectedBBBFbtPayouts.transactions;
                               }
                               
@@ -2698,7 +2698,7 @@ export default function Home() {
                                   });
                                 }
                                 
-                                if (bbbFbtValueNum > 0 && selectedBBBFbtPayouts?.payouts) {
+                                if (bbbNassauValueNum > 0 && selectedBBBFbtPayouts?.payouts) {
                                   selectedGroup.players.forEach(player => {
                                     combinedPayouts[player.id] += selectedBBBFbtPayouts.payouts[player.id] || 0;
                                   });
@@ -2779,12 +2779,12 @@ export default function Home() {
                       </Card>
                     )}
 
-                    {/* 3. & 4. 🎯 BBB POINTS ONLY PAYOUTS & ⛳ BBB FBT ONLY PAYOUTS */}
+                    {/* 3. & 4. 🎯 BBB POINTS ONLY PAYOUTS & ⛳ BBB NASSAU ONLY PAYOUTS */}
                     {(() => {
                       const bbbPointValueNum = parseFloat(bbbPointValue) || 0;
-                      const bbbFbtValueNum = parseFloat(bbbFbtValue) || 0;
+                      const bbbNassauValueNum = parseFloat(bbbNassauValue) || 0;
                       
-                      if (!selectedBBBGame || (bbbPointValueNum <= 0 && bbbFbtValueNum <= 0)) return null;
+                      if (!selectedBBBGame || (bbbPointValueNum <= 0 && bbbNassauValueNum <= 0)) return null;
 
                       const bbbPointsPayouts: Record<string, number> = {};
                       const bbbFbtPayouts: Record<string, number> = {};
@@ -2800,7 +2800,7 @@ export default function Home() {
                         });
                       }
 
-                      if (bbbFbtValueNum > 0 && selectedBBBFbtPayouts?.payouts) {
+                      if (bbbNassauValueNum > 0 && selectedBBBFbtPayouts?.payouts) {
                         selectedGroup.players.forEach(player => {
                           bbbFbtPayouts[player.id] = selectedBBBFbtPayouts.payouts[player.id] || 0;
                         });
@@ -2852,10 +2852,10 @@ export default function Home() {
                             </Card>
                           )}
 
-                          {bbbFbtValueNum > 0 && (
+                          {bbbNassauValueNum > 0 && (
                             <Card className="mb-4">
                               <CardContent className="p-4">
-                                <h3 className="text-lg font-semibold text-gray-800 mb-3">⛳ BBB FBT Only Payouts</h3>
+                                <h3 className="text-lg font-semibold text-gray-800 mb-3">⛳ BBB Nassau Only Payouts</h3>
                                 <div className="space-y-2">
                                   {[...selectedGroup.players]
                                     .sort((a, b) => {
@@ -2901,7 +2901,7 @@ export default function Home() {
 
                     {/* 5. 🎯 WHO OWES WHO - 2/9/16 GAMES */}
                     {(() => {
-                      const hasPayoutValues = (parseFloat(pointValue) > 0) || (parseFloat(fbtValue) > 0);
+                      const hasPayoutValues = (parseFloat(pointValue) > 0) || (parseFloat(nassauValue) > 0);
                       const show2916WhoOwesWho = selectedPointsGame && hasPayoutValues;
                       
                       return show2916WhoOwesWho;
@@ -2910,28 +2910,28 @@ export default function Home() {
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-semibold text-gray-800">🎯 2/9/16 - Who Owes Who</h3>
-                            <Select value={combinedPayoutMode} onValueChange={(value: 'points' | 'fbt' | 'both') => setCombinedPayoutMode(value)}>
+                            <Select value={combinedPayoutMode} onValueChange={(value: 'points' | 'nassau' | 'both') => setCombinedPayoutMode(value)}>
                               <SelectTrigger className="w-32">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="points">Points Only</SelectItem>
-                                <SelectItem value="fbt">FBT Only</SelectItem>
+                                <SelectItem value="nassau">Nassau Only</SelectItem>
                                 <SelectItem value="both">Both</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
                           <p className="text-sm text-gray-600 mb-4">
                             {combinedPayoutMode === 'points' ? 'Points-based settlement from 2/9/16 games only.' :
-                             combinedPayoutMode === 'fbt' ? 'FBT settlement from 2/9/16 games only.' :
-                             'Combined settlement for Points + FBT from 2/9/16 games only.'}
+                             combinedPayoutMode === 'nassau' ? 'Nassau settlement from 2/9/16 games only.' :
+                             'Combined settlement for Points + Nassau from 2/9/16 games only.'}
                           </p>
                           
                           {(() => {
                             // Use individual payout results for 2/9/16 games only (no cards)
                             const getTransactionsForMode = () => {
                               const pointValueNum = parseFloat(pointValue);
-                              const fbtValueNum = parseFloat(fbtValue);
+                              const nassauValueNum = parseFloat(nassauValue);
                               
                               // For Points Only mode, use selectedPointsPayouts
                               if (combinedPayoutMode === 'points' && selectedPointsPayouts?.transactions) {
@@ -2939,7 +2939,7 @@ export default function Home() {
                               }
                               
                               // For FBT Only mode, use selectedFbtPayouts
-                              if (combinedPayoutMode === 'fbt' && selectedFbtPayouts?.transactions) {
+                              if (combinedPayoutMode === 'nassau' && selectedFbtPayouts?.transactions) {
                                 return selectedFbtPayouts.transactions;
                               }
                               
@@ -2992,7 +2992,7 @@ export default function Home() {
                         Object.values(selectedPointsGame.holes || {}).some(hole => 
                           Object.values(hole as Record<string, any>).some((strokes: any) => strokes > 0)
                         );
-                      const hasPayoutValues = (parseFloat(pointValue) > 0) || (parseFloat(fbtValue) > 0);
+                      const hasPayoutValues = (parseFloat(pointValue) > 0) || (parseFloat(nassauValue) > 0);
 
                       return (
                         <>
@@ -3041,10 +3041,10 @@ export default function Home() {
                     {/* 6. & 7. 🎯 POINTS ONLY PAYOUTS - 2/9/16 GAMES & ⛳ FBT ONLY PAYOUTS - 2/9/16 GAMES */}
                     {(() => {
                       const pointValueNum = parseFloat(pointValue) || 0;
-                      const fbtValueNum = parseFloat(fbtValue) || 0;
+                      const nassauValueNum = parseFloat(nassauValue) || 0;
                       
                       // FIX: Always show when selectedPointsGame exists and ANY value > 0, regardless of scores
-                      if (!selectedPointsGame || (pointValueNum <= 0 && fbtValueNum <= 0)) return null;
+                      if (!selectedPointsGame || (pointValueNum <= 0 && nassauValueNum <= 0)) return null;
 
                       // Calculate total points for Points tile
                       const totalPoints: Record<string, number> = {};
@@ -3073,7 +3073,7 @@ export default function Home() {
                       }
 
                       // Get FBT payouts from API
-                      if (fbtValueNum > 0 && selectedFbtPayouts?.payouts) {
+                      if (nassauValueNum > 0 && selectedFbtPayouts?.payouts) {
                         selectedGroup.players.forEach(player => {
                           fbtPayouts[player.id] = selectedFbtPayouts.payouts[player.id] || 0;
                         });
@@ -3170,13 +3170,13 @@ export default function Home() {
                       );
                     })()}
 
-                    {/* 3. & 4. 🎯 BBB POINTS ONLY PAYOUTS & ⛳ BBB FBT ONLY PAYOUTS */}
+                    {/* 3. & 4. 🎯 BBB POINTS ONLY PAYOUTS & ⛳ BBB NASSAU ONLY PAYOUTS */}
                     {(() => {
                       const bbbPointValueNum = parseFloat(bbbPointValue) || 0;
-                      const bbbFbtValueNum = parseFloat(bbbFbtValue) || 0;
+                      const bbbNassauValueNum = parseFloat(bbbNassauValue) || 0;
                       
                       // Show BBB tiles when BBB game exists and ANY value > 0
-                      if (!selectedBBBGame || (bbbPointValueNum <= 0 && bbbFbtValueNum <= 0)) return null;
+                      if (!selectedBBBGame || (bbbPointValueNum <= 0 && bbbNassauValueNum <= 0)) return null;
 
                       // Get BBB payouts from server-side APIs
                       const bbbPointsPayouts: Record<string, number> = {};
@@ -3195,8 +3195,8 @@ export default function Home() {
                         });
                       }
 
-                      // Get BBB FBT payouts from API
-                      if (bbbFbtValueNum > 0 && selectedBBBFbtPayouts?.payouts) {
+                      // Get BBB Nassau payouts from API
+                      if (bbbNassauValueNum > 0 && selectedBBBFbtPayouts?.payouts) {
                         selectedGroup.players.forEach(player => {
                           bbbFbtPayouts[player.id] = selectedBBBFbtPayouts.payouts[player.id] || 0;
                         });
@@ -3250,10 +3250,10 @@ export default function Home() {
                           )}
 
                           {/* BBB FBT Only Tile */}
-                          {bbbFbtValueNum > 0 && (
+                          {bbbNassauValueNum > 0 && (
                             <Card className="mb-4">
                               <CardContent className="p-4">
-                                <h3 className="text-lg font-semibold text-gray-800 mb-3">⛳ BBB FBT Only Payouts</h3>
+                                <h3 className="text-lg font-semibold text-gray-800 mb-3">⛳ BBB Nassau Only Payouts</h3>
                                 <div className="space-y-2">
                                   {[...selectedGroup.players]
                                     .sort((a, b) => {
@@ -3558,7 +3558,7 @@ export default function Home() {
                       });
 
                       const pointValueNum = parseFloat(pointValue) || 0;
-                      const fbtValueNum = parseFloat(fbtValue) || 0;
+                      const nassauValueNum = parseFloat(nassauValue) || 0;
                       
                       // Calculate both payout systems
                       const pointsPayouts: Record<string, number> = {};
@@ -3587,7 +3587,7 @@ export default function Home() {
                       }
                       
                       // FBT payouts (use server-side API instead of frontend calculation)
-                      if (fbtValueNum > 0 && selectedFbtPayouts?.payouts) {
+                      if (nassauValueNum > 0 && selectedFbtPayouts?.payouts) {
                         selectedGroup.players.forEach(player => {
                           fbtPayouts[player.id] = selectedFbtPayouts.payouts[player.id] || 0;
                         });
@@ -3598,7 +3598,7 @@ export default function Home() {
                       }
                       
                       // Convert to display format based on selected mode
-                      const activePayouts = payoutMode === 'fbt' ? fbtPayouts : pointsPayouts;
+                      const activePayouts = payoutMode === 'nassau' ? fbtPayouts : pointsPayouts;
                       const payouts: Record<string, { amount: number; type: 'pays' | 'receives' }> = {};
                       selectedGroup.players.forEach(player => {
                         const netAmount = activePayouts[player.id] || 0;
@@ -3628,12 +3628,12 @@ export default function Home() {
                                   Points
                                 </Button>
                                 <Button
-                                  variant={payoutMode === 'fbt' ? 'default' : 'outline'}
-                                  onClick={() => setPayoutMode('fbt')}
+                                  variant={payoutMode === 'nassau' ? 'default' : 'outline'}
+                                  onClick={() => setPayoutMode('nassau')}
                                   size="sm"
                                   className="flex-1"
                                 >
-                                  FBT
+                                  Nassau
                                 </Button>
                               </div>
                             </div>
@@ -3666,10 +3666,10 @@ export default function Home() {
                               <div>
                                 <div className="flex items-center gap-1 mb-2">
                                   <label className="text-sm font-medium text-gray-700">
-                                    FBT Value ($)
+                                    Nassau Value ($)
                                   </label>
                                   <button
-                                    onClick={() => setShowFbtValueTooltip(true)}
+                                    onClick={() => setShowNassauValueTooltip(true)}
                                     className="text-gray-500 hover:text-gray-700"
                                   >
                                     <Info className="h-4 w-4" />
@@ -3679,15 +3679,15 @@ export default function Home() {
                                   type="number"
                                   step="0.01"
                                   min="0"
-                                  value={fbtValue}
-                                  onChange={(e) => setFbtValue(e.target.value)}
+                                  value={nassauValue}
+                                  onChange={(e) => setNassauValue(e.target.value)}
                                   className="w-full"
                                   placeholder="5.00"
                                 />
                               </div>
                             </div>
 
-                            {/* V6.5: Save Button for Point/FBT Values */}
+                            {/* V6.5: Save Button for Point/Nassau Values */}
                             <div className="mb-4">
                               <Button
                                 onClick={savePointFbtValues}
@@ -3739,7 +3739,7 @@ export default function Home() {
                                 })}
                             </div>
 
-                            {((payoutMode === 'points' && pointValueNum > 0) || (payoutMode === 'fbt' && fbtValueNum > 0)) && (
+                            {((payoutMode === 'points' && pointValueNum > 0) || (payoutMode === 'nassau' && nassauValueNum > 0)) && (
                               <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
                                 <p className="text-sm text-blue-800">
                                   {payoutMode === 'points' ? (
@@ -3758,7 +3758,7 @@ export default function Home() {
                             )}
 
                             {/* 2/9/16 Who Owes Who Section - Only show when Cards game is NOT active */}
-                            {((payoutMode === 'points' && pointValueNum > 0) || (payoutMode === 'fbt' && fbtValueNum > 0)) && 
+                            {((payoutMode === 'points' && pointValueNum > 0) || (payoutMode === 'nassau' && nassauValueNum > 0)) && 
                              !(selectedGame && gameState && gameState.cardHistory?.length > 0) && (
                               <div className="mt-4">
                                 <h4 className="text-md font-semibold text-gray-800 mb-3">Who Owes Who - 2/9/16</h4>
@@ -3785,7 +3785,7 @@ export default function Home() {
                                         pointsPayouts[player2.id] -= transaction;
                                       }
                                     }
-                                  } else if (payoutMode === 'fbt' && fbtValueNum > 0) {
+                                  } else if (payoutMode === 'nassau' && nassauValueNum > 0) {
                                     // Use canonical FBT endpoint data
                                     if (selectedFbtPayouts?.payouts) {
                                       selectedGroup.players.forEach(player => {
@@ -4087,13 +4087,13 @@ export default function Home() {
                             </div>
                           </Button>
                           <Button
-                            variant={bbbPayoutMode === 'fbt' ? 'default' : 'outline'}
-                            onClick={() => setBBBPayoutMode('fbt')}
+                            variant={bbbPayoutMode === 'nassau' ? 'default' : 'outline'}
+                            onClick={() => setBBBPayoutMode('nassau')}
                             className="h-auto p-3"
-                            data-testid="button-bbb-payout-fbt"
+                            data-testid="button-bbb-payout-nassau"
                           >
                             <div className="text-center">
-                              <div className="font-medium">FBT</div>
+                              <div className="font-medium">Nassau</div>
                             </div>
                           </Button>
                         </div>
@@ -4121,18 +4121,18 @@ export default function Home() {
                           <div>
                             <div className="flex items-center gap-1 mb-2">
                               <label className="text-sm font-medium text-gray-700">
-                                BBB FBT Value ($)
+                                BBB Nassau Value ($)
                               </label>
                             </div>
                             <Input
                               type="number"
                               step="0.01"
                               min="0"
-                              value={bbbFbtValue}
-                              onChange={(e) => setBBBFbtValue(e.target.value)}
+                              value={bbbNassauValue}
+                              onChange={(e) => setBBBNassauValue(e.target.value)}
                               className="w-full"
                               placeholder="5.00"
-                              data-testid="input-bbb-fbt-value"
+                              data-testid="input-bbb-nassau-value"
                             />
                           </div>
                         </div>
@@ -4152,7 +4152,7 @@ export default function Home() {
                         {/* Dynamic BBB Scores and Payout Display */}
                         {(() => {
                           const bbbPointValueNum = parseFloat(bbbPointValue);
-                          const bbbFbtValueNum = parseFloat(bbbFbtValue);
+                          const bbbNassauValueNum = parseFloat(bbbNassauValue);
                           
                           // Calculate total points from BBB game
                           const totalPoints: Record<string, number> = {};
@@ -4178,14 +4178,14 @@ export default function Home() {
                             });
                           }
 
-                          if (bbbFbtValueNum > 0 && selectedBBBFbtPayouts?.payouts) {
+                          if (bbbNassauValueNum > 0 && selectedBBBFbtPayouts?.payouts) {
                             selectedGroup.players.forEach(player => {
                               bbbFbtPayouts[player.id] = selectedBBBFbtPayouts.payouts[player.id] || 0;
                             });
                           }
 
                           const hasValidPayouts = (bbbPayoutMode === 'points' && bbbPointValueNum > 0) || 
-                                                 (bbbPayoutMode === 'fbt' && bbbFbtValueNum > 0);
+                                                 (bbbPayoutMode === 'nassau' && bbbNassauValueNum > 0);
 
                           return hasValidPayouts && (
                             <>
@@ -4258,9 +4258,9 @@ export default function Home() {
                                 </div>
                               )}
 
-                              {bbbPayoutMode === 'fbt' && (
+                              {bbbPayoutMode === 'nassau' && (
                                 <div className="mt-4">
-                                  <h4 className="text-md font-semibold text-gray-800 mb-3">BBB FBT Scores</h4>
+                                  <h4 className="text-md font-semibold text-gray-800 mb-3">BBB Nassau Scores</h4>
                                   <div className="space-y-2">
                                     {[...selectedGroup.players]
                                       .sort((a, b) => (totalPoints[b.id] || 0) - (totalPoints[a.id] || 0))
@@ -4312,7 +4312,7 @@ export default function Home() {
                                     </>
                                   ) : (
                                     <>
-                                      <strong>BBB FBT System:</strong> Players earn points for Bingo, Bango, Bongo across Front 9, Back 9, and Total 18 holes. FBT payouts reward consistent performance across course segments.
+                                      <strong>BBB Nassau System:</strong> Players earn points for Bingo, Bango, Bongo across Front 9, Back 9, and Total 18 holes. Nassau payouts reward consistent performance across course segments.
                                     </>
                                   )}
                                 </p>
@@ -4446,7 +4446,7 @@ export default function Home() {
                           <li className="ml-4">- Front 9 (holes 1-9)</li>
                           <li className="ml-4">- Back 9 (holes 10-18)</li>
                           <li className="ml-4">- Total 18 holes</li>
-                          <li>• Winners receive FBT Value for each category won</li>
+                          <li>• Winners receive Nassau Value for each category won</li>
                           <li>• Non-winners split the total cost equally</li>
                         </ul>
                       </div>
@@ -4564,7 +4564,7 @@ export default function Home() {
                           <li className="ml-4">- Front 9 (holes 1-9)</li>
                           <li className="ml-4">- Back 9 (holes 10-18)</li>
                           <li className="ml-4">- Total 18 holes</li>
-                          <li>• Winners receive FBT Value for each category won</li>
+                          <li>• Winners receive Nassau Value for each category won</li>
                           <li>• Non-winners split the total cost equally</li>
                         </ul>
                       </div>
@@ -5082,18 +5082,18 @@ export default function Home() {
         </DialogContent>
       </Dialog>
 
-      {/* FBT Value Tooltip Modal */}
-      <Dialog open={showFbtValueTooltip} onOpenChange={setShowFbtValueTooltip}>
+      {/* Nassau Value Tooltip Modal */}
+      <Dialog open={showNassauValueTooltip} onOpenChange={setShowNassauValueTooltip}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold text-gray-800">FBT Value</DialogTitle>
+            <DialogTitle className="text-xl font-semibold text-gray-800">Nassau Value</DialogTitle>
             <DialogDescription>
               How much money winners receive for Front 9, Back 9, and Total victories.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <p className="text-sm text-gray-700">
-              <strong>FBT System:</strong> Winners are determined by the lowest stroke count for:
+              <strong>Nassau System:</strong> Winners are determined by the lowest stroke count for:
             </p>
             <ul className="text-sm text-gray-700 ml-4 space-y-1">
               <li>• <strong>Front 9:</strong> Holes 1-9</li>
@@ -5101,10 +5101,10 @@ export default function Home() {
               <li>• <strong>Total:</strong> All 18 holes</li>
             </ul>
             <p className="text-sm text-gray-700">
-              For example, if FBT Value is $5.00 and Player A wins Front 9 and Total, they receive $10.00. The remaining players split the cost equally.
+              For example, if Nassau Value is $5.00 and Player A wins Front 9 and Total, they receive $10.00. The remaining players split the cost equally.
             </p>
             <Button 
-              onClick={() => setShowFbtValueTooltip(false)}
+              onClick={() => setShowNassauValueTooltip(false)}
               className="w-full"
             >
               Got it
@@ -5187,28 +5187,28 @@ export default function Home() {
               )}
               
               {/* FBT Game Option */}
-              {selectedPointsGame && parseFloat(fbtValue) > 0 && (
+              {selectedPointsGame && parseFloat(nassauValue) > 0 && (
                 <Button 
-                  variant={tempSelectedGames.includes('fbt') ? 'default' : 'outline'}
+                  variant={tempSelectedGames.includes('nassau') ? 'default' : 'outline'}
                   className={`w-full justify-start h-auto p-3 ${
-                    tempSelectedGames.includes('fbt') 
+                    tempSelectedGames.includes('nassau') 
                       ? 'bg-amber-100 hover:bg-amber-200 text-amber-800 border-amber-300' 
                       : 'hover:bg-gray-50'
                   }`}
                   onClick={() => {
-                    if (tempSelectedGames.includes('fbt')) {
-                      setTempSelectedGames(tempSelectedGames.filter(g => g !== 'fbt'));
+                    if (tempSelectedGames.includes('nassau')) {
+                      setTempSelectedGames(tempSelectedGames.filter(g => g !== 'nassau'));
                     } else {
-                      setTempSelectedGames([...tempSelectedGames, 'fbt']);
+                      setTempSelectedGames([...tempSelectedGames, 'nassau']);
                     }
                   }}
                 >
                   <div className="flex items-center gap-3 w-full">
                     <span className="text-lg">⛳</span>
                     <div className="text-left">
-                      <div className="font-medium">2/9/16 FBT Game</div>
-                      <div className={`text-sm ${tempSelectedGames.includes('fbt') ? 'text-amber-600' : 'text-gray-600'}`}>
-                        ${fbtValue} per victory
+                      <div className="font-medium">2/9/16 Nassau Game</div>
+                      <div className={`text-sm ${tempSelectedGames.includes('nassau') ? 'text-amber-600' : 'text-gray-600'}`}>
+                        ${nassauValue} per victory
                       </div>
                     </div>
                   </div>
@@ -5244,29 +5244,29 @@ export default function Home() {
                 </Button>
               )}
 
-              {/* BBB FBT Game Option */}
-              {selectedBBBGame && parseFloat(bbbFbtValue) > 0 && selectedBBBGame.holes && Object.keys(selectedBBBGame.holes).length > 0 && (
+              {/* BBB Nassau Game Option */}
+              {selectedBBBGame && parseFloat(bbbNassauValue) > 0 && selectedBBBGame.holes && Object.keys(selectedBBBGame.holes).length > 0 && (
                 <Button 
-                  variant={tempSelectedGames.includes('bbb-fbt') ? 'default' : 'outline'}
+                  variant={tempSelectedGames.includes('bbb-nassau') ? 'default' : 'outline'}
                   className={`w-full justify-start h-auto p-3 ${
-                    tempSelectedGames.includes('bbb-fbt') 
+                    tempSelectedGames.includes('bbb-nassau') 
                       ? 'bg-amber-100 hover:bg-amber-200 text-amber-800 border-amber-300' 
                       : 'hover:bg-gray-50'
                   }`}
                   onClick={() => {
-                    if (tempSelectedGames.includes('bbb-fbt')) {
-                      setTempSelectedGames(tempSelectedGames.filter(g => g !== 'bbb-fbt'));
+                    if (tempSelectedGames.includes('bbb-nassau')) {
+                      setTempSelectedGames(tempSelectedGames.filter(g => g !== 'bbb-nassau'));
                     } else {
-                      setTempSelectedGames([...tempSelectedGames, 'bbb-fbt']);
+                      setTempSelectedGames([...tempSelectedGames, 'bbb-nassau']);
                     }
                   }}
                 >
                   <div className="flex items-center gap-3 w-full">
                     <span className="text-lg">🎯</span>
                     <div className="text-left">
-                      <div className="font-medium">BBB FBT Game</div>
+                      <div className="font-medium">BBB Nassau Game</div>
                       <div className={`text-sm ${tempSelectedGames.includes('bbb-fbt') ? 'text-amber-600' : 'text-gray-600'}`}>
-                        ${bbbFbtValue} per victory
+                        ${bbbNassauValue} per victory
                       </div>
                     </div>
                   </div>
@@ -5297,11 +5297,11 @@ export default function Home() {
                     try {
                       // FIX: Determine correct game IDs and values based on selected games
                       const hasBBBGames = tempSelectedGames.some(game => game.startsWith('bbb-'));
-                      const has2916Games = tempSelectedGames.some(game => ['points', 'fbt'].includes(game));
+                      const has2916Games = tempSelectedGames.some(game => ['points', 'nassau'].includes(game));
                       
                       // Use appropriate values based on game types in temp selection
                       const savePointValue = hasBBBGames ? parseFloat(bbbPointValue) : parseFloat(pointValue);
-                      const saveFbtValue = hasBBBGames ? parseFloat(bbbFbtValue) : parseFloat(fbtValue);
+                      const saveFbtValue = hasBBBGames ? parseFloat(bbbNassauValue) : parseFloat(nassauValue);
                       
                       // Use BBB game ID if BBB games are selected, otherwise use 2/9/16 game ID
                       let correctPointsGameId = null;
@@ -5325,7 +5325,7 @@ export default function Home() {
                           pointsGameId: correctPointsGameId,
                           selectedGames: tempSelectedGames,
                           pointValue: savePointValue,
-                          fbtValue: saveFbtValue,
+                          nassauValue: saveFbtValue,
                           saveResults: true
                         })
                       });

@@ -4,7 +4,7 @@ import { createServer, type Server } from "http";
 import { z } from "zod";
 import { storage } from "./storage.js";
 import { setupAuth, isAuthenticated, generateRoomToken, requireAdmin } from "./replitAuth.js";
-import { calculateCardGameDetails, calculate2916Points, validateCardAssignment, calculateCardsGame, calculatePointsGame, calculateFbtGame, buildFbtNetsFromPointsGame, combineGames, settleWhoOwesWho, combineTotals, generateSettlement, calculateBBBPointsGame, calculateBBBFbtGame, calculateGIRPointsGame, calculateGIRFbtGame, calculateGIRPoints } from "./secureGameLogic.js";
+import { calculateCardGameDetails, calculate2916Points, validateCardAssignment, calculateCardsGame, calculatePointsGame, calculateNassauGame, buildNassauNetsFromPointsGame, combineGames, settleWhoOwesWho, combineTotals, generateSettlement, calculateBBBPointsGame, calculateBBBNassauGame, calculateGIRPointsGame, calculateGIRNassauGame, calculateGIRPoints } from "./secureGameLogic.js";
 import { SecureWebSocketManager } from "./secureWebSocket.js";
 import { registerUser, authenticateUser, registerSchema, loginSchema } from "./localAuth.js";
 import { insertGroupSchema, insertGameStateSchema, insertPointsGameSchema, cardValuesSchema, pointsGameSettingsSchema, gameStates, roomStates, userPreferences, insertUserPreferencesSchema, passwordResetTokens, insertPasswordResetTokenSchema, users, type Card, type CardAssignment } from "@shared/schema";
@@ -1073,7 +1073,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name: `${name} - 2/9/16`,
         holes: {}, // Initialize empty holes object
         points: {}, // Initialize empty points object
-        settings: { pointValue: 1, fbtValue: 10 }, // Default settings
+        settings: { pointValue: 1, nassauValue: 10 }, // Default settings
         createdBy: userId
       };
       
@@ -1087,7 +1087,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name: `${name} - BBB`,
         holes: {}, // Initialize empty holes object
         points: {}, // Initialize empty points object  
-        settings: { pointValue: 1, fbtValue: 10 }, // Default settings
+        settings: { pointValue: 1, nassauValue: 10 }, // Default settings
         createdBy: userId
       };
       
@@ -1101,7 +1101,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name: `${name} - GIR`,
         holes: {}, // Initialize empty holes object
         points: {}, // Initialize empty points object  
-        settings: { pointValue: 1, fbtValue: 10 }, // Default settings
+        settings: { pointValue: 1, nassauValue: 10 }, // Default settings
         createdBy: userId
       };
       
@@ -1358,7 +1358,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Merge with existing settings
-      const currentSettings = pointsGame.settings || { pointValue: 1, fbtValue: 10 };
+      const currentSettings = pointsGame.settings || { pointValue: 1, nassauValue: 10 };
       const newSettings = { ...currentSettings, ...validatedSettings };
 
       // Update the points game with new settings
@@ -1497,7 +1497,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isActive: true,
         payoutMode: 'points',
         pointValue: 1.00,
-        fbtValue: 10.00,
+        nassauValue: 10.00,
         createdBy: userId
       };
       
@@ -2041,25 +2041,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
           return num;
         }),
-        payoutMode: z.enum(['points', 'fbt'], {
-          errorMap: () => ({ message: 'Payout mode must be "points" or "fbt"' })
-        }),
+        payoutMode: z.enum(['points', 'fbt', 'nassau'], {
+          errorMap: () => ({ message: 'Payout mode must be "points", "nassau", or "fbt" (legacy)' })
+        }).transform(mode => mode === 'fbt' ? 'nassau' : mode), // Normalize legacy 'fbt' to 'nassau'
         fbtValue: z.string().optional().transform((val) => {
           if (!val) return 0;
           const num = parseFloat(val);
           if (isNaN(num) || num < 0) {
-            throw new Error('FBT value must be a non-negative number');
+            throw new Error('Nassau value must be a non-negative number');
+          }
+          return num;
+        }),
+        nassauValue: z.string().optional().transform((val) => {
+          if (!val) return 0;
+          const num = parseFloat(val);
+          if (isNaN(num) || num < 0) {
+            throw new Error('Nassau value must be a non-negative number');
           }
           return num;
         })
-      }).refine(data => 
+      }).transform(data => ({
+        ...data,
+        // Prefer nassauValue, fall back to fbtValue for legacy support
+        nassauValue: data.nassauValue || data.fbtValue
+      })).refine(data => 
         (data.payoutMode === 'points' && data.pointValue > 0) ||
-        (data.payoutMode === 'fbt' && data.fbtValue > 0),
-        { message: 'Point value required for points mode, FBT value required for FBT mode' }
+        (data.payoutMode === 'nassau' && data.nassauValue > 0),
+        { message: 'Point value required for points mode, Nassau value required for Nassau mode' }
       );
       
       const { gameId } = paramsSchema.parse(req.params);
-      const { pointValue, payoutMode, fbtValue } = querySchema.parse(req.query);
+      const { pointValue, payoutMode, nassauValue } = querySchema.parse(req.query);
 
       const game = await storage.getPointsGame(gameId);
       if (!game) {
@@ -2129,9 +2141,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           }
         }
-      } else if (payoutMode === 'fbt' && fbtValue > 0) {
-        // FBT calculation for BBB (same logic as 2/9/16)
-        // Calculate point totals for FBT
+      } else if (payoutMode === 'nassau' && nassauValue > 0) {
+        // Nassau calculation for BBB (same logic as 2/9/16)
+        // Calculate point totals for Nassau
         const front9Points: Record<string, number> = {};
         const back9Points: Record<string, number> = {};
         const totalPoints: Record<string, number> = {};
@@ -2164,8 +2176,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const winners = segmentPlayers.filter(id => segment[id] === maxPoints && maxPoints > 0);
           
           if (winners.length > 0) {
-            const payoutPerWinner = fbtValue / winners.length;
-            const payoutPerLoser = fbtValue / segmentPlayers.length;
+            const payoutPerWinner = nassauValue / winners.length;
+            const payoutPerLoser = nassauValue / segmentPlayers.length;
             
             segmentPlayers.forEach(playerId => {
               if (winners.includes(playerId)) {
@@ -2237,25 +2249,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
           return num;
         }),
-        payoutMode: z.enum(['points', 'fbt'], {
-          errorMap: () => ({ message: 'Payout mode must be "points" or "fbt"' })
-        }),
+        payoutMode: z.enum(['points', 'fbt', 'nassau'], {
+          errorMap: () => ({ message: 'Payout mode must be "points", "nassau", or "fbt" (legacy)' })
+        }).transform(mode => mode === 'fbt' ? 'nassau' : mode), // Normalize legacy 'fbt' to 'nassau'
         fbtValue: z.string().optional().transform((val) => {
           if (!val) return 0;
           const num = parseFloat(val);
           if (isNaN(num) || num < 0) {
-            throw new Error('FBT value must be a non-negative number');
+            throw new Error('Nassau value must be a non-negative number');
+          }
+          return num;
+        }),
+        nassauValue: z.string().optional().transform((val) => {
+          if (!val) return 0;
+          const num = parseFloat(val);
+          if (isNaN(num) || num < 0) {
+            throw new Error('Nassau value must be a non-negative number');
           }
           return num;
         })
-      }).refine(data => 
+      }).transform(data => ({
+        ...data,
+        // Prefer nassauValue, fall back to fbtValue for legacy support
+        nassauValue: data.nassauValue || data.fbtValue
+      })).refine(data => 
         (data.payoutMode === 'points' && data.pointValue > 0) ||
-        (data.payoutMode === 'fbt' && data.fbtValue > 0),
-        { message: 'Point value required for points mode, FBT value required for FBT mode' }
+        (data.payoutMode === 'nassau' && data.nassauValue > 0),
+        { message: 'Point value required for points mode, Nassau value required for Nassau mode' }
       );
       
       const { gameId } = paramsSchema.parse(req.params);
-      const { pointValue, payoutMode, fbtValue } = querySchema.parse(req.query);
+      const { pointValue, payoutMode, nassauValue } = querySchema.parse(req.query);
 
       const game = await storage.getPointsGame(gameId);
       if (!game) {
@@ -2293,9 +2317,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (payoutMode === 'points' && pointValue > 0) {
         // Use calculateGIRPointsGame for points mode
         payouts = calculateGIRPointsGame(game.holes || {}, playerIds, pointValue);
-      } else if (payoutMode === 'fbt' && fbtValue > 0) {
-        // Use calculateGIRFbtGame for FBT mode
-        payouts = calculateGIRFbtGame(game.holes || {}, playerIds, fbtValue);
+      } else if (payoutMode === 'nassau' && nassauValue > 0) {
+        // Use calculateGIRNassauGame for Nassau mode
+        payouts = calculateGIRNassauGame(game.holes || {}, playerIds, nassauValue);
       } else {
         return res.status(400).json({ message: 'Invalid payout mode or value' });
       }
@@ -2336,7 +2360,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/points-games/:gameId/who-owes-who', isAuthenticated, async (req, res) => {
     try {
       const { gameId } = req.params;
-      const { pointValue, payoutMode, fbtValue } = req.query;
+      const { pointValue, payoutMode, nassauValue: nassauValueFromQuery, fbtValue: fbtValueFromQuery } = req.query;
+      const nassauValue = nassauValueFromQuery || fbtValueFromQuery;
 
       const game = await storage.getPointsGame(gameId);
       if (!game) {
@@ -2390,9 +2415,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // If diff === 0, no payment needed
           }
         }
-      } else if (payoutMode === 'fbt' && fbtValue) {
-        // FBT-based payouts
-        const fbtValueNum = parseFloat(fbtValue as string) || 0;
+      } else if ((payoutMode === 'nassau' || payoutMode === 'fbt') && nassauValue) {
+        // Nassau-based payouts
+        const nassauValueNum = parseFloat(nassauValue as string) || 0;
         
         players.forEach(player => {
           payouts[player.id] = 0;
@@ -2459,8 +2484,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
           
           // Winner and loser shares
-          const winShare = fbtValueNum / winners.length;
-          const loseShare = fbtValueNum / losers.length;
+          const winShare = nassauValueNum / winners.length;
+          const loseShare = nassauValueNum / losers.length;
           
           winners.forEach(winner => {
             payouts[winner] += winShare;
@@ -2496,7 +2521,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/calculate-combined-games', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const { groupId, gameStateId, pointsGameId, selectedGames, pointValue, fbtValue, saveResults = false } = req.body;
+      // Accept both nassauValue (new) and fbtValue (legacy) for backward compatibility
+      const { groupId, gameStateId, pointsGameId, selectedGames, pointValue, nassauValue: nassauValueFromBody, fbtValue: fbtValueFromBody, saveResults = false } = req.body;
+      const nassauValue = nassauValueFromBody || fbtValueFromBody || 0;
       
       console.log('🔍 ===== CALCULATE-COMBINED-GAMES REQUEST =====');
       console.log('🔍 REQUEST PARAMS:', {
@@ -2505,7 +2532,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         pointsGameId,
         selectedGames,
         pointValue,
-        fbtValue,
+        nassauValue,
         saveResults
       });
       
@@ -2523,8 +2550,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let bbbGame = null;
       
       // Always fetch all games if we have BBB games OR mixed scenarios
-      const hasBBBGames = selectedGames.includes('bbb-points') || selectedGames.includes('bbb-fbt');
-      const hasRegularGames = selectedGames.includes('points') || selectedGames.includes('fbt');
+      const hasBBBGames = selectedGames.includes('bbb-points') || selectedGames.includes('bbb-nassau') || selectedGames.includes('bbb-fbt');
+      const hasRegularGames = selectedGames.includes('points') || selectedGames.includes('nassau') || selectedGames.includes('fbt');
       
       if (hasBBBGames || hasRegularGames) {
         // Fetch all games to handle both individual and mixed scenarios - FIXED: pass gameStateId
@@ -2589,17 +2616,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         activeGames.push('points');
       }
 
-      // FBT (Regular 2/9/16 game)
-      const regularGameForFBT = regular2916Game || pointsGame;
-      if (selectedGames.includes('fbt') && regularGameForFBT && parseFloat(fbtValue) > 0) {
-        console.log('🔍 REGULAR FBT using game:', regularGameForFBT.id, 'type:', regularGameForFBT.gameType);
+      // Nassau (Regular 2/9/16 game)
+      const regularGameForNassau = regular2916Game || pointsGame;
+      if ((selectedGames.includes('nassau') || selectedGames.includes('fbt')) && regularGameForNassau && parseFloat(nassauValue) > 0) {
+        console.log('🔍 REGULAR NASSAU using game:', regularGameForNassau.id, 'type:', regularGameForNassau.gameType);
         // Convert null to undefined for type compatibility
-        const pointsGameForFBT = {
-          ...regularGameForFBT,
-          points: regularGameForFBT.points || undefined
+        const pointsGameForNassau = {
+          ...regularGameForNassau,
+          points: regularGameForNassau.points || undefined
         };
-        nets.push(buildFbtNetsFromPointsGame(group.players, pointsGameForFBT, parseFloat(fbtValue)));
-        activeGames.push('fbt');
+        nets.push(buildNassauNetsFromPointsGame(group.players, pointsGameForNassau, parseFloat(nassauValue)));
+        activeGames.push('nassau');
       }
 
       // BBB POINTS
@@ -2630,32 +2657,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         activeGames.push('bbb-points');
       }
 
-      // BBB FBT
-      const bbbGameForFBT = bbbGame || (pointsGame?.gameType === 'bbb' ? pointsGame : null);
-      const bbbFbtCondition = selectedGames.includes('bbb-fbt') && bbbGameForFBT && parseFloat(fbtValue) > 0;
-      console.log('🔍 BBB FBT CHECK (UPDATED):', {
-        includesBBBFbt: selectedGames.includes('bbb-fbt'),
-        hasBBBGame: !!bbbGameForFBT,
-        bbbGameId: bbbGameForFBT?.id,
-        bbbGameType: bbbGameForFBT?.gameType,
-        fbtValue: parseFloat(fbtValue),
-        conditionMet: bbbFbtCondition
+      // BBB Nassau
+      const bbbGameForNassau = bbbGame || (pointsGame?.gameType === 'bbb' ? pointsGame : null);
+      const bbbNassauCondition = (selectedGames.includes('bbb-nassau') || selectedGames.includes('bbb-fbt')) && bbbGameForNassau && parseFloat(nassauValue) > 0;
+      console.log('🔍 BBB NASSAU CHECK (UPDATED):', {
+        includesBBBNassau: selectedGames.includes('bbb-nassau') || selectedGames.includes('bbb-fbt'),
+        hasBBBGame: !!bbbGameForNassau,
+        bbbGameId: bbbGameForNassau?.id,
+        bbbGameType: bbbGameForNassau?.gameType,
+        nassauValue: parseFloat(nassauValue),
+        conditionMet: bbbNassauCondition
       });
       
-      if (bbbFbtCondition) {
+      if (bbbNassauCondition) {
         const playerIds = group.players.map(p => p.id);
-        const bbbHoleData = bbbGameForFBT.holes || {};
-        console.log('🔍 BBB FBT DATA (UPDATED):', {
+        const bbbHoleData = bbbGameForNassau.holes || {};
+        console.log('🔍 BBB NASSAU DATA (UPDATED):', {
           playerIds,
           bbbHoleDataKeys: Object.keys(bbbHoleData),
           bbbHoleData: JSON.stringify(bbbHoleData, null, 2)
         });
         
-        const bbbFbtResult = calculateBBBFbtGame(bbbHoleData, playerIds, parseFloat(fbtValue));
-        console.log('🔍 BBB FBT RESULT (UPDATED):', bbbFbtResult);
+        const bbbNassauResult = calculateBBBNassauGame(bbbHoleData, playerIds, parseFloat(nassauValue));
+        console.log('🔍 BBB NASSAU RESULT (UPDATED):', bbbNassauResult);
         
-        nets.push(bbbFbtResult);
-        activeGames.push('bbb-fbt');
+        nets.push(bbbNassauResult);
+        activeGames.push('bbb-nassau');
       }
 
       // Step 2: Combine nets by player KEY (canonical 3-step pipeline)
@@ -2696,7 +2723,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             pointsGameId: pointsGameId || null,
             selectedGames: activeGames,
             pointValue: parseFloat(pointValue) || 1,
-            fbtValue: parseFloat(fbtValue) || 10,
+            nassauValue: parseFloat(nassauValue) || 10,
             calculationResult: {
               success: true,
               totalTransactions: transactions.length,
@@ -2817,9 +2844,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 // If diff === 0, no payment needed
               }
             }
-          } else if (payoutMode === 'fbt' && fbtValue) {
-            // FBT-based payouts calculation (same as above)
-            const fbtValueNum = parseFloat(fbtValue as string) || 0;
+          } else if ((payoutMode === 'nassau' || payoutMode === 'fbt') && (nassauValue || fbtValue)) {
+            // Nassau-based payouts calculation (same as above)
+            const nassauValueNum = parseFloat((nassauValue || fbtValue) as string) || 0;
             
             players.forEach(player => {
               payouts[player.id] = 0;
@@ -2854,8 +2881,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 front9Strokes[player.id] > 0 && (front9Strokes[winner.id] === 0 || front9Strokes[player.id] < front9Strokes[winner.id]) ? player : winner
               );
               if (front9Strokes[front9Winner.id] > 0) {
-                payouts[front9Winner.id] += fbtValueNum;
-                totalWinnings += fbtValueNum;
+                payouts[front9Winner.id] += nassauValueNum;
+                totalWinnings += nassauValueNum;
                 winners.add(front9Winner.id);
               }
             }
@@ -2865,8 +2892,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 back9Strokes[player.id] > 0 && (back9Strokes[winner.id] === 0 || back9Strokes[player.id] < back9Strokes[winner.id]) ? player : winner
               );
               if (back9Strokes[back9Winner.id] > 0) {
-                payouts[back9Winner.id] += fbtValueNum;
-                totalWinnings += fbtValueNum;
+                payouts[back9Winner.id] += nassauValueNum;
+                totalWinnings += nassauValueNum;
                 winners.add(back9Winner.id);
               }
             }
@@ -2876,8 +2903,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 totalStrokes[player.id] > 0 && (totalStrokes[winner.id] === 0 || totalStrokes[player.id] < totalStrokes[winner.id]) ? player : winner
               );
               if (totalStrokes[totalWinner.id] > 0) {
-                payouts[totalWinner.id] += fbtValueNum;
-                totalWinnings += fbtValueNum;
+                payouts[totalWinner.id] += nassauValueNum;
+                totalWinnings += nassauValueNum;
                 winners.add(totalWinner.id);
               }
             }

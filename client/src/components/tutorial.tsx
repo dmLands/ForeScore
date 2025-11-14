@@ -50,7 +50,7 @@ const tutorialSteps: TutorialStep[] = [
   {
     id: 3,
     title: "Points-Based Games: BBB and 2/9/16",
-    content: "ForeScore includes two exciting points-based competitions! Bingo Bango Bongo awards points for achieving objectives on each hole (Bingo-first on green, Bango-closest to pin, Bongo-first in hole), while 2/9/16 is stroke-based competition. Both offer 'Points' and 'FBT' payout systems that run simultaneously!",
+    content: "ForeScore includes two exciting points-based competitions! Bingo Bango Bongo awards points for achieving objectives on each hole (Bingo-first on green, Bango-closest to pin, Bongo-first in hole), while 2/9/16 is stroke-based competition. Both offer 'Points' and 'Nassau' payout systems that run simultaneously!",
     visual: (
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
@@ -71,7 +71,7 @@ const tutorialSteps: TutorialStep[] = [
             <div className="text-gray-600">Point differences</div>
           </div>
           <div className="bg-gray-100 p-2 rounded text-center border">
-            <div className="font-bold text-gray-800">FBT</div>
+            <div className="font-bold text-gray-800">Nassau</div>
             <div className="text-gray-600">Front/Back/Total winners</div>
           </div>
         </div>

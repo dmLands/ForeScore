@@ -155,17 +155,17 @@ function pointsGame(points: Record<string, number>, valuePerPoint = 1): Record<s
   return net;
 }
 
-/** C) Points Game (FBT: Front / Back / Total; fixed pot/segment) - Exact Implementation */
-export function calculateFbtGame(
+/** C) Points Game (Nassau: Front / Back / Total; fixed pot/segment) - Exact Implementation */
+export function calculateNassauGame(
   frontPoints: Record<string, number>,
   backPoints: Record<string, number>,
   totalPoints: Record<string, number>,
   potValue: number = 10
 ): Record<string, number> {
-  return fbtGame(frontPoints, backPoints, totalPoints, potValue);
+  return nassauGame(frontPoints, backPoints, totalPoints, potValue);
 }
 
-function fbtGame(front: Record<string, number>, back: Record<string, number>, total: Record<string, number>, potValue = 10): Record<string, number> {
+function nassauGame(front: Record<string, number>, back: Record<string, number>, total: Record<string, number>, potValue = 10): Record<string, number> {
   const allPlayers = Array.from(new Set([...Object.keys(front), ...Object.keys(back), ...Object.keys(total)]));
   const net: Record<string, number> = {};
   for (const p of allPlayers) net[p] = 0;
@@ -189,8 +189,8 @@ function fbtGame(front: Record<string, number>, back: Record<string, number>, to
   return net;
 }
 
-/** Build FBT nets from pointsGame.points (NOT strokes/holes). */
-export function buildFbtNetsFromPointsGame(
+/** Build Nassau nets from pointsGame.points (NOT strokes/holes). */
+export function buildNassauNetsFromPointsGame(
   groupPlayers: Player[],
   pointsGame: { points?: Record<number, Record<string, number>> },
   potValue: number
@@ -209,7 +209,7 @@ export function buildFbtNetsFromPointsGame(
     }
   });
 
-  return calculateFbtGame(front, back, total, potValue); // RAW
+  return calculateNassauGame(front, back, total, potValue); // RAW
 }
 
 /** Combine nets by KEY (never by index) - Fixed Version */
@@ -467,10 +467,10 @@ export function calculateBBBPointsGame(
 }
 
 /**
- * BBB FBT Game calculation (Front/Back/Total like 2/9/16)
+ * BBB Nassau Game calculation (Front/Back/Total like 2/9/16)
  * Front = holes 1-9, Back = holes 10-18, Total = all holes
  */
-export function calculateBBBFbtGame(
+export function calculateBBBNassauGame(
   bbbHoleData: Record<number, { firstOn?: string; closestTo?: string; firstIn?: string }>,
   playerIds: string[],
   potValue: number = 10
@@ -509,7 +509,7 @@ export function calculateBBBFbtGame(
     }
   });
 
-  return calculateFbtGame(frontPoints, backPoints, totalPoints, potValue);
+  return calculateNassauGame(frontPoints, backPoints, totalPoints, potValue);
 }
 
 /**
@@ -606,11 +606,11 @@ export function calculateGIRPointsGame(
 }
 
 /**
- * GIR FBT Game calculation (Front/Back/Total like BBB)
+ * GIR Nassau Game calculation (Front/Back/Total like BBB)
  * Front = holes 1-9, Back = holes 10-18, Total = all holes
- * Uses traditional FBT winner-takes-pot logic (not ladder)
+ * Uses traditional Nassau winner-takes-pot logic (not ladder)
  */
-export function calculateGIRFbtGame(
+export function calculateGIRNassauGame(
   girHoleData: Record<number, Record<string, boolean>>,
   playerIds: string[],
   potValue: number = 10
@@ -655,6 +655,6 @@ export function calculateGIRFbtGame(
     });
   });
 
-  // Use traditional FBT pot logic (winner-takes-all per segment)
-  return calculateFbtGame(frontPoints, backPoints, totalPoints, potValue);
+  // Use traditional Nassau pot logic (winner-takes-all per segment)
+  return calculateNassauGame(frontPoints, backPoints, totalPoints, potValue);
 }

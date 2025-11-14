@@ -26,8 +26,8 @@ export function GIRGame({ selectedGroup }: GIRGameProps) {
     setHoleData,
     pointValue,
     setPointValue,
-    fbtValue,
-    setFbtValue,
+    nassauValue,
+    setNassauValue,
     payoutMode,
     setPayoutMode,
     saveHoleData,
@@ -254,13 +254,13 @@ export function GIRGame({ selectedGroup }: GIRGameProps) {
                 Points
               </Button>
               <Button
-                variant={payoutMode === 'fbt' ? 'default' : 'outline'}
-                onClick={() => setPayoutMode('fbt')}
+                variant={payoutMode === 'nassau' ? 'default' : 'outline'}
+                onClick={() => setPayoutMode('nassau')}
                 size="sm"
                 className="flex-1"
-                data-testid="button-gir-mode-fbt"
+                data-testid="button-gir-mode-nassau"
               >
-                FBT
+                Nassau
               </Button>
             </div>
           </div>
@@ -283,16 +283,16 @@ export function GIRGame({ selectedGroup }: GIRGameProps) {
             </div>
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">
-                FBT Value ($)
+                Nassau Value ($)
               </label>
               <Input
                 type="number"
                 step="0.01"
                 min="0"
-                value={fbtValue}
-                onChange={(e) => setFbtValue(e.target.value)}
+                value={nassauValue}
+                onChange={(e) => setNassauValue(e.target.value)}
                 placeholder="10.00"
-                data-testid="input-gir-fbt-value"
+                data-testid="input-gir-nassau-value"
               />
             </div>
           </div>

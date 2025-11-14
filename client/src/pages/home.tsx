@@ -6043,7 +6043,7 @@ function ScorecardTable({
     
     // Cards (always single button)
     if (availableGames.hasCards) {
-      variants.push({ id: 'cards', label: 'Cards', icon: '🎴', amount: 'Current holders' });
+      variants.push({ id: 'cards', label: 'Cards', icon: '🎴', amount: '' });
     }
     
     return variants;
@@ -6099,10 +6099,8 @@ function ScorecardTable({
               variant={selectedGames.includes(variant.id) ? 'default' : 'outline'}
               size="sm"
               onClick={() => toggleGame(variant.id)}
-              className="flex flex-col items-start h-auto py-2 px-3"
             >
               <span className="font-medium">{variant.icon} {variant.label}</span>
-              <span className="text-xs opacity-80">{variant.amount}</span>
             </Button>
           ))}
         </div>

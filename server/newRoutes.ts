@@ -1441,14 +1441,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const playerCards: Record<string, string> = {};
       if (gameState.cardHistory && gameState.cardHistory.length > 0) {
         // Track current card holder for each card type
-        const currentHolders: Record<string, { playerId: string; cardType: string }> = {};
+        const currentHolders: Record<string, CardAssignment> = {};
         
         // Process card history chronologically
         for (const assignment of gameState.cardHistory) {
-          currentHolders[assignment.cardType] = {
-            playerId: assignment.playerId,
-            cardType: assignment.cardType
-          };
+          currentHolders[assignment.cardType] = assignment;
         }
         
         // Invert to get player -> card display mapping
@@ -1457,7 +1454,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             playerCards[assignment.playerId] = '';
           }
           
-          // For standard cards, use emoji; for custom cards, use the card name/text
+          // For standard cards, use emoji; for custom cards, use the card emoji or name
           const cardEmojis: Record<string, string> = {
             'camel': '🐪',
             'fish': '🐟',
@@ -1468,7 +1465,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
             'yeti': '👹'
           };
           
-          const displayValue = cardEmojis[assignment.cardType] || assignment.cardType;
+          // Priority: cardEmoji > emoji lookup > cardName > cardType
+          let displayValue = '';
+          if (assignment.cardEmoji) {
+            displayValue = assignment.cardEmoji;
+          } else if (cardEmojis[assignment.cardType]) {
+            displayValue = cardEmojis[assignment.cardType];
+          } else if (assignment.cardName) {
+            displayValue = assignment.cardName;
+          } else {
+            displayValue = assignment.cardType;
+          }
+          
           playerCards[assignment.playerId] += displayValue + ' ';
         }
       }

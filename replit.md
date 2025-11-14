@@ -4,6 +4,16 @@
 ForeScore is a secure, full-stack Progressive Web App designed as a companion for golf penalty games like "Animal." It provides enterprise-grade local authentication, server-side security validation, and comprehensive game management. The application supports group management, card game mechanics using a Proportional Share Algorithm, isolated 2/9/16 points games, and multiple payout calculation views. A key feature is the GIR (Greens in Regulation) game with user-configurable penalty and bonus holes. All game calculations are performed server-side to prevent tampering, ensuring secure user authentication, session management, and subscription access control. The project aims to be a robust, reliable, and secure platform for managing golf penalty games, aspiring to be the leading digital tool in this niche.
 
 ## Recent Changes
+### V9.5 (COMPLETED) - November 2025
+- **Scorecard Variant Separation & Data Display Fix**:
+  - **Separate Points/Nassau Buttons**: Split combined game buttons into distinct variant buttons (e.g., "2/9/16 Points $1" and "2/9/16 Nassau $10" as separate toggleable buttons)
+  - **Composite Variant Keys**: Implemented `game:mode` key format (e.g., '2916:points', 'gir:nassau', 'bbb:points') for precise variant selection
+  - **Fixed GIR/2/9/16 Data Display**: Resolved issue where GIR and 2/9/16 data wasn't appearing in scorecard due to selectedGames initialization conflict
+  - **Helper Functions**: Added `mapGameMetadataToVariants()` to parse backend metadata into selectable variants and `hasAnyVariant()` to check base game selection
+  - **Auto-Select All Variants**: Scorecard modal now auto-selects all available game variants when opened (empty initialization triggers useEffect)
+  - **Robust Value Parsing**: Defensive splitting of "$/$ /" format with trimming and fallback defaults to handle inconsistent spacing
+  - **Custom Card Name Fix**: Card badges in payouts now display user-input names (e.g., "🔥 Hot Card $15") instead of generic "Custom" text
+
 ### V9.4 (COMPLETED) - November 2025
 - **Admin Scorecard Enhancements**:
   - **Button-Based Game Selection**: Replaced checkboxes with styled Button components showing active/outline variants, added descriptive helper text

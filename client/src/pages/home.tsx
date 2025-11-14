@@ -5999,7 +5999,7 @@ function ScorecardTable({
     // 2/9/16 variants
     if (availableGames.has2916 && gameMetadata?.['2916']) {
       const meta = gameMetadata['2916'];
-      const [pointsValue = '', nassauValue = ''] = (meta.value || '').split('/').map(v => v.trim());
+      const [pointsValue = '', nassauValue = ''] = (meta.value || '').split('/').map((v: string) => v.trim());
       
       if (meta.mode === 'Points & Nassau') {
         variants.push({ id: '2916:points', label: '2/9/16 Points', icon: '🎯', amount: pointsValue });
@@ -6014,7 +6014,7 @@ function ScorecardTable({
     // BBB variants
     if (availableGames.hasBBB && gameMetadata?.['bbb']) {
       const meta = gameMetadata['bbb'];
-      const [pointsValue = '', nassauValue = ''] = (meta.value || '').split('/').map(v => v.trim());
+      const [pointsValue = '', nassauValue = ''] = (meta.value || '').split('/').map((v: string) => v.trim());
       
       if (meta.mode === 'Points & Nassau') {
         variants.push({ id: 'bbb:points', label: 'BBB Points', icon: '🎲', amount: pointsValue });
@@ -6029,7 +6029,7 @@ function ScorecardTable({
     // GIR variants
     if (availableGames.hasGIR && gameMetadata?.['gir']) {
       const meta = gameMetadata['gir'];
-      const [pointsValue = '', nassauValue = ''] = (meta.value || '').split('/').map(v => v.trim());
+      const [pointsValue = '', nassauValue = ''] = (meta.value || '').split('/').map((v: string) => v.trim());
       
       if (meta.mode === 'Points & Nassau') {
         variants.push({ id: 'gir:points', label: 'GIR Points', icon: '🏌️', amount: pointsValue });

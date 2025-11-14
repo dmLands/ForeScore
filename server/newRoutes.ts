@@ -8,6 +8,7 @@ import { calculateCardGameDetails, calculate2916Points, validateCardAssignment, 
 import { SecureWebSocketManager } from "./secureWebSocket.js";
 import { registerUser, authenticateUser, registerSchema, loginSchema } from "./localAuth.js";
 import { insertGroupSchema, insertGameStateSchema, insertPointsGameSchema, cardValuesSchema, pointsGameSettingsSchema, gameStates, roomStates, userPreferences, insertUserPreferencesSchema, passwordResetTokens, insertPasswordResetTokenSchema, users, type Card, type CardAssignment } from "@shared/schema";
+import { APP_VERSION } from "@shared/version";
 import { db } from "./db.js";
 import { sql, eq, and, gt, isNotNull } from "drizzle-orm";
 import { sendForgotPasswordEmail } from "./emailService.js";
@@ -24,6 +25,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const subscriptionProtected = (req: any, res: any, next: any) => {
     return requireSubscriptionAccess(req, res, next);
   };
+
+  // Version endpoint - always accessible
+  app.get('/api/version', (_req, res) => {
+    res.json({ version: APP_VERSION });
+  });
 
   // Offline sync endpoints
   app.post('/api/offline-sync/card-assignment', isAuthenticated, subscriptionProtected, async (req, res) => {

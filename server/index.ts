@@ -58,6 +58,25 @@ app.use((req, res, next) => {
     throw err;
   });
 
+  // Add cache control headers for all responses
+  app.use((req, res, next) => {
+    // HTML files and API endpoints: no cache
+    if (req.path.endsWith('.html') || req.path === '/' || req.path.startsWith('/api/')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
+    // JS/CSS with hash (Vite uses format like app-abc123XY.js): long-term cache
+    else if (/\-[0-9a-zA-Z]{8,}\.(js|css)$/i.test(req.path)) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    }
+    // Other static assets: moderate cache
+    else if (req.path.match(/\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$/i)) {
+      res.setHeader('Cache-Control', 'public, max-age=3600, must-revalidate');
+    }
+    next();
+  });
+
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes

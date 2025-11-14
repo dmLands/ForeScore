@@ -1,4 +1,6 @@
-const CACHE_NAME = 'forescore-v1';
+// NOTE: Update this version number when deploying - should match shared/version.ts
+const APP_VERSION = '1.0.0';
+const CACHE_NAME = `forescore-v${APP_VERSION}`;
 const STATIC_CACHE_URLS = [
   '/',
   '/index.html',
@@ -10,22 +12,25 @@ const STATIC_CACHE_URLS = [
 
 const OFFLINE_STORAGE_KEY = 'forescore-offline-data';
 
-// Install event - cache static assets
+// Install event - cache static assets and activate immediately
 self.addEventListener('install', (event) => {
-  console.log('Service Worker installing...');
+  console.log(`Service Worker installing version ${APP_VERSION}...`);
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
         console.log('Caching static assets');
         return cache.addAll(STATIC_CACHE_URLS);
       })
-      .then(() => self.skipWaiting())
+      .then(() => {
+        console.log('Service Worker installed, skipping waiting...');
+        return self.skipWaiting();
+      })
   );
 });
 
-// Activate event - clean up old caches
+// Activate event - clean up old caches and take control immediately
 self.addEventListener('activate', (event) => {
-  console.log('Service Worker activating...');
+  console.log(`Service Worker activating version ${APP_VERSION}...`);
   event.waitUntil(
     caches.keys()
       .then(cacheNames => {
@@ -38,11 +43,25 @@ self.addEventListener('activate', (event) => {
           })
         );
       })
-      .then(() => self.clients.claim())
+      .then(() => {
+        console.log('Service Worker activated, claiming clients...');
+        return self.clients.claim();
+      })
+      .then(() => {
+        // Notify all clients about the update
+        return self.clients.matchAll().then(clients => {
+          clients.forEach(client => {
+            client.postMessage({
+              type: 'SW_UPDATED',
+              version: APP_VERSION
+            });
+          });
+        });
+      })
   );
 });
 
-// Fetch event - serve from cache with network fallback
+// Fetch event - network-first for HTML, cache-first for assets
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -58,7 +77,29 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Handle static assets and pages
+  // Network-first strategy for HTML to ensure fresh content
+  if (request.headers.get('accept')?.includes('text/html') || url.pathname === '/' || url.pathname === '/index.html') {
+    event.respondWith(
+      fetch(request)
+        .then(response => {
+          if (response.status === 200) {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(request, responseClone);
+            });
+          }
+          return response;
+        })
+        .catch(() => {
+          return caches.match(request).then(cached => {
+            return cached || caches.match('/index.html');
+          });
+        })
+    );
+    return;
+  }
+
+  // Cache-first for static assets (JS, CSS, images)
   event.respondWith(
     caches.match(request)
       .then(response => {
@@ -68,7 +109,6 @@ self.addEventListener('fetch', (event) => {
         
         return fetch(request)
           .then(response => {
-            // Cache successful responses
             if (response.status === 200) {
               const responseClone = response.clone();
               caches.open(CACHE_NAME)
@@ -79,7 +119,6 @@ self.addEventListener('fetch', (event) => {
             return response;
           })
           .catch(() => {
-            // Return offline page for navigation requests
             if (request.mode === 'navigate') {
               return caches.match('/index.html');
             }

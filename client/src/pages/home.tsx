@@ -3520,7 +3520,9 @@ export default function Home() {
                       return (
                         <Card>
                           <CardContent className="p-4">
-                            <h3 className="text-lg font-semibold text-gray-800 mb-3">2/9/16 Payouts</h3>
+                            <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                              {payoutMode === 'points' ? '2/9/16 Points Payouts' : '2/9/16 Nassau Payouts'}
+                            </h3>
                             
                             {/* Payout Mode Toggle */}
                             <div className="mb-4">
@@ -3648,21 +3650,82 @@ export default function Home() {
                                 })}
                             </div>
 
-                            {((payoutMode === 'points' && pointValueNum > 0) || (payoutMode === 'nassau' && nassauValueNum > 0)) && (
-                              <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                                <p className="text-sm text-blue-800">
+                            {/* 2/9/16 Scores Section */}
+                            {selectedPointsGame && (
+                              <div className="mt-6">
+                                <h4 className="text-md font-semibold text-gray-800 mb-3">
+                                  {payoutMode === 'points' ? '2/9/16 Points Scores' : '2/9/16 Nassau Scores'}
+                                </h4>
+                                <div className="space-y-2">
                                   {payoutMode === 'points' ? (
-                                    <>
-                                      <strong>Points System:</strong> Each player pays or receives money from every other player based on point differences. 
-                                      The net result shows each player's total amount owed or received.
-                                    </>
+                                    // Points Mode: Show total points
+                                    [...selectedGroup.players]
+                                      .sort((a, b) => (totalPoints[b.id] || 0) - (totalPoints[a.id] || 0))
+                                      .map((player) => (
+                                        <div key={player.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                          <div className="flex items-center gap-3">
+                                            <div 
+                                              className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                                              style={{ backgroundColor: player.color }}
+                                            >
+                                              {player.initials}
+                                            </div>
+                                            <span className="font-medium text-gray-800">{player.name}</span>
+                                          </div>
+                                          <div className="text-right">
+                                            <p className="text-lg font-bold text-gray-800">
+                                              {totalPoints[player.id] || 0}
+                                            </p>
+                                            <p className="text-xs text-gray-600">points</p>
+                                          </div>
+                                        </div>
+                                      ))
                                   ) : (
-                                    <>
-                                      <strong>FBT System:</strong> Winners are determined by lowest stroke count for Front 9, Back 9, and Total 18 holes. 
-                                      Each winner receives the FBT value amount.
-                                    </>
+                                    // Nassau Mode: Show Front 9, Back 9, Total breakdown
+                                    [...selectedGroup.players]
+                                      .sort((a, b) => (totalPoints[b.id] || 0) - (totalPoints[a.id] || 0))
+                                      .map((player) => {
+                                        // Calculate Front 9, Back 9 from holes data
+                                        let front9Points = 0;
+                                        let back9Points = 0;
+
+                                        Object.entries(selectedPointsGame.holes || {}).forEach(([hole, holeData]) => {
+                                          const holeNum = parseInt(hole);
+                                          const playerStrokes = Number(holeData[player.id]) || 0;
+                                          
+                                          if (playerStrokes > 0) {
+                                            if (holeNum <= 9) {
+                                              front9Points += playerStrokes;
+                                            } else {
+                                              back9Points += playerStrokes;
+                                            }
+                                          }
+                                        });
+
+                                        const total = front9Points + back9Points;
+
+                                        return (
+                                          <div key={player.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                            <div className="flex items-center gap-3">
+                                              <div 
+                                                className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                                                style={{ backgroundColor: player.color }}
+                                              >
+                                                {player.initials}
+                                              </div>
+                                              <span className="font-medium text-gray-800">{player.name}</span>
+                                            </div>
+                                            <div className="text-right">
+                                              <p className="text-lg font-bold text-gray-800">
+                                                F{front9Points} | B{back9Points} | T{total}
+                                              </p>
+                                              <p className="text-xs text-gray-600">Front | Back | Total</p>
+                                            </div>
+                                          </div>
+                                        );
+                                      })
                                   )}
-                                </p>
+                                </div>
                               </div>
                             )}
 
@@ -4211,6 +4274,90 @@ export default function Home() {
                                   </div>
                                 </div>
                               )}
+
+                              {/* BBB Who Owes Who Section */}
+                              <div className="mt-6">
+                                <h4 className="text-md font-semibold text-gray-800 mb-3">Who Owes Who</h4>
+                                {(() => {
+                                  // Use the appropriate payouts based on mode
+                                  const activePayouts = bbbPayoutMode === 'points' ? bbbPointsPayouts : bbbFbtPayouts;
+                                  
+                                  // Calculate who owes who transactions
+                                  const creditors = selectedGroup.players.filter(p => (activePayouts[p.id] || 0) > 0);
+                                  const debtors = selectedGroup.players.filter(p => (activePayouts[p.id] || 0) < 0);
+                                  
+                                  const transactions: Array<{
+                                    from: string;
+                                    fromName: string;
+                                    to: string;
+                                    toName: string;
+                                    amount: number;
+                                  }> = [];
+
+                                  const creditorsCopy = creditors.map(p => ({
+                                    ...p,
+                                    remaining: activePayouts[p.id] || 0
+                                  })).sort((a, b) => b.remaining - a.remaining);
+
+                                  const debtorsCopy = debtors.map(p => ({
+                                    ...p,
+                                    remaining: Math.abs(activePayouts[p.id] || 0)
+                                  })).sort((a, b) => b.remaining - a.remaining);
+
+                                  let creditorIndex = 0;
+                                  let debtorIndex = 0;
+
+                                  while (creditorIndex < creditorsCopy.length && debtorIndex < debtorsCopy.length) {
+                                    const creditor = creditorsCopy[creditorIndex];
+                                    const debtor = debtorsCopy[debtorIndex];
+                                    
+                                    const paymentAmount = Math.min(creditor.remaining, debtor.remaining);
+                                    
+                                    if (paymentAmount > 0.01) {
+                                      transactions.push({
+                                        from: debtor.id,
+                                        fromName: debtor.name,
+                                        to: creditor.id,
+                                        toName: creditor.name,
+                                        amount: Math.round(paymentAmount * 100) / 100
+                                      });
+                                    }
+                                    
+                                    creditor.remaining -= paymentAmount;
+                                    debtor.remaining -= paymentAmount;
+                                    
+                                    if (creditor.remaining < 0.01) creditorIndex++;
+                                    if (debtor.remaining < 0.01) debtorIndex++;
+                                  }
+
+                                  if (transactions.length === 0) {
+                                    return (
+                                      <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                        <p className="text-gray-600">All players are even - no payments needed!</p>
+                                      </div>
+                                    );
+                                  }
+
+                                  return (
+                                    <div className="space-y-2">
+                                      {transactions.map((transaction, index) => (
+                                        <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                          <div className="flex items-center gap-3">
+                                            <div className="text-sm">
+                                              <span className="font-medium text-red-600">{transaction.fromName}</span>
+                                              <span className="text-gray-600"> owes </span>
+                                              <span className="font-medium text-green-600">{transaction.toName}</span>
+                                            </div>
+                                          </div>
+                                          <div className="text-right">
+                                            <p className="text-lg font-bold text-black">${transaction.amount.toFixed(2)}</p>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  );
+                                })()}
+                              </div>
 
                               {/* Contextual Explanatory Text */}
                               <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">

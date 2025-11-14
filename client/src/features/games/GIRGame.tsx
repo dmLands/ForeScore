@@ -380,30 +380,46 @@ export function GIRGame({ selectedGroup }: GIRGameProps) {
               <div className="w-5 h-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mr-2"></div>
               <span className="text-sm text-gray-600">Calculating payouts...</span>
             </div>
-          ) : payoutData && payoutData.whoOwesWho ? (
+          ) : payoutData && payoutData.payouts ? (
             <>
+              {/* GIR Payout Amounts per Player */}
               <div className="mb-6">
-                <h4 className="font-medium text-gray-800 mb-2">Who Owes Who</h4>
-                {payoutData.whoOwesWho.length === 0 ? (
-                  <p className="text-sm text-gray-500">All players are even</p>
-                ) : (
-                  <div className="space-y-2">
-                    {payoutData.whoOwesWho.map((tx: any, idx: number) => (
-                      <div
-                        key={idx}
-                        className="flex items-center justify-between p-2 bg-gray-50 rounded"
-                        data-testid={`transaction-${idx}`}
-                      >
-                        <div className="text-sm">
-                          <span className="font-medium text-red-600">{tx.fromPlayerName}</span>
-                          <span className="text-gray-600"> owes </span>
-                          <span className="font-medium text-green-600">{tx.toPlayerName}</span>
+                <h4 className="text-md font-semibold text-gray-800 mb-3">
+                  {payoutMode === 'points' ? 'GIR Points Payouts' : 'GIR Nassau Payouts'}
+                </h4>
+                <div className="space-y-2">
+                  {Object.entries(payoutData.payouts)
+                    .sort(([, a]: [string, any], [, b]: [string, any]) => b - a)
+                    .map(([playerId, netAmount]: [string, any]) => {
+                      const player = players.find(p => p.id === playerId);
+                      if (!player) return null;
+                      const isEven = Math.abs(netAmount) < 0.01;
+                      
+                      return (
+                        <div key={playerId} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <div 
+                              className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                              style={{ backgroundColor: player.color }}
+                            >
+                              {player.initials}
+                            </div>
+                            <span className="font-medium text-gray-800">{player.name}</span>
+                          </div>
+                          <div className="text-right">
+                            <div className={`text-lg font-bold ${
+                              isEven ? 'text-gray-800' : 
+                              netAmount > 0 ? 'text-emerald-600' : 'text-red-600'
+                            }`}>
+                              {isEven ? '$0.00' : 
+                               netAmount > 0 ? `+$${netAmount.toFixed(2)}` : 
+                               `-$${Math.abs(netAmount).toFixed(2)}`}
+                            </div>
+                          </div>
                         </div>
-                        <span className="font-bold text-black">${tx.amount.toFixed(2)}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      );
+                    })}
+                </div>
               </div>
 
               {/* GIR Scores Section - integrated within payouts card */}
@@ -509,6 +525,39 @@ export function GIRGame({ selectedGroup }: GIRGameProps) {
                     </div>
                   )}
                 </>
+              )}
+
+              {/* GIR Who Owes Who Section */}
+              {payoutData && Array.isArray(payoutData.whoOwesWho) && (
+                <div className="mt-6">
+                  <h4 className="text-md font-semibold text-gray-800 mb-3">Who Owes Who</h4>
+                  {payoutData.whoOwesWho.length === 0 ? (
+                    <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-200">
+                      <p className="text-gray-600">All players are even - no payments needed!</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {payoutData.whoOwesWho.map((tx: any, idx: number) => (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
+                        data-testid={`transaction-${idx}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="text-sm">
+                            <span className="font-medium text-red-600">{tx.fromPlayerName}</span>
+                            <span className="text-gray-600"> owes </span>
+                            <span className="font-medium text-green-600">{tx.toPlayerName}</span>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-lg font-bold text-black">${tx.amount.toFixed(2)}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                </div>
               )}
             </>
           ) : (

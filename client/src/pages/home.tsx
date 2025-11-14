@@ -5985,6 +5985,20 @@ function ScorecardTable({
     enabled: !!gameStateId
   });
 
+  // Auto-select all available games when scorecard data loads
+  useEffect(() => {
+    if (scorecardData?.availableGames && selectedGames.length === 0) {
+      const autoSelected: string[] = [];
+      if (scorecardData.availableGames.has2916) autoSelected.push('2916');
+      if (scorecardData.availableGames.hasBBB) autoSelected.push('bbb');
+      if (scorecardData.availableGames.hasGIR) autoSelected.push('gir');
+      if (scorecardData.availableGames.hasCards) autoSelected.push('cards');
+      if (autoSelected.length > 0) {
+        onSelectedGamesChange(autoSelected);
+      }
+    }
+  }, [scorecardData?.availableGames, gameStateId]);
+
   if (isLoading) {
     return <div className="text-center py-8">Loading scorecard...</div>;
   }
@@ -6006,52 +6020,55 @@ function ScorecardTable({
 
   return (
     <div className="space-y-4">
-      {/* Game Selection Checkboxes */}
-      <div className="flex flex-wrap gap-2 pb-2 border-b">
-        {availableGames.has2916 && (
-          <label className="flex items-center gap-2 px-3 py-2 rounded-md border cursor-pointer hover:bg-gray-50">
-            <input
-              type="checkbox"
-              checked={selectedGames.includes('2916')}
-              onChange={() => toggleGame('2916')}
-              className="rounded"
-            />
-            <span className="text-sm font-medium">🎯 2/9/16</span>
-          </label>
-        )}
-        {availableGames.hasBBB && (
-          <label className="flex items-center gap-2 px-3 py-2 rounded-md border cursor-pointer hover:bg-gray-50">
-            <input
-              type="checkbox"
-              checked={selectedGames.includes('bbb')}
-              onChange={() => toggleGame('bbb')}
-              className="rounded"
-            />
-            <span className="text-sm font-medium">🎲 BBB</span>
-          </label>
-        )}
-        {availableGames.hasGIR && (
-          <label className="flex items-center gap-2 px-3 py-2 rounded-md border cursor-pointer hover:bg-gray-50">
-            <input
-              type="checkbox"
-              checked={selectedGames.includes('gir')}
-              onChange={() => toggleGame('gir')}
-              className="rounded"
-            />
-            <span className="text-sm font-medium">🏌️ GIR</span>
-          </label>
-        )}
-        {availableGames.hasCards && (
-          <label className="flex items-center gap-2 px-3 py-2 rounded-md border cursor-pointer hover:bg-gray-50">
-            <input
-              type="checkbox"
-              checked={selectedGames.includes('cards')}
-              onChange={() => toggleGame('cards')}
-              className="rounded"
-            />
-            <span className="text-sm font-medium">🎴 Cards</span>
-          </label>
-        )}
+      {/* Game Selection Buttons */}
+      <div className="space-y-2">
+        <p className="text-sm text-gray-600">Select which games to display on the scorecard:</p>
+        <div className="flex flex-wrap gap-2">
+          {availableGames.has2916 && (
+            <Button
+              variant={selectedGames.includes('2916') ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => toggleGame('2916')}
+              className="flex flex-col items-start h-auto py-2 px-3"
+            >
+              <span className="font-medium">🎯 2/9/16</span>
+              <span className="text-xs opacity-80">Stroke play</span>
+            </Button>
+          )}
+          {availableGames.hasBBB && (
+            <Button
+              variant={selectedGames.includes('bbb') ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => toggleGame('bbb')}
+              className="flex flex-col items-start h-auto py-2 px-3"
+            >
+              <span className="font-medium">🎲 BBB</span>
+              <span className="text-xs opacity-80">Bango Bongo</span>
+            </Button>
+          )}
+          {availableGames.hasGIR && (
+            <Button
+              variant={selectedGames.includes('gir') ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => toggleGame('gir')}
+              className="flex flex-col items-start h-auto py-2 px-3"
+            >
+              <span className="font-medium">🏌️ GIR</span>
+              <span className="text-xs opacity-80">Greens in Regulation</span>
+            </Button>
+          )}
+          {availableGames.hasCards && (
+            <Button
+              variant={selectedGames.includes('cards') ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => toggleGame('cards')}
+              className="flex flex-col items-start h-auto py-2 px-3"
+            >
+              <span className="font-medium">🎴 Cards</span>
+              <span className="text-xs opacity-80">Current holders</span>
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Scorecard Table */}
@@ -6059,9 +6076,9 @@ function ScorecardTable({
         <table className="w-full border-collapse text-sm">
           <thead>
             <tr>
-              <th className="sticky left-0 bg-white border border-gray-300 p-2 font-semibold z-10">Player</th>
+              <th className="sticky left-0 bg-white border border-gray-300 p-2 font-semibold z-10 w-[140px]">Player</th>
               {selectedGames.includes('cards') && (
-                <th className="sticky left-[100px] bg-gray-50 border border-gray-300 p-2 font-semibold z-10">Cards</th>
+                <th className="sticky left-[140px] bg-gray-50 border border-gray-300 p-2 font-semibold z-10 w-[160px]">Cards</th>
               )}
               {[...Array(18)].map((_, i) => (
                 <th key={i} className="border border-gray-300 p-2 font-semibold min-w-[100px]">
@@ -6073,12 +6090,12 @@ function ScorecardTable({
           <tbody>
             {players.map((player: any) => (
               <tr key={player.id} className="hover:bg-gray-50">
-                <td className="sticky left-0 bg-white border border-gray-300 p-2 font-medium z-10">
+                <td className="sticky left-0 bg-white border border-gray-300 p-2 font-medium z-10 w-[140px]">
                   {player.name}
                 </td>
                 {selectedGames.includes('cards') && (
-                  <td className="sticky left-[100px] bg-gray-50 border border-gray-300 p-2 text-center z-10">
-                    <span className="text-lg">{playerCards?.[player.id] || '-'}</span>
+                  <td className="sticky left-[140px] bg-gray-50 border border-gray-300 p-2 text-center z-10 w-[160px]">
+                    <span className="text-sm">{playerCards?.[player.id]?.trim() || '-'}</span>
                   </td>
                 )}
                 {[...Array(18)].map((_, holeIndex) => {

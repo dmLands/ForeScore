@@ -1441,19 +1441,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const playerCards: Record<string, string> = {};
       if (gameState.cardHistory && gameState.cardHistory.length > 0) {
         // Track current card holder for each card type
-        const currentHolders: Record<string, string> = {};
+        const currentHolders: Record<string, { playerId: string; cardType: string }> = {};
         
         // Process card history chronologically
         for (const assignment of gameState.cardHistory) {
-          currentHolders[assignment.cardType] = assignment.playerId;
+          currentHolders[assignment.cardType] = {
+            playerId: assignment.playerId,
+            cardType: assignment.cardType
+          };
         }
         
-        // Invert to get player -> card emoji mapping
-        for (const [cardType, playerId] of Object.entries(currentHolders)) {
-          if (!playerCards[playerId]) {
-            playerCards[playerId] = '';
+        // Invert to get player -> card display mapping
+        for (const assignment of Object.values(currentHolders)) {
+          if (!playerCards[assignment.playerId]) {
+            playerCards[assignment.playerId] = '';
           }
-          // Convert card type to emoji
+          
+          // For standard cards, use emoji; for custom cards, use the card name/text
           const cardEmojis: Record<string, string> = {
             'camel': '🐪',
             'fish': '🐟',
@@ -1463,8 +1467,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             'snake': '🐍',
             'yeti': '👹'
           };
-          const emoji = cardEmojis[cardType] || cardType;
-          playerCards[playerId] += emoji;
+          
+          const displayValue = cardEmojis[assignment.cardType] || assignment.cardType;
+          playerCards[assignment.playerId] += displayValue + ' ';
         }
       }
 

@@ -1354,6 +1354,112 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Scorecard aggregation endpoint (admin-only feature flag)
+  app.get('/api/game-state/:id/scorecard', isAuthenticated, requireAdmin, async (req, res) => {
+    try {
+      const gameStateId = req.params.id;
+      
+      // Fetch game state
+      const gameState = await storage.getGameStateById(gameStateId);
+      if (!gameState) {
+        return res.status(404).json({ message: 'Game state not found' });
+      }
+
+      // Fetch group for player names
+      const group = await storage.getGroup(gameState.groupId);
+      if (!group) {
+        return res.status(404).json({ message: 'Group not found' });
+      }
+
+      // Fetch all points games linked to this game state
+      const pointsGames = await storage.getPointsGamesByGroupId(group.id);
+      const linkedGames = pointsGames.filter(pg => pg.gameStateId === gameStateId);
+
+      // Find each game type
+      const regular2916Game = linkedGames.find(pg => pg.gameType === 'points');
+      const bbbGame = linkedGames.find(pg => pg.gameType === 'bbb');
+      const girGame = linkedGames.find(pg => pg.gameType === 'gir');
+
+      // Build aggregated scorecard data structure
+      const scorecard: Record<number, {
+        strokes?: Record<string, number>;
+        bbb?: Record<string, { firstOn?: string; closestTo?: string; firstIn?: string }>;
+        gir?: Record<string, boolean>;
+        cards?: CardAssignment[];
+      }> = {};
+
+      // Aggregate 2/9/16 strokes (holes 1-18)
+      if (regular2916Game?.holes) {
+        for (let holeNum = 1; holeNum <= 18; holeNum++) {
+          const holeData = (regular2916Game.holes as any)[holeNum];
+          const strokes = holeData && typeof holeData === "object" ? holeData.strokes : undefined;
+
+          scorecard[holeNum] ??= {};
+          scorecard[holeNum].strokes = strokes && typeof strokes === "object"
+            ? (strokes as Record<string, number>)
+            : {};
+        }
+      }
+
+      // Aggregate GIR results (holes 1-18)
+      if (girGame?.holes) {
+        for (let holeNum = 1; holeNum <= 18; holeNum++) {
+          const holeData = (girGame.holes as any)[holeNum];
+          const girValues = holeData && typeof holeData === "object" ? holeData.values : undefined;
+
+          scorecard[holeNum] ??= {};
+          scorecard[holeNum].gir = girValues && typeof girValues === "object"
+            ? (girValues as Record<string, boolean>)
+            : {};
+        }
+      }
+
+      // Aggregate BBB winners (holes 1-18)
+      if (bbbGame?.holes) {
+        const extractWinner = (winner: any) =>
+          typeof winner === "string" ? winner : winner?.playerId;
+
+        for (let holeNum = 1; holeNum <= 18; holeNum++) {
+          const holeData = (bbbGame.holes as any)[holeNum];
+
+          scorecard[holeNum] ??= {};
+          scorecard[holeNum].bbb = holeData && typeof holeData === "object"
+            ? {
+                firstOn: extractWinner(holeData.firstOn),
+                closestTo: extractWinner(holeData.closestTo),
+                firstIn: extractWinner(holeData.firstIn),
+              }
+            : {
+                firstOn: undefined,
+                closestTo: undefined,
+                firstIn: undefined,
+              };
+        }
+      }
+
+      // Aggregate card assignments by hole
+      // For now, pass all cards - frontend will handle grouping by hole if needed
+      // Future enhancement: add holeNumber to CardAssignment type
+
+      res.json({
+        gameStateId,
+        groupId: group.id,
+        players: group.players,
+        scorecard,
+        cardHistory: gameState.cardHistory || [],
+        availableGames: {
+          has2916: !!regular2916Game,
+          hasBBB: !!bbbGame,
+          hasGIR: !!girGame,
+          hasCards: (gameState.cardHistory?.length || 0) > 0
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching scorecard:', error);
+      res.status(500).json({ message: 'Failed to fetch scorecard data' });
+    }
+  });
+
   // Update card values in game state
   // Legacy PATCH endpoint for card values (keep for backward compatibility)
   app.patch('/api/games/:id/card-values', isAuthenticated, async (req, res) => {

@@ -470,6 +470,8 @@ export default function Home() {
   const [multiSelectGames, setMultiSelectGames] = useState<string[]>([]);
   const [tempSelectedGames, setTempSelectedGames] = useState<string[]>([]);
   const [showPayoutModal, setShowPayoutModal] = useState(false);
+  const [showScorecardModal, setShowScorecardModal] = useState(false);
+  const [tempSelectedGamesForScorecard, setTempSelectedGamesForScorecard] = useState<string[]>([]);
   
   // Card value editing state (REMOVED - using localCardValues instead)
 
@@ -2538,20 +2540,37 @@ export default function Home() {
                             </Button>
                           ) : (
                             <div className="space-y-4">
-                              {/* Edit Payouts Button */}
+                              {/* Edit Payouts Button & Scorecard Button */}
                               <div className="flex justify-between items-center">
                                 <h4 className="text-md font-semibold text-gray-700">Combined Settlement</h4>
-                                <Button 
-                                  onClick={() => {
-                                    setTempSelectedGames(multiSelectGames); // Set current selection as temp
-                                    setShowPayoutModal(true);
-                                  }}
-                                  variant="outline"
-                                  size="sm"
-                                  className="btn-interactive hover-lift border-emerald-500 text-emerald-600 hover:bg-emerald-50"
-                                >
-                                  Edit Payouts
-                                </Button>
+                                <div className="flex gap-2">
+                                  <Button 
+                                    onClick={() => {
+                                      setTempSelectedGames(multiSelectGames); // Set current selection as temp
+                                      setShowPayoutModal(true);
+                                    }}
+                                    variant="outline"
+                                    size="sm"
+                                    className="btn-interactive hover-lift border-emerald-500 text-emerald-600 hover:bg-emerald-50"
+                                    data-testid="button-edit-payouts"
+                                  >
+                                    Edit Payouts
+                                  </Button>
+                                  {isAdmin && (
+                                    <Button 
+                                      onClick={() => {
+                                        setTempSelectedGamesForScorecard(multiSelectGames); // Set current selection for scorecard
+                                        setShowScorecardModal(true);
+                                      }}
+                                      variant="outline"
+                                      size="sm"
+                                      className="btn-interactive hover-lift border-blue-500 text-blue-600 hover:bg-blue-50"
+                                      data-testid="button-scorecard"
+                                    >
+                                      📊 Scorecard
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
                               
                               {/* Selected Games Display */}
@@ -5939,6 +5958,36 @@ export default function Home() {
         </>
       )}
 
+      {/* Scorecard Modal (Admin Feature) */}
+      {isAdmin && (
+        <Dialog open={showScorecardModal} onOpenChange={setShowScorecardModal}>
+          <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-semibold text-gray-800">📊 Scorecard</DialogTitle>
+              <DialogDescription>
+                Detailed hole-by-hole breakdown for all active games
+              </DialogDescription>
+            </DialogHeader>
+            
+            {selectedGame && (
+              <ScorecardTable
+                gameStateId={selectedGame.id}
+                selectedGames={tempSelectedGamesForScorecard}
+              />
+            )}
+            
+            <div className="flex justify-end pt-4">
+              <Button 
+                onClick={() => setShowScorecardModal(false)}
+                variant="outline"
+              >
+                Close
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
       {/* PWA Install Button - Floating Action Button */}
       <div className="fixed bottom-24 right-4 z-50" data-testid="button-install-home">
         <AppDownloadPrompt />
@@ -5946,6 +5995,90 @@ export default function Home() {
       
       {/* Offline Indicator */}
       <OfflineIndicator />
+    </div>
+  );
+}
+
+// Scorecard Table Component (Admin Feature)
+function ScorecardTable({ gameStateId, selectedGames }: { gameStateId: string; selectedGames: string[] }) {
+  const { data: scorecardData, isLoading } = useQuery({
+    queryKey: ['/api/game-state', gameStateId, 'scorecard'],
+    queryFn: async () => {
+      const response = await fetch(`/api/game-state/${gameStateId}/scorecard`, {
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to fetch scorecard');
+      return response.json();
+    },
+    enabled: !!gameStateId
+  });
+
+  if (isLoading) {
+    return <div className="text-center py-8">Loading scorecard...</div>;
+  }
+
+  if (!scorecardData) {
+    return <div className="text-center py-8 text-gray-500">No scorecard data available</div>;
+  }
+
+  const { players, scorecard, availableGames } = scorecardData;
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full border-collapse text-sm">
+        <thead>
+          <tr>
+            <th className="sticky left-0 bg-white border border-gray-300 p-2 font-semibold">Player</th>
+            {[...Array(18)].map((_, i) => (
+              <th key={i} className="border border-gray-300 p-2 font-semibold min-w-[80px]">
+                Hole {i + 1}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {players.map((player: any) => (
+            <tr key={player.id} className="hover:bg-gray-50">
+              <td className="sticky left-0 bg-white border border-gray-300 p-2 font-medium">
+                {player.name}
+              </td>
+              {[...Array(18)].map((_, holeIndex) => {
+                const holeNum = holeIndex + 1;
+                const holeData = scorecard[holeNum] || {};
+                
+                return (
+                  <td key={holeIndex} className="border border-gray-300 p-2 align-top">
+                    <div className="space-y-1 text-xs">
+                      {/* Strokes (2/9/16) */}
+                      {holeData.strokes?.[player.id] !== undefined && (
+                        <div className="text-gray-700">
+                          ⛳ {holeData.strokes[player.id]}
+                        </div>
+                      )}
+                      
+                      {/* BBB Events */}
+                      {holeData.bbb && (
+                        <div className="text-blue-600">
+                          {holeData.bbb.firstIn === player.id && <span>1st In</span>}
+                          {holeData.bbb.firstOn === player.id && <span>1st On</span>}
+                          {holeData.bbb.closestTo === player.id && <span>Closest</span>}
+                        </div>
+                      )}
+                      
+                      {/* GIR */}
+                      {holeData.gir?.[player.id] !== undefined && (
+                        <div className={holeData.gir[player.id] ? 'text-green-600' : 'text-red-600'}>
+                          {holeData.gir[player.id] ? '✅ GIR' : '❌ Miss'}
+                        </div>
+                      )}
+                    </div>
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

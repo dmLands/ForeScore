@@ -4101,7 +4101,7 @@ export default function Home() {
                               {/* Payout Results */}
                               <div className="mt-6">
                                 <h4 className="text-md font-semibold text-gray-800 mb-3">
-                                  {bbbPayoutMode === 'points' ? 'Points Payouts' : 'FBT Payouts'}
+                                  {bbbPayoutMode === 'points' ? 'BBB Points Payouts' : 'BBB Nassau Payouts'}
                                 </h4>
                                 <div className="space-y-2">
                                   {[...selectedGroup.players]

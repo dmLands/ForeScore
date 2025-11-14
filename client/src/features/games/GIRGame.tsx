@@ -301,7 +301,9 @@ export function GIRGame({ selectedGroup }: GIRGameProps) {
       {/* Payouts Card */}
       <Card>
         <CardContent className="p-4">
-          <h3 className="text-lg font-semibold text-gray-800 mb-3">GIR Payouts</h3>
+          <h3 className="text-lg font-semibold text-gray-800 mb-3">
+            {payoutMode === 'points' ? 'GIR Points Payouts' : 'GIR Nassau Payouts'}
+          </h3>
           
           {/* Payout Mode Selection */}
           <div className="mb-4">
@@ -379,136 +381,141 @@ export function GIRGame({ selectedGroup }: GIRGameProps) {
               <span className="text-sm text-gray-600">Calculating payouts...</span>
             </div>
           ) : payoutData && payoutData.whoOwesWho ? (
-            <div>
-              <h4 className="font-medium text-gray-800 mb-2">Who Owes Who</h4>
-              {payoutData.whoOwesWho.length === 0 ? (
-                <p className="text-sm text-gray-500">All players are even</p>
-              ) : (
-                <div className="space-y-2">
-                  {payoutData.whoOwesWho.map((tx: any, idx: number) => (
-                    <div
-                      key={idx}
-                      className="flex items-center justify-between p-2 bg-gray-50 rounded"
-                      data-testid={`transaction-${idx}`}
-                    >
-                      <div className="text-sm">
-                        <span className="font-medium text-red-600">{tx.fromPlayerName}</span>
-                        <span className="text-gray-600"> owes </span>
-                        <span className="font-medium text-green-600">{tx.toPlayerName}</span>
+            <>
+              <div className="mb-6">
+                <h4 className="font-medium text-gray-800 mb-2">Who Owes Who</h4>
+                {payoutData.whoOwesWho.length === 0 ? (
+                  <p className="text-sm text-gray-500">All players are even</p>
+                ) : (
+                  <div className="space-y-2">
+                    {payoutData.whoOwesWho.map((tx: any, idx: number) => (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between p-2 bg-gray-50 rounded"
+                        data-testid={`transaction-${idx}`}
+                      >
+                        <div className="text-sm">
+                          <span className="font-medium text-red-600">{tx.fromPlayerName}</span>
+                          <span className="text-gray-600"> owes </span>
+                          <span className="font-medium text-green-600">{tx.toPlayerName}</span>
+                        </div>
+                        <span className="font-bold text-black">${tx.amount.toFixed(2)}</span>
                       </div>
-                      <span className="font-bold text-black">${tx.amount.toFixed(2)}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* GIR Scores Section - integrated within payouts card */}
+              {payoutData.girPoints && (
+                <>
+                  {/* Points Mode: Show total points */}
+                  {payoutMode === 'points' && (
+                    <div className="mt-4">
+                      <h4 className="text-md font-semibold text-gray-800 mb-3">GIR Points Scores</h4>
+                      <div className="space-y-2">
+                        {Object.entries(payoutData.girPoints)
+                          .sort(([, a]: [string, any], [, b]: [string, any]) => b - a)
+                          .map(([playerId, points]: [string, any]) => {
+                            const player = players.find(p => p.id === playerId);
+                            if (!player) return null;
+                            return (
+                              <div key={playerId} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div className="flex items-center gap-3">
+                                  <div 
+                                    className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                                    style={{ backgroundColor: player.color }}
+                                  >
+                                    {player.initials}
+                                  </div>
+                                  <span className="font-medium text-gray-800">{player.name}</span>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-lg font-bold text-gray-800">
+                                    {points < 0 ? '-' : ''}{Math.abs(points)}
+                                  </p>
+                                  <p className="text-xs text-gray-600">points</p>
+                                </div>
+                              </div>
+                            );
+                          })}
+                      </div>
                     </div>
-                  ))}
-                </div>
+                  )}
+
+                  {/* Nassau Mode: Show Front/Back/Total breakdown */}
+                  {payoutMode === 'nassau' && selectedGirGame.holes && Object.keys(selectedGirGame.holes).length > 0 && (
+                    <div className="mt-4">
+                      <h4 className="text-md font-semibold text-gray-800 mb-3">GIR Nassau Scores</h4>
+                      <div className="space-y-2">
+                        {Object.entries(payoutData.girPoints)
+                          .sort(([, a]: [string, any], [, b]: [string, any]) => b - a)
+                          .map(([playerId, totalPoints]: [string, any]) => {
+                            const player = players.find(p => p.id === playerId);
+                            if (!player) return null;
+
+                            // Calculate Front 9, Back 9 from holes data (mirroring BBB Nassau logic)
+                            let front9Points = 0;
+                            let back9Points = 0;
+
+                            Object.entries(selectedGirGame.holes || {}).forEach(([hole, holeData]) => {
+                              const holeNum = parseInt(hole);
+                              if (holeData && typeof holeData === 'object') {
+                                const hitGreen = holeData[player.id];
+                                if (typeof hitGreen === 'boolean') {
+                                  const isPenalty = holeConfig.penalty.includes(holeNum);
+                                  const isBonus = holeConfig.bonus.includes(holeNum);
+                                  
+                                  // Match server-side GIR point calculation logic
+                                  let points = 0;
+                                  if (isPenalty) {
+                                    points = hitGreen ? 1 : -1;
+                                  } else if (isBonus) {
+                                    points = hitGreen ? 2 : 0;
+                                  } else {
+                                    points = hitGreen ? 1 : 0;
+                                  }
+
+                                  if (holeNum <= 9) {
+                                    front9Points += points;
+                                  } else {
+                                    back9Points += points;
+                                  }
+                                }
+                              }
+                            });
+
+                            return (
+                              <div key={playerId} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div className="flex items-center gap-3">
+                                  <div 
+                                    className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                                    style={{ backgroundColor: player.color }}
+                                  >
+                                    {player.initials}
+                                  </div>
+                                  <span className="font-medium text-gray-800">{player.name}</span>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-lg font-bold text-gray-800">
+                                    F{front9Points} | B{back9Points} | T{totalPoints}
+                                  </p>
+                                  <p className="text-xs text-gray-600">Front | Back | Total</p>
+                                </div>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
-            </div>
+            </>
           ) : (
             <p className="text-sm text-gray-500">Enter values and select a mode to see payouts</p>
           )}
         </CardContent>
       </Card>
-
-      {/* GIR Points Scores Card */}
-      {payoutData && payoutData.girPoints && (
-        <Card>
-          <CardContent className="p-4">
-            <h3 className="text-lg font-semibold text-gray-800 mb-3">GIR Points Scores</h3>
-            <div className="space-y-2">
-              {Object.entries(payoutData.girPoints)
-                .sort(([, a]: [string, any], [, b]: [string, any]) => b - a)
-                .map(([playerId, points]: [string, any]) => {
-                  const player = players.find(p => p.id === playerId);
-                  if (!player) return null;
-                  return (
-                    <div key={playerId} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <div 
-                          className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
-                          style={{ backgroundColor: player.color }}
-                        >
-                          {player.initials}
-                        </div>
-                        <span className="font-medium text-gray-800">{player.name}</span>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-lg font-bold text-gray-800">
-                          {points < 0 ? '-' : ''}{Math.abs(points)}
-                        </p>
-                        <p className="text-xs text-gray-600">points</p>
-                      </div>
-                    </div>
-                  );
-                })}
-            </div>
-
-            {/* GIR Nassau Scores */}
-            {payoutMode === 'nassau' && selectedGirGame.holes && Object.keys(selectedGirGame.holes).length > 0 && (
-              <div className="mt-4">
-                <h4 className="text-md font-semibold text-gray-800 mb-3">GIR Nassau Scores</h4>
-                <div className="space-y-2">
-                  {Object.entries(payoutData.girPoints)
-                    .sort(([, a]: [string, any], [, b]: [string, any]) => b - a)
-                    .map(([playerId, totalPoints]: [string, any]) => {
-                      const player = players.find(p => p.id === playerId);
-                      if (!player) return null;
-
-                      // Calculate Front 9, Back 9 from holes data (mirroring BBB Nassau logic)
-                      let front9Points = 0;
-                      let back9Points = 0;
-
-                      Object.entries(selectedGirGame.holes || {}).forEach(([hole, holeData]) => {
-                        const holeNum = parseInt(hole);
-                        if (holeData && typeof holeData === 'object') {
-                          const hitGreen = holeData[player.id];
-                          if (typeof hitGreen === 'boolean') {
-                            const isPenalty = holeConfig.penalty.includes(holeNum);
-                            const isBonus = holeConfig.bonus.includes(holeNum);
-                            
-                            // Match server-side GIR point calculation logic
-                            let points = 0;
-                            if (isPenalty) {
-                              points = hitGreen ? 1 : -1;
-                            } else if (isBonus) {
-                              points = hitGreen ? 2 : 0;
-                            } else {
-                              points = hitGreen ? 1 : 0;
-                            }
-
-                            if (holeNum <= 9) {
-                              front9Points += points;
-                            } else {
-                              back9Points += points;
-                            }
-                          }
-                        }
-                      });
-
-                      return (
-                        <div key={playerId} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <div 
-                              className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold"
-                              style={{ backgroundColor: player.color }}
-                            >
-                              {player.initials}
-                            </div>
-                            <span className="font-medium text-gray-800">{player.name}</span>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-lg font-bold text-gray-800">
-                              F{front9Points} | B{back9Points} | T{totalPoints}
-                            </p>
-                            <p className="text-xs text-gray-600">Front | Back | Total</p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

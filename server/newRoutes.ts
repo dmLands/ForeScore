@@ -379,6 +379,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
 
+  // Admin endpoint to sync a specific user's subscription by email
+  app.post('/api/admin/sync-user-subscription', isAuthenticated, requireAdmin, async (req, res) => {
+    try {
+      const { email } = z.object({
+        email: z.string().email()
+      }).parse(req.body);
+
+      const user = await storage.getUserByEmail(email);
+      
+      if (!user) {
+        return res.status(404).json({ 
+          success: false,
+          message: 'User not found' 
+        });
+      }
+
+      if (!user.stripeSubscriptionId) {
+        return res.status(400).json({ 
+          success: false,
+          message: 'User has no Stripe subscription ID' 
+        });
+      }
+
+      await stripeService.syncSubscriptionFromStripe(user.id);
+      
+      // Get updated subscription status
+      const subscriptionStatus = await stripeService.hasAccess(user.id);
+      
+      res.json({ 
+        success: true,
+        message: `Successfully synced subscription for ${email}`,
+        user: {
+          id: user.id,
+          email: user.email,
+          stripeSubscriptionId: user.stripeSubscriptionId
+        },
+        subscriptionStatus
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid data',
+          errors: error.errors
+        });
+      }
+      console.error('Admin user sync error:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Failed to sync user subscription',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // Temporary admin endpoint to sync all subscriptions (REMOVE IN PRODUCTION)
   app.post('/api/admin/sync-all-subscriptions', async (req, res) => {
     try {
@@ -425,18 +480,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const sig = req.headers['stripe-signature'];
       const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
       
+      console.log(`📥 Webhook received at ${new Date().toISOString()}`);
+      
       if (!endpointSecret) {
-        console.warn('No webhook secret configured - accepting all webhook events');
+        console.warn('⚠️  No webhook secret configured - accepting all webhook events (INSECURE)');
         const event = req.body;
+        console.log(`📦 Webhook event type: ${event.type}`);
         await stripeService.handleWebhook(event);
+        console.log(`✅ Webhook processed successfully: ${event.type}`);
         return res.status(200).json({ received: true });
       }
       
       const event = stripe.webhooks.constructEvent(req.body, sig!, endpointSecret);
+      console.log(`📦 Webhook event type: ${event.type}, ID: ${event.id}`);
+      
       await stripeService.handleWebhook(event);
+      console.log(`✅ Webhook processed successfully: ${event.type}`);
+      
       res.status(200).json({ received: true });
     } catch (error) {
-      console.error('Webhook error:', error);
+      console.error('❌ Webhook error:', error);
+      if (error instanceof Error) {
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+      }
       res.status(400).json({ error: 'Webhook signature verification failed' });
     }
   });

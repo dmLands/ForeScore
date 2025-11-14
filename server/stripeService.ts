@@ -372,12 +372,18 @@ export class StripeService {
    * Handle Stripe webhooks (for subscription updates)
    */
   async handleWebhook(event: Stripe.Event): Promise<void> {
+    console.log(`🎣 Processing webhook: ${event.type}`);
+    
     switch (event.type) {
       case 'setup_intent.succeeded':
         // When payment method setup succeeds, CREATE SUBSCRIPTION NOW
         const setupIntent = event.data.object as Stripe.SetupIntent;
+        console.log(`💳 Setup Intent succeeded: ${setupIntent.id}`);
         if (setupIntent.metadata?.userId && setupIntent.metadata?.planKey) {
+          console.log(`Creating subscription for user: ${setupIntent.metadata.userId}, plan: ${setupIntent.metadata.planKey}`);
           await this.createSubscriptionAfterPayment(setupIntent.id);
+        } else {
+          console.warn('⚠️  Setup Intent missing userId or planKey in metadata');
         }
         break;
         
@@ -386,31 +392,43 @@ export class StripeService {
         const successfulInvoice = event.data.object as Stripe.Invoice;
         const invoiceSubscriptionId = (successfulInvoice as any).subscription;
         if (invoiceSubscriptionId && typeof invoiceSubscriptionId === 'string') {
-          console.log(`Invoice payment succeeded for subscription: ${invoiceSubscriptionId}`);
+          console.log(`💰 Invoice payment succeeded for subscription: ${invoiceSubscriptionId}`);
           const sub = await stripe.subscriptions.retrieve(invoiceSubscriptionId);
+          console.log(`Subscription status: ${sub.status}, Customer: ${sub.customer}`);
           await this.updateSubscriptionStatus(sub);
           
           // If this was the first invoice after trial (billing_reason === 'subscription_cycle')
           // ensure user has active access even if status is still 'trialing'
           if ((successfulInvoice as any).billing_reason === 'subscription_cycle') {
-            console.log(`First payment after trial completed - ensuring user has access`);
+            console.log(`🎉 First payment after trial completed - user should now have active subscription`);
           }
         }
         break;
         
       case 'customer.subscription.updated':
+        const updatedSubscription = event.data.object as Stripe.Subscription;
+        console.log(`🔄 Subscription updated: ${updatedSubscription.id}, new status: ${updatedSubscription.status}`);
+        await this.updateSubscriptionStatus(updatedSubscription);
+        break;
+        
       case 'customer.subscription.deleted':
-        const subscription = event.data.object as Stripe.Subscription;
-        await this.updateSubscriptionStatus(subscription);
+        const deletedSubscription = event.data.object as Stripe.Subscription;
+        console.log(`🗑️  Subscription deleted: ${deletedSubscription.id}`);
+        await this.updateSubscriptionStatus(deletedSubscription);
         break;
         
       case 'invoice.payment_failed':
         const failedInvoice = event.data.object as Stripe.Invoice;
+        console.log(`❌ Invoice payment failed: ${failedInvoice.id}`);
         if ((failedInvoice as any).subscription && typeof (failedInvoice as any).subscription === 'string') {
           const sub = await stripe.subscriptions.retrieve((failedInvoice as any).subscription);
+          console.log(`Updating subscription ${sub.id} status after payment failure`);
           await this.updateSubscriptionStatus(sub);
         }
         break;
+        
+      default:
+        console.log(`ℹ️  Unhandled webhook event type: ${event.type}`);
     }
   }
 

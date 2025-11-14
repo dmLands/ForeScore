@@ -3,7 +3,7 @@
  * Both files must have the same version number for cache invalidation to work.
  * See DEPLOYMENT.md for deployment instructions.
  */
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.0.1';
 const CACHE_NAME = `forescore-v${APP_VERSION}`;
 const STATIC_CACHE_URLS = [
   '/',
@@ -72,6 +72,15 @@ self.addEventListener('fetch', (event) => {
 
   // Only handle GET requests
   if (request.method !== 'GET') {
+    return;
+  }
+
+  // CRITICAL: Never cache the service worker script itself
+  // This ensures updates are detected on every page load
+  if (url.pathname === '/sw.js') {
+    event.respondWith(
+      fetch(request, { cache: 'no-store' })
+    );
     return;
   }
 

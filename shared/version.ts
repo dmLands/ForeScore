@@ -8,4 +8,4 @@
  * Both must match for cache invalidation to work correctly.
  * See DEPLOYMENT.md for full deployment instructions.
  */
-export const APP_VERSION = '1.0.0';
+export const APP_VERSION = '1.0.1';

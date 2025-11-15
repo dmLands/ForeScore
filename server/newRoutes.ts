@@ -1478,11 +1478,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const cardEmojis: Record<string, string> = {
             'camel': '🐪',
             'fish': '🐟',
-            'roadrunner': '🏃',
+            'roadrunner': '🐦',
             'ghost': '👻',
             'skunk': '🦨',
             'snake': '🐍',
-            'yeti': '👹'
+            'yeti': '🌲'
           };
           
           // Priority: assignment fields > standard emoji > custom card lookup (by ID then name)
@@ -1609,7 +1609,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         selectedGames.push('gir:nassau');
       }
 
-      res.json({
+      const response = {
         gameStateId,
         groupId: group.id,
         players: group.players,
@@ -1624,7 +1624,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           hasCards: (gameState.cardHistory?.length || 0) > 0
         },
         gameMetadata
-      });
+      };
+      
+      console.log('📊 SCORECARD RESPONSE:', JSON.stringify({
+        selectedGames: response.selectedGames,
+        availableGames: response.availableGames,
+        gameMetadata: response.gameMetadata,
+        scorecardHoleCount: Object.keys(scorecard).length
+      }, null, 2));
+      
+      res.json(response);
     } catch (error) {
       console.error('Error fetching scorecard:', error);
       res.status(500).json({ message: 'Failed to fetch scorecard data' });

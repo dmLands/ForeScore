@@ -1389,27 +1389,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }> = {};
 
       // Aggregate 2/9/16 strokes (holes 1-18)
+      // For 2/9/16 games, holeData IS the strokes object: { playerId: strokeCount }
       if (regular2916Game?.holes) {
         for (let holeNum = 1; holeNum <= 18; holeNum++) {
           const holeData = (regular2916Game.holes as any)[holeNum];
-          const strokes = holeData && typeof holeData === "object" ? holeData.strokes : undefined;
 
           scorecard[holeNum] ??= {};
-          scorecard[holeNum].strokes = strokes && typeof strokes === "object"
-            ? (strokes as Record<string, number>)
+          scorecard[holeNum].strokes = holeData && typeof holeData === "object"
+            ? (holeData as Record<string, number>)
             : {};
         }
       }
 
       // Aggregate GIR results (holes 1-18)
+      // For GIR games, holeData IS the gir values object: { playerId: boolean }
       if (girGame?.holes) {
         for (let holeNum = 1; holeNum <= 18; holeNum++) {
           const holeData = (girGame.holes as any)[holeNum];
-          const girValues = holeData && typeof holeData === "object" ? holeData.values : undefined;
 
           scorecard[holeNum] ??= {};
-          scorecard[holeNum].gir = girValues && typeof girValues === "object"
-            ? (girValues as Record<string, boolean>)
+          scorecard[holeNum].gir = holeData && typeof holeData === "object"
+            ? (holeData as Record<string, boolean>)
             : {};
         }
       }

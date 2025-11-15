@@ -5996,17 +5996,25 @@ function ScorecardTable({
   const mapGameMetadataToVariants = (availableGames: any, gameMetadata: any) => {
     const variants: Array<{ id: string; label: string; icon: string; amount: string }> = [];
     
+    // Helper to decode HTML entities
+    const decodeHTML = (html: string) => {
+      const txt = document.createElement('textarea');
+      txt.innerHTML = html;
+      return txt.value;
+    };
+    
     // 2/9/16 variants
     if (availableGames.has2916 && gameMetadata?.['2916']) {
       const meta = gameMetadata['2916'];
+      const mode = decodeHTML(meta.mode || '');
       const [pointsValue = '', nassauValue = ''] = (meta.value || '').split('/').map((v: string) => v.trim());
       
-      if (meta.mode === 'Points & Nassau') {
+      if (mode === 'Points & Nassau' || mode.includes('Points') && mode.includes('Nassau')) {
         variants.push({ id: '2916:points', label: '2/9/16 Points', icon: '🎯', amount: pointsValue });
         variants.push({ id: '2916:nassau', label: '2/9/16 Nassau', icon: '🎯', amount: nassauValue });
-      } else if (meta.mode === 'Points') {
+      } else if (mode === 'Points') {
         variants.push({ id: '2916:points', label: '2/9/16 Points', icon: '🎯', amount: meta.value || '' });
-      } else if (meta.mode === 'Nassau') {
+      } else if (mode === 'Nassau') {
         variants.push({ id: '2916:nassau', label: '2/9/16 Nassau', icon: '🎯', amount: meta.value || '' });
       }
     }
@@ -6014,14 +6022,15 @@ function ScorecardTable({
     // BBB variants
     if (availableGames.hasBBB && gameMetadata?.['bbb']) {
       const meta = gameMetadata['bbb'];
+      const mode = decodeHTML(meta.mode || '');
       const [pointsValue = '', nassauValue = ''] = (meta.value || '').split('/').map((v: string) => v.trim());
       
-      if (meta.mode === 'Points & Nassau') {
+      if (mode === 'Points & Nassau' || mode.includes('Points') && mode.includes('Nassau')) {
         variants.push({ id: 'bbb:points', label: 'BBB Points', icon: '🎲', amount: pointsValue });
         variants.push({ id: 'bbb:nassau', label: 'BBB Nassau', icon: '🎲', amount: nassauValue });
-      } else if (meta.mode === 'Points') {
+      } else if (mode === 'Points') {
         variants.push({ id: 'bbb:points', label: 'BBB Points', icon: '🎲', amount: meta.value || '' });
-      } else if (meta.mode === 'Nassau') {
+      } else if (mode === 'Nassau') {
         variants.push({ id: 'bbb:nassau', label: 'BBB Nassau', icon: '🎲', amount: meta.value || '' });
       }
     }
@@ -6029,14 +6038,15 @@ function ScorecardTable({
     // GIR variants
     if (availableGames.hasGIR && gameMetadata?.['gir']) {
       const meta = gameMetadata['gir'];
+      const mode = decodeHTML(meta.mode || '');
       const [pointsValue = '', nassauValue = ''] = (meta.value || '').split('/').map((v: string) => v.trim());
       
-      if (meta.mode === 'Points & Nassau') {
+      if (mode === 'Points & Nassau' || mode.includes('Points') && mode.includes('Nassau')) {
         variants.push({ id: 'gir:points', label: 'GIR Points', icon: '🏌️', amount: pointsValue });
         variants.push({ id: 'gir:nassau', label: 'GIR Nassau', icon: '🏌️', amount: nassauValue });
-      } else if (meta.mode === 'Points') {
+      } else if (mode === 'Points') {
         variants.push({ id: 'gir:points', label: 'GIR Points', icon: '🏌️', amount: meta.value || '' });
-      } else if (meta.mode === 'Nassau') {
+      } else if (mode === 'Nassau') {
         variants.push({ id: 'gir:nassau', label: 'GIR Nassau', icon: '🏌️', amount: meta.value || '' });
       }
     }

@@ -6131,32 +6131,50 @@ function ScorecardTable({
                   Hole {i + 1}
                 </th>
               ))}
+              {hasAnyVariant('2916') && (
+                <th className="border border-gray-300 p-2 font-semibold bg-emerald-50 min-w-[100px]">
+                  Total Strokes
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>
-            {players.map((player: any) => (
-              <tr key={player.id} className="hover:bg-gray-50">
-                <td className="sticky left-0 bg-white border border-gray-300 p-2 font-medium z-10 w-[140px]">
-                  {player.name}
-                </td>
-                {selectedGames.includes('cards') && (
-                  <td className="bg-gray-50 border border-gray-300 p-2 text-center w-[160px]">
-                    <span className="text-sm">{playerCards?.[player.id]?.trim() || '-'}</span>
+            {players.map((player: any) => {
+              // Calculate total strokes for this player
+              let totalStrokes = 0;
+              if (hasAnyVariant('2916')) {
+                for (let h = 1; h <= 18; h++) {
+                  const holeData = scorecard[h] || {};
+                  const strokes = holeData.strokes?.[player.id];
+                  if (strokes !== undefined) {
+                    totalStrokes += strokes;
+                  }
+                }
+              }
+              
+              return (
+                <tr key={player.id} className="hover:bg-gray-50">
+                  <td className="sticky left-0 bg-white border border-gray-300 p-2 font-medium z-10 w-[140px]">
+                    {player.name}
                   </td>
-                )}
-                {[...Array(18)].map((_, holeIndex) => {
-                  const holeNum = holeIndex + 1;
-                  const holeData = scorecard[holeNum] || {};
-                  
-                  return (
-                    <td key={holeIndex} className="border border-gray-300 p-2 align-top">
-                      <div className="space-y-1 text-xs">
-                        {/* 2/9/16 Strokes - show if any 2916 variant is selected */}
-                        {hasAnyVariant('2916') && holeData.strokes?.[player.id] !== undefined && (
-                          <div className="text-gray-700 font-medium">
-                            <span className="text-gray-500">2/9/16:</span> {holeData.strokes[player.id]}
-                          </div>
-                        )}
+                  {selectedGames.includes('cards') && (
+                    <td className="bg-gray-50 border border-gray-300 p-2 text-center w-[160px]">
+                      <span className="text-sm">{playerCards?.[player.id]?.trim() || '-'}</span>
+                    </td>
+                  )}
+                  {[...Array(18)].map((_, holeIndex) => {
+                    const holeNum = holeIndex + 1;
+                    const holeData = scorecard[holeNum] || {};
+                    
+                    return (
+                      <td key={holeIndex} className="border border-gray-300 p-2 align-top">
+                        <div className="space-y-1 text-xs">
+                          {/* Strokes - show if any 2916 variant is selected */}
+                          {hasAnyVariant('2916') && holeData.strokes?.[player.id] !== undefined && (
+                            <div className="text-gray-700 font-medium">
+                              <span className="text-gray-500">Strokes:</span> {holeData.strokes[player.id]}
+                            </div>
+                          )}
                         
                         {/* BBB Events - show if any BBB variant is selected */}
                         {hasAnyVariant('bbb') && holeData.bbb && (
@@ -6177,8 +6195,14 @@ function ScorecardTable({
                     </td>
                   );
                 })}
+                {hasAnyVariant('2916') && (
+                  <td className="border border-gray-300 p-2 text-center bg-emerald-50 font-bold text-gray-800">
+                    {totalStrokes > 0 ? totalStrokes : '-'}
+                  </td>
+                )}
               </tr>
-            ))}
+            );
+            })}
           </tbody>
         </table>
       </div>

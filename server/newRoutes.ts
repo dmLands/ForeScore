@@ -1626,11 +1626,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         gameMetadata
       };
       
+      // Sample first 3 holes to see what data structure looks like
+      const sampleHoles: any = {};
+      for (let i = 1; i <= 3; i++) {
+        if (scorecard[i]) {
+          sampleHoles[i] = scorecard[i];
+        }
+      }
+      
       console.log('📊 SCORECARD RESPONSE:', JSON.stringify({
         selectedGames: response.selectedGames,
         availableGames: response.availableGames,
         gameMetadata: response.gameMetadata,
-        scorecardHoleCount: Object.keys(scorecard).length
+        scorecardHoleCount: Object.keys(scorecard).length,
+        sampleHoles
       }, null, 2));
       
       res.json(response);

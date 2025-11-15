@@ -6007,6 +6007,7 @@ function ScorecardTable({
     if (availableGames.has2916 && gameMetadata?.['2916']) {
       const meta = gameMetadata['2916'];
       const mode = decodeHTML(meta.mode || '');
+      console.log('🔍 2916 mode after decode:', mode, 'original:', meta.mode);
       const [pointsValue = '', nassauValue = ''] = (meta.value || '').split('/').map((v: string) => v.trim());
       
       if (mode === 'Points & Nassau' || mode.includes('Points') && mode.includes('Nassau')) {

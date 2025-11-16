@@ -2205,12 +2205,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Group not found' });
       }
       
-      // CRITICAL SECURITY: Verify user is member of this group
+      // CRITICAL SECURITY: Verify user is owner of this group
       if (group.createdBy !== userId) {
-        const userIsMember = group.players.some(player => player.id === userId);
-        if (!userIsMember) {
-          return res.status(403).json({ message: 'Access denied: You are not a member of this group' });
-        }
+        return res.status(403).json({ message: 'Access denied: Only the group creator can modify game data' });
       }
       
       // Validate that all provided player IDs exist in the group
@@ -2313,12 +2310,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Group not found' });
       }
       
-      // CRITICAL SECURITY: Verify user is member of this group
+      // CRITICAL SECURITY: Verify user is owner of this group
       if (group.createdBy !== userId) {
-        const userIsMember = group.players.some(player => player.id === userId);
-        if (!userIsMember) {
-          return res.status(403).json({ message: 'Access denied: You are not a member of this group' });
-        }
+        return res.status(403).json({ message: 'Access denied: Only the group creator can modify game data' });
       }
       
       // Validate that all provided player IDs exist in the group
@@ -2431,12 +2425,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Group not found' });
       }
       
-      // CRITICAL SECURITY: Verify user is member of this group
+      // CRITICAL SECURITY: Verify user is owner of this group
       if (group.createdBy !== userId) {
-        const userIsMember = group.players.some(player => player.id === userId);
-        if (!userIsMember) {
-          return res.status(403).json({ message: 'Access denied: You are not a member of this group' });
-        }
+        return res.status(403).json({ message: 'Access denied: Only the group creator can modify game data' });
       }
 
       // Update the hole configuration
@@ -2526,12 +2517,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Group not found' });
       }
       
-      // CRITICAL SECURITY: Verify user is member of this group
+      // CRITICAL SECURITY: Verify user is owner of this group
       if (group.createdBy !== userId) {
-        const userIsMember = group.players.some(player => player.id === userId);
-        if (!userIsMember) {
-          return res.status(403).json({ message: 'Access denied: You are not a member of this group' });
-        }
+        return res.status(403).json({ message: 'Access denied: Only the group creator can modify game data' });
       }
 
       const players = group.players;
@@ -2726,12 +2714,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Group not found' });
       }
       
-      // CRITICAL SECURITY: Verify user is member of this group
+      // CRITICAL SECURITY: Verify user is owner of this group
       if (group.createdBy !== userId) {
-        const userIsMember = group.players.some(player => player.id === userId);
-        if (!userIsMember) {
-          return res.status(403).json({ message: 'Access denied: You are not a member of this group' });
-        }
+        return res.status(403).json({ message: 'Access denied: Only the group creator can modify game data' });
       }
 
       const players = group.players;

@@ -1481,7 +1481,7 @@ export default function Home() {
     }
   });
 
-  // BBB-specific mutations
+  // BBB-specific mutations with optimistic updates and improved error handling
   const updateBBBHoleDataMutation = useMutation({
     mutationFn: async (data: { 
       gameId: string; 
@@ -1497,21 +1497,68 @@ export default function Home() {
       });
       return response.json();
     },
+    onMutate: async (variables) => {
+      // Cancel outgoing refetches (so they don't overwrite our optimistic update)
+      await queryClient.cancelQueries({ queryKey: ['/api/points-games', selectedGroup?.id] });
+      
+      // Snapshot the previous value
+      const previousGame = selectedBBBGame;
+      
+      // Optimistically update the UI
+      if (selectedBBBGame) {
+        const optimisticGame = { ...selectedBBBGame };
+        if (!optimisticGame.holes) optimisticGame.holes = {};
+        optimisticGame.holes[variables.hole] = {
+          firstOn: variables.firstOn,
+          closestTo: variables.closestTo,
+          firstIn: variables.firstIn
+        };
+        setSelectedBBBGame(optimisticGame);
+      }
+      
+      // Return context with snapshot
+      return { previousGame };
+    },
     onSuccess: (updatedGame: PointsGame) => {
       setSelectedBBBGame(updatedGame);
-      // FIX: Standardize cache invalidation for both BBB-specific and general keys
-      queryClient.invalidateQueries({ queryKey: ['/api/points-games/bbb', selectedGroup?.id] });
-      queryClient.invalidateQueries({ queryKey: ['/api/points-games', selectedGroup?.id] }); // Also invalidate general points games
-      queryClient.refetchQueries({ queryKey: ['/api/points-games/bbb', selectedGroup?.id, selectedGame?.id] });
       
-      // CRITICAL: Invalidate BBB payout calculation queries to update payouts immediately
+      // OPTIMIZED: Only invalidate critical queries (reduced from 4 to 1)
       queryClient.invalidateQueries({ queryKey: ['/api/calculate-combined-games'] });
       
-      console.log('BBB hole data updated successfully');
+      toast({ 
+        title: "Saved", 
+        description: "BBB hole data saved successfully",
+        duration: 2000 
+      });
     },
-    onError: (error) => {
+    onError: (error, variables, context) => {
+      // Revert optimistic update on error
+      if (context?.previousGame) {
+        setSelectedBBBGame(context.previousGame);
+      }
+      
+      // Better error messaging based on error type
+      let errorMessage = "Failed to save BBB hole data";
+      
+      if (error instanceof Error) {
+        if (error.message.includes('timeout')) {
+          errorMessage = "Request timed out - check your connection and try again";
+        } else if (error.message.includes('403')) {
+          errorMessage = "Access denied - only group creator can save data";
+        } else if (error.message.includes('401')) {
+          errorMessage = "Please log in again to save data";
+        } else if (error.message.includes('Network') || error.message.includes('fetch')) {
+          errorMessage = "Network error - check your internet connection";
+        }
+      }
+      
       console.error('Error updating BBB hole data:', error);
-      toast({ title: "Error", description: "Failed to update BBB hole data", variant: "destructive" });
+      toast({ 
+        title: "Error", 
+        description: errorMessage, 
+        variant: "destructive",
+        duration: 5000 
+      });
     }
   });
 

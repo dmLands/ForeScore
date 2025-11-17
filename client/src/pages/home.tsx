@@ -1508,11 +1508,11 @@ export default function Home() {
       if (selectedBBBGame) {
         const optimisticGame = { ...selectedBBBGame };
         if (!optimisticGame.holes) optimisticGame.holes = {};
-        optimisticGame.holes[variables.hole] = {
-          firstOn: variables.firstOn,
-          closestTo: variables.closestTo,
-          firstIn: variables.firstIn
-        };
+        const holeData: any = {};
+        if (variables.firstOn) holeData.firstOn = variables.firstOn;
+        if (variables.closestTo) holeData.closestTo = variables.closestTo;
+        if (variables.firstIn) holeData.firstIn = variables.firstIn;
+        optimisticGame.holes[variables.hole] = holeData;
         setSelectedBBBGame(optimisticGame);
       }
       

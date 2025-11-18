@@ -141,9 +141,11 @@ export default function Register() {
       <Card className="w-full max-w-md shadow-xl bg-white/95 backdrop-blur-sm">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-700 rounded-full flex items-center justify-center text-2xl text-white shadow-lg">
-              ⛳
-            </div>
+            <img 
+              src="/attached_assets/ForeScore_Logo_transparent_1763148840628.png" 
+              alt="ForeScore Logo" 
+              className="w-16 h-16 object-contain"
+            />
           </div>
           <CardTitle className="text-2xl font-bold text-gray-900">Join ForeScore</CardTitle>
           <CardDescription className="text-gray-600">

@@ -1524,12 +1524,6 @@ export default function Home() {
       
       // OPTIMIZED: Only invalidate critical queries (reduced from 4 to 1)
       queryClient.invalidateQueries({ queryKey: ['/api/calculate-combined-games'] });
-      
-      toast({ 
-        title: "Saved", 
-        description: "BBB hole data saved successfully",
-        duration: 2000 
-      });
     },
     onError: (error, variables, context) => {
       // Revert optimistic update on error

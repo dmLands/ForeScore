@@ -3627,24 +3627,19 @@ export default function Home() {
                             </div>
 
                             {/* V6.5: Save Button for Point/Nassau Values */}
-                            <div className="mb-4">
-                              <Button
-                                onClick={savePointFbtValues}
-                                disabled={saveStatus === 'saving' || !selectedPointsGame}
-                                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
-                                data-testid="button-save-point-fbt-values"
-                              >
-                                {saveStatus === 'saving' && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>}
-                                {saveStatus === 'saved' && <span className="mr-2">✓</span>}
-                                {saveStatus === 'error' && <span className="mr-2">✗</span>}
-                                {saveStatus === 'saving' ? 'Saving...' : 
-                                 saveStatus === 'saved' ? 'Saved!' :
-                                 saveStatus === 'error' ? 'Error - Retry' : 'Update Values'}
-                              </Button>
-                              <p className="text-xs text-gray-500 mt-1 text-center">
-                                {payoutMode === 'points' ? 'Sacramento Points Payouts' : 'Sacramento Nassau Payouts'}
-                              </p>
-                            </div>
+                            <Button
+                              onClick={savePointFbtValues}
+                              disabled={saveStatus === 'saving' || !selectedPointsGame}
+                              className="w-full mb-4 bg-emerald-600 hover:bg-emerald-700 text-white"
+                              data-testid="button-save-point-fbt-values"
+                            >
+                              {saveStatus === 'saving' && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>}
+                              {saveStatus === 'saved' && <span className="mr-2">✓</span>}
+                              {saveStatus === 'error' && <span className="mr-2">✗</span>}
+                              {saveStatus === 'saving' ? 'Saving...' : 
+                               saveStatus === 'saved' ? 'Saved!' :
+                               saveStatus === 'error' ? 'Error - Retry' : 'Update Values'}
+                            </Button>
 
                             {/* Payout Calculations */}
                             <div className="space-y-2">

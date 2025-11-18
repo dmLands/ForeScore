@@ -91,7 +91,7 @@ export default function Landing() {
                 </CardHeader>
                 <CardContent className="pt-0">
                   <p className="text-sm text-gray-600 leading-relaxed">
-                    The classic points game where players earn 2, 9, or 16 points (match play, threesomes, or foursomes) per hole depending on performance. Includes three payout modes (Points or Front-Back-Total [Nassau], or both).
+                    Honoring the iconic 916 area code, Sacramento is our take on the classic points game where players earn 9 or 16 points (threesomes or foursomes) per hole depending on performance. Includes three payout modes (Points or Front-Back-Total [Nassau], or both).
                   </p>
                 </CardContent>
               </Card>

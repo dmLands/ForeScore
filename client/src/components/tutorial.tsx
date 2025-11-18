@@ -168,7 +168,7 @@ const tutorialSteps: TutorialStep[] = [
         <p className="text-gray-600">Make every hole more fun</p>
         <div className="flex justify-center gap-4 mt-4">
           <div className="text-2xl">🎲</div>
-          <div className="text-2xl">#</div>
+          <div className="text-2xl">👑</div>
           <div className="text-2xl">🐪</div>
         </div>
       </div>

@@ -2978,7 +2978,7 @@ export default function Home() {
                       <Card className="mb-4">
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold text-gray-800"># Sacramento (916) - Who Owes Who</h3>
+                            <h3 className="text-lg font-semibold text-gray-800">👑 Sacramento (916) - Who Owes Who</h3>
                             <Select value={combinedPayoutMode} onValueChange={(value: 'points' | 'nassau' | 'both') => setCombinedPayoutMode(value)}>
                               <SelectTrigger className="w-32">
                                 <SelectValue />
@@ -3153,7 +3153,7 @@ export default function Home() {
                           {/* 6. Points Only Tile - ALWAYS SHOW */}
                           <Card className="mb-4">
                             <CardContent className="p-4">
-                              <h3 className="text-lg font-semibold text-gray-800 mb-3"># Sacramento (916) – Points Only</h3>
+                              <h3 className="text-lg font-semibold text-gray-800 mb-3">👑 Sacramento (916) – Points Only</h3>
                               <div className="space-y-2">
                                 {[...selectedGroup.players]
                                   .sort((a, b) => {
@@ -3196,7 +3196,7 @@ export default function Home() {
                           {/* 7. FBT Only Tile - ALWAYS SHOW */}
                           <Card className="mb-4">
                             <CardContent className="p-4">
-                              <h3 className="text-lg font-semibold text-gray-800 mb-3"># Sacramento (916) – Nassau Only</h3>
+                              <h3 className="text-lg font-semibold text-gray-800 mb-3">👑 Sacramento (916) – Nassau Only</h3>
                               <div className="space-y-2">
                                 {[...selectedGroup.players]
                                   .sort((a, b) => {
@@ -4667,7 +4667,7 @@ export default function Home() {
               <AccordionItem value="2916" data-testid="accordion-item-2916">
                 <Card>
                   <AccordionTrigger className="px-6 pt-6 pb-4 hover:no-underline" data-testid="accordion-trigger-2916">
-                    <h2 className="text-lg font-bold text-gray-800"># Sacramento (916) Game Rules</h2>
+                    <h2 className="text-lg font-bold text-gray-800">👑 Sacramento (916) Game Rules</h2>
                   </AccordionTrigger>
                   <AccordionContent>
                     <CardContent className="px-6 pb-6 pt-0">
@@ -5418,7 +5418,7 @@ export default function Home() {
                   }}
                 >
                   <div className="flex items-center gap-3 w-full">
-                    <span className="text-lg">#️⃣</span>
+                    <span className="text-lg">👑</span>
                     <div className="text-left">
                       <div className="font-medium">Sacramento (916) Points</div>
                       <div className={`text-sm ${tempSelectedGames.includes('points') ? 'text-amber-600' : 'text-gray-600'}`}>
@@ -5510,7 +5510,7 @@ export default function Home() {
                   }}
                 >
                   <div className="flex items-center gap-3 w-full">
-                    <span className="text-lg">#️⃣</span>
+                    <span className="text-lg">👑</span>
                     <div className="text-left">
                       <div className="font-medium">Sacramento (916) Nassau</div>
                       <div className={`text-sm ${tempSelectedGames.includes('nassau') ? 'text-amber-600' : 'text-gray-600'}`}>

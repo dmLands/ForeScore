@@ -2176,15 +2176,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
       });
       
-      // Validate request body
+      // Validate request body - allow empty submissions to clear holes
       const bodySchema = z.object({
         firstOn: z.string().optional(),
         closestTo: z.string().optional(),
         firstIn: z.string().optional()
-      }).refine(data => 
-        data.firstOn || data.closestTo || data.firstIn,
-        { message: 'At least one BBB category must be provided' }
-      );
+      }).transform(data => ({
+        // Normalize empty strings and 'none' to undefined
+        firstOn: data.firstOn && data.firstOn !== 'none' ? data.firstOn : undefined,
+        closestTo: data.closestTo && data.closestTo !== 'none' ? data.closestTo : undefined,
+        firstIn: data.firstIn && data.firstIn !== 'none' ? data.firstIn : undefined
+      }));
       
       const { gameId, hole } = paramsSchema.parse(req.params);
       const { firstOn, closestTo, firstIn } = bodySchema.parse(req.body);
@@ -2228,6 +2230,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (closestTo) bbbHoleData.closestTo = closestTo;
       if (firstIn) bbbHoleData.firstIn = firstIn;
 
+      // Check if this is a clear (all values empty)
+      const isClearing = !firstOn && !closestTo && !firstIn;
+
       // Calculate BBB points (1 point per category won)
       const bbbPoints: Record<string, number> = {};
       
@@ -2236,17 +2241,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         bbbPoints[player.id] = 0;
       });
 
-      // Award points for each category
-      if (firstOn) bbbPoints[firstOn] = (bbbPoints[firstOn] || 0) + 1;
-      if (closestTo) bbbPoints[closestTo] = (bbbPoints[closestTo] || 0) + 1;
-      if (firstIn) bbbPoints[firstIn] = (bbbPoints[firstIn] || 0) + 1;
+      // Award points for each category (only if not clearing)
+      if (!isClearing) {
+        if (firstOn) bbbPoints[firstOn] = (bbbPoints[firstOn] || 0) + 1;
+        if (closestTo) bbbPoints[closestTo] = (bbbPoints[closestTo] || 0) + 1;
+        if (firstIn) bbbPoints[firstIn] = (bbbPoints[firstIn] || 0) + 1;
+      }
 
       // Update the holes and points data
       const updatedHoles = { ...game.holes };
       const updatedPoints = { ...game.points };
       
-      updatedHoles[hole] = bbbHoleData;
-      updatedPoints[hole] = bbbPoints;
+      // If clearing, remove the hole data entirely; otherwise, store it
+      if (isClearing) {
+        delete updatedHoles[hole];
+        delete updatedPoints[hole];
+      } else {
+        updatedHoles[hole] = bbbHoleData;
+        updatedPoints[hole] = bbbPoints;
+      }
 
       const updatedGame = await storage.updatePointsGame(gameId, {
         holes: updatedHoles,

@@ -2978,7 +2978,7 @@ export default function Home() {
                       <Card className="mb-4">
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold text-gray-800">👑 Sacramento (916) - Who Owes Who</h3>
+                            <h3 className="text-lg font-semibold text-gray-800">👑 Sacramento - Who Owes Who</h3>
                             <Select value={combinedPayoutMode} onValueChange={(value: 'points' | 'nassau' | 'both') => setCombinedPayoutMode(value)}>
                               <SelectTrigger className="w-32">
                                 <SelectValue />
@@ -3153,7 +3153,7 @@ export default function Home() {
                           {/* 6. Points Only Tile - ALWAYS SHOW */}
                           <Card className="mb-4">
                             <CardContent className="p-4">
-                              <h3 className="text-lg font-semibold text-gray-800 mb-3">👑 Sacramento (916) – Points Only</h3>
+                              <h3 className="text-lg font-semibold text-gray-800 mb-3">👑 Sacramento – Points Only</h3>
                               <div className="space-y-2">
                                 {[...selectedGroup.players]
                                   .sort((a, b) => {
@@ -3196,7 +3196,7 @@ export default function Home() {
                           {/* 7. FBT Only Tile - ALWAYS SHOW */}
                           <Card className="mb-4">
                             <CardContent className="p-4">
-                              <h3 className="text-lg font-semibold text-gray-800 mb-3">👑 Sacramento (916) – Nassau Only</h3>
+                              <h3 className="text-lg font-semibold text-gray-800 mb-3">👑 Sacramento – Nassau Only</h3>
                               <div className="space-y-2">
                                 {[...selectedGroup.players]
                                   .sort((a, b) => {
@@ -3336,9 +3336,9 @@ export default function Home() {
         {/* Games Tab Content (Conditional based on submenu) */}
         {currentTab === 'games' && selectedSubGame === 'points' && (
           <div className="p-4 space-y-4">
-            {/* Sacramento (916) Game Header */}
+            {/* Sacramento Game Header */}
             <div>
-              <h2 className="text-2xl font-bold text-emerald-600" data-testid="header-game-title">Sacramento (916)</h2>
+              <h2 className="text-2xl font-bold text-emerald-600" data-testid="header-game-title">Sacramento</h2>
             </div>
             {selectedGroup ? (
               <>
@@ -3549,7 +3549,7 @@ export default function Home() {
                         <Card>
                           <CardContent className="p-4">
                             <h3 className="text-lg font-semibold text-gray-800 mb-3">
-                              {payoutMode === 'points' ? 'Sacramento (916) Points Payouts' : 'Sacramento (916) Nassau Payouts'}
+                              {payoutMode === 'points' ? 'Sacramento Points Payouts' : 'Sacramento Nassau Payouts'}
                             </h3>
                             
                             {/* Payout Mode Toggle */}
@@ -3641,6 +3641,9 @@ export default function Home() {
                                  saveStatus === 'saved' ? 'Saved!' :
                                  saveStatus === 'error' ? 'Error - Retry' : 'Update Values'}
                               </Button>
+                              <p className="text-xs text-gray-500 mt-1 text-center">
+                                {payoutMode === 'points' ? 'Sacramento Points Payouts' : 'Sacramento Nassau Payouts'}
+                              </p>
                             </div>
 
                             {/* Payout Calculations */}
@@ -3678,11 +3681,11 @@ export default function Home() {
                                 })}
                             </div>
 
-                            {/* Sacramento (916) Scores Section */}
+                            {/* Sacramento Scores Section */}
                             {selectedPointsGame && (
                               <div className="mt-6">
                                 <h4 className="text-md font-semibold text-gray-800 mb-3">
-                                  {payoutMode === 'points' ? 'Sacramento (916) Points Scores' : 'Sacramento (916) Nassau Scores'}
+                                  {payoutMode === 'points' ? 'Sacramento Points Scores' : 'Sacramento Nassau Scores'}
                                 </h4>
                                 <div className="space-y-2">
                                   {payoutMode === 'points' ? (
@@ -3757,11 +3760,11 @@ export default function Home() {
                               </div>
                             )}
 
-                            {/* Sacramento (916) Who Owes Who Section - Only show when Cards game is NOT active */}
+                            {/* Sacramento Who Owes Who Section - Only show when Cards game is NOT active */}
                             {((payoutMode === 'points' && pointValueNum > 0) || (payoutMode === 'nassau' && nassauValueNum > 0)) && 
                              !(selectedGame && gameState && gameState.cardHistory?.length > 0) && (
                               <div className="mt-4">
-                                <h4 className="text-md font-semibold text-gray-800 mb-3">Who Owes Who - Sacramento (916)</h4>
+                                <h4 className="text-md font-semibold text-gray-800 mb-3">Who Owes Who - Sacramento</h4>
                                 {(() => {
                                   // Calculate who owes who for Sacramento (916) game
                                   const pointsPayouts: Record<string, number> = {};
@@ -4663,11 +4666,11 @@ export default function Home() {
                 </Card>
               </AccordionItem>
             
-              {/* Sacramento (916) Game Rules */}
+              {/* Sacramento Game Rules */}
               <AccordionItem value="2916" data-testid="accordion-item-2916">
                 <Card>
                   <AccordionTrigger className="px-6 pt-6 pb-4 hover:no-underline" data-testid="accordion-trigger-2916">
-                    <h2 className="text-lg font-bold text-gray-800">👑 Sacramento (916) Game Rules</h2>
+                    <h2 className="text-lg font-bold text-gray-800">👑 Sacramento Game Rules</h2>
                   </AccordionTrigger>
                   <AccordionContent>
                     <CardContent className="px-6 pb-6 pt-0">
@@ -5941,7 +5944,7 @@ export default function Home() {
                     setShowGamesOverlay(false);
                   }}
                 >
-                  <Hash className="h-5 w-5 text-gray-600" />
+                  <Crown className="h-5 w-5 text-gray-600" />
                   <div>
                     <div className="font-medium text-gray-900">Sacramento (916)</div>
                     <div className="text-sm text-gray-500">Points-based scoring</div>

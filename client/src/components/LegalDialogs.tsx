@@ -31,7 +31,7 @@ export default function LegalDialogs({ showTerms, showPrivacy, onOpenChange }: L
               <section>
                 <h3 className="font-semibold text-lg mb-2">2. Service Description</h3>
                 <p>
-                  ForeScore is a golf companion application that provides digital tools for managing golf penalty games, including card games and points-based games like 2/9/16 and Bingo Bango Bongo. The Service includes features for score tracking, payout calculations, and group management.
+                  ForeScore is a golf companion application that provides digital tools for managing golf penalty games, including card games and points-based games like Sacramento (916) and Bingo Bango Bongo. The Service includes features for score tracking, payout calculations, and group management.
                 </p>
               </section>
 

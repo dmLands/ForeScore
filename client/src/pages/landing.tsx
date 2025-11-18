@@ -79,14 +79,14 @@ export default function Landing() {
                 </CardContent>
               </Card>
 
-              {/* 2/9/16 Game */}
+              {/* Sacramento (916) Game */}
               <Card className="border-2 border-gray-200 bg-gradient-to-br from-gray-50 to-gray-50">
                 <CardHeader className="pb-3">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold shadow-md">
                       #
                     </div>
-                    <CardTitle className="text-lg text-gray-900">2/9/16 Game</CardTitle>
+                    <CardTitle className="text-lg text-gray-900">Sacramento (916) Game</CardTitle>
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0">

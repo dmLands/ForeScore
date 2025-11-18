@@ -298,7 +298,7 @@ export default function Home() {
     }
   };
 
-  // Save BBB point/FBT values to database (similar to 2/9/16 pattern)
+  // Save BBB point/FBT values to database (similar to Sacramento (916) pattern)
   const saveBBBPointsFbtValues = async () => {
     if (!selectedBBBGame) {
       console.warn('No BBB game selected');
@@ -609,7 +609,7 @@ export default function Home() {
   });
 
   // Advanced Combined Games API using Python reference implementation
-  // Query for 🎯 tile Points+FBT combined scenarios (2/9/16 games only, no cards)
+  // Query for 🎯 tile Points+FBT combined scenarios (Sacramento (916) games only, no cards)
   const { data: pointsFbtCombinedResult } = useQuery<{
     payouts: Record<string, number>;
     transactions: Array<{ from: string, fromName: string, to: string, toName: string, amount: number }>;
@@ -632,7 +632,7 @@ export default function Home() {
 
       const pointValueNum = parseFloat(pointValue);
       const nassauValueNum = parseFloat(nassauValue);
-      const selectedGamesForMode = []; // Only 2/9/16 games
+      const selectedGamesForMode = []; // Only Sacramento (916) games
       
       if (combinedPayoutMode === 'points' && pointValueNum > 0) {
         selectedGamesForMode.push('points');
@@ -850,22 +850,22 @@ export default function Home() {
     }
   }, [selectedGame?.id, selectedGroup?.id, queryClient]);
 
-  // Auto-select 2/9/16 game for current game session - GAME SESSION ISOLATION FIX
+  // Auto-select Sacramento (916) game for current game session - GAME SESSION ISOLATION FIX
   useEffect(() => {
     if (selectedGroup && selectedGame && pointsGames.length > 0) {
-      // FIX: Filter for only 2/9/16 games (not BBB)
+      // FIX: Filter for only Sacramento (916) games (not BBB)
       const pointsOnly2916Games = pointsGames.filter(game => game.gameType === 'points');
       
-      // If we have a selectedPointsGame but it's not in the current game session's 2/9/16 games, clear it
+      // If we have a selectedPointsGame but it's not in the current game session's Sacramento (916) games, clear it
       if (selectedPointsGame && !pointsOnly2916Games.find(game => game.id === selectedPointsGame.id)) {
         setSelectedPointsGame(null);
       }
-      // Auto-select the 2/9/16 game for this game session (not BBB)
+      // Auto-select the Sacramento (916) game for this game session (not BBB)
       if (!selectedPointsGame && pointsOnly2916Games.length > 0) {
-        const existingGame = pointsOnly2916Games[0]; // Get the 2/9/16 game specifically
+        const existingGame = pointsOnly2916Games[0]; // Get the Sacramento (916) game specifically
         if (existingGame) {
           setSelectedPointsGame(existingGame);
-          console.log(`Auto-selected 2/9/16 game: ${existingGame.name} for game session: ${selectedGame.id}`);
+          console.log(`Auto-selected Sacramento (916) game: ${existingGame.name} for game session: ${selectedGame.id}`);
         }
       }
     }
@@ -881,14 +881,14 @@ export default function Home() {
   // Auto-select BBB game for current game session - GAME SESSION ISOLATION FIX
   useEffect(() => {
     if (selectedGroup && selectedGame && pointsGames.length > 0) {
-      // FIX: Filter for only BBB games (not 2/9/16)
+      // FIX: Filter for only BBB games (not Sacramento (916))
       const bbbOnlyGames = pointsGames.filter(game => game.gameType === 'bbb');
       
       // If we have a selectedBBBGame but it's not in the current game session's BBB games, clear it
       if (selectedBBBGame && !bbbOnlyGames.find(game => game.id === selectedBBBGame.id)) {
         setSelectedBBBGame(null);
       }
-      // Auto-select the BBB game for this game session (not 2/9/16)
+      // Auto-select the BBB game for this game session (not Sacramento (916))
       if (!selectedBBBGame && bbbOnlyGames.length > 0) {
         const existingGame = bbbOnlyGames[0]; // Get the BBB game specifically
         if (existingGame) {
@@ -933,10 +933,10 @@ export default function Home() {
     }
   }, [selectedGroup, selectedGame, pointsGames, selectedGIRGame]);
 
-  // V6.6: Refetch points games data when switching to Games->2/9/16 to ensure saved scores are visible
+  // V6.6: Refetch points games data when switching to Games->Sacramento (916) to ensure saved scores are visible
   useEffect(() => {
     if (currentTab === 'games' && selectedSubGame === 'points' && selectedGroup?.id) {
-      console.log('Switching to Games->2/9/16 - refetching points games data to ensure saved scores are visible');
+      console.log('Switching to Games->Sacramento (916) - refetching points games data to ensure saved scores are visible');
       queryClient.invalidateQueries({ queryKey: ['/api/points-games', selectedGroup.id] });
       // Force refetch to get latest hole strokes and point data
       queryClient.refetchQueries({ queryKey: ['/api/points-games', selectedGroup.id, selectedGame?.id] });
@@ -1106,7 +1106,7 @@ export default function Home() {
       return !!payoutData;
     }
     
-    // If only 2/9/16 active, need points/fbt payouts
+    // If only Sacramento (916) active, need points/fbt payouts
     if (!isCardsActive && is2916WithValues) {
       const pointValueNum = parseFloat(pointValue) || 0;
       const nassauValueNum = parseFloat(nassauValue) || 0;
@@ -1175,7 +1175,7 @@ export default function Home() {
         if (bbbPointValueNum > 0) autoGames.push('bbb-points');
         if (bbbNassauValueNum > 0) autoGames.push('bbb-nassau');
       } 
-      // Otherwise add regular 2/9/16 games if they have values
+      // Otherwise add regular Sacramento (916) games if they have values
       else if (has2916Values) {
         if (pointValueNum > 0) autoGames.push('points');
         if (nassauValueNum > 0) autoGames.push('nassau');
@@ -2568,7 +2568,7 @@ export default function Home() {
                       const isCardsActive = selectedGame && safeGameState && safeGameState.cardHistory?.length > 0;
                       const hasPayoutValues = (parseFloat(pointValue) > 0) || (parseFloat(nassauValue) > 0);
                       
-                      // FIX: Show when cards are active OR when 2/9/16 values are set (regardless of scores)
+                      // FIX: Show when cards are active OR when Sacramento (916) values are set (regardless of scores)
                       return isCardsActive || (selectedPointsGame && hasPayoutValues);
                     })() && (
                       <Card className="mb-4 card-interactive hover-lift">
@@ -2968,7 +2968,7 @@ export default function Home() {
                       );
                     })()}
 
-                    {/* 5. 🎯 WHO OWES WHO - 2/9/16 GAMES */}
+                    {/* 5. 🎯 WHO OWES WHO - Sacramento (916) GAMES */}
                     {(() => {
                       const hasPayoutValues = (parseFloat(pointValue) > 0) || (parseFloat(nassauValue) > 0);
                       const show2916WhoOwesWho = selectedPointsGame && hasPayoutValues;
@@ -2978,7 +2978,7 @@ export default function Home() {
                       <Card className="mb-4">
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold text-gray-800"># 2/9/16 - Who Owes Who</h3>
+                            <h3 className="text-lg font-semibold text-gray-800"># Sacramento (916) - Who Owes Who</h3>
                             <Select value={combinedPayoutMode} onValueChange={(value: 'points' | 'nassau' | 'both') => setCombinedPayoutMode(value)}>
                               <SelectTrigger className="w-32">
                                 <SelectValue />
@@ -2991,13 +2991,13 @@ export default function Home() {
                             </Select>
                           </div>
                           <p className="text-sm text-gray-600 mb-4">
-                            {combinedPayoutMode === 'points' ? 'Points-based settlement from 2/9/16 games only.' :
-                             combinedPayoutMode === 'nassau' ? 'Nassau settlement from 2/9/16 games only.' :
-                             'Combined settlement for Points + Nassau from 2/9/16 games only.'}
+                            {combinedPayoutMode === 'points' ? 'Points-based settlement from Sacramento (916) games only.' :
+                             combinedPayoutMode === 'nassau' ? 'Nassau settlement from Sacramento (916) games only.' :
+                             'Combined settlement for Points + Nassau from Sacramento (916) games only.'}
                           </p>
                           
                           {(() => {
-                            // Use individual payout results for 2/9/16 games only (no cards)
+                            // Use individual payout results for Sacramento (916) games only (no cards)
                             const getTransactionsForMode = () => {
                               const pointValueNum = parseFloat(pointValue);
                               const nassauValueNum = parseFloat(nassauValue);
@@ -3107,7 +3107,7 @@ export default function Home() {
                       );
                     })()}
 
-                    {/* 6. & 7. 🎯 POINTS ONLY PAYOUTS - 2/9/16 GAMES & ⛳ FBT ONLY PAYOUTS - 2/9/16 GAMES */}
+                    {/* 6. & 7. 🎯 POINTS ONLY PAYOUTS - Sacramento (916) GAMES & ⛳ FBT ONLY PAYOUTS - Sacramento (916) GAMES */}
                     {(() => {
                       const pointValueNum = parseFloat(pointValue) || 0;
                       const nassauValueNum = parseFloat(nassauValue) || 0;
@@ -3153,7 +3153,7 @@ export default function Home() {
                           {/* 6. Points Only Tile - ALWAYS SHOW */}
                           <Card className="mb-4">
                             <CardContent className="p-4">
-                              <h3 className="text-lg font-semibold text-gray-800 mb-3"># 2/9/16 – Points Only</h3>
+                              <h3 className="text-lg font-semibold text-gray-800 mb-3"># Sacramento (916) – Points Only</h3>
                               <div className="space-y-2">
                                 {[...selectedGroup.players]
                                   .sort((a, b) => {
@@ -3196,7 +3196,7 @@ export default function Home() {
                           {/* 7. FBT Only Tile - ALWAYS SHOW */}
                           <Card className="mb-4">
                             <CardContent className="p-4">
-                              <h3 className="text-lg font-semibold text-gray-800 mb-3"># 2/9/16 – Nassau Only</h3>
+                              <h3 className="text-lg font-semibold text-gray-800 mb-3"># Sacramento (916) – Nassau Only</h3>
                               <div className="space-y-2">
                                 {[...selectedGroup.players]
                                   .sort((a, b) => {
@@ -3336,9 +3336,9 @@ export default function Home() {
         {/* Games Tab Content (Conditional based on submenu) */}
         {currentTab === 'games' && selectedSubGame === 'points' && (
           <div className="p-4 space-y-4">
-            {/* 2/9/16 Game Header */}
+            {/* Sacramento (916) Game Header */}
             <div>
-              <h2 className="text-2xl font-bold text-emerald-600" data-testid="header-game-title">2/9/16</h2>
+              <h2 className="text-2xl font-bold text-emerald-600" data-testid="header-game-title">Sacramento (916)</h2>
             </div>
             {selectedGroup ? (
               <>
@@ -3346,33 +3346,33 @@ export default function Home() {
                 {!selectedPointsGame ? (
                   <Card>
                     <CardContent className="p-6">
-                      <h2 className="text-lg font-bold text-gray-800 mb-4">2/9/16 Game</h2>
+                      <h2 className="text-lg font-bold text-gray-800 mb-4">Sacramento (916) Game</h2>
                       
                       {pointsGamesLoading || (pointsGames.length > 0 && !selectedPointsGame) ? (
                         <div className="text-center space-y-4">
                           <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
                             <h3 className="text-lg font-semibold text-emerald-800 mb-2">
-                              {pointsGames.length > 0 ? pointsGames[0].name : "2/9/16 Game"}
+                              {pointsGames.length > 0 ? pointsGames[0].name : "Sacramento (916) Game"}
                             </h3>
                             <p className="text-sm text-emerald-600">
-                              Loading your 2/9/16 game...
+                              Loading your Sacramento (916) game...
                             </p>
                           </div>
                         </div>
                       ) : (
                         <div className="text-center space-y-4">
-                          <p className="text-gray-600">No 2/9/16 games yet. Create one to start tracking scores.</p>
+                          <p className="text-gray-600">No Sacramento (916) games yet. Create one to start tracking scores.</p>
                           <Button 
                             onClick={() => createPointsGameMutation.mutate({
                               groupId: selectedGroup.id,
                               gameStateId: selectedGame?.id, // Link to specific card game session
-                              name: selectedGame ? `${selectedGame.name} - 2/9/16 Game ${new Date().toLocaleDateString()}` : `2/9/16 Game ${new Date().toLocaleDateString()}`
+                              name: selectedGame ? `${selectedGame.name} - Sacramento (916) Game ${new Date().toLocaleDateString()}` : `Sacramento (916) Game ${new Date().toLocaleDateString()}`
                             })}
                             disabled={createPointsGameMutation.isPending}
                             className="w-full bg-emerald-500 hover:bg-emerald-600 text-white"
                           >
                             <Plus className="mr-2 h-4 w-4" />
-                            {createPointsGameMutation.isPending ? "Creating..." : "Create 2/9/16 Game"}
+                            {createPointsGameMutation.isPending ? "Creating..." : "Create Sacramento (916) Game"}
                           </Button>
                         </div>
                       )}
@@ -3549,7 +3549,7 @@ export default function Home() {
                         <Card>
                           <CardContent className="p-4">
                             <h3 className="text-lg font-semibold text-gray-800 mb-3">
-                              {payoutMode === 'points' ? '2/9/16 Points Payouts' : '2/9/16 Nassau Payouts'}
+                              {payoutMode === 'points' ? 'Sacramento (916) Points Payouts' : 'Sacramento (916) Nassau Payouts'}
                             </h3>
                             
                             {/* Payout Mode Toggle */}
@@ -3678,11 +3678,11 @@ export default function Home() {
                                 })}
                             </div>
 
-                            {/* 2/9/16 Scores Section */}
+                            {/* Sacramento (916) Scores Section */}
                             {selectedPointsGame && (
                               <div className="mt-6">
                                 <h4 className="text-md font-semibold text-gray-800 mb-3">
-                                  {payoutMode === 'points' ? '2/9/16 Points Scores' : '2/9/16 Nassau Scores'}
+                                  {payoutMode === 'points' ? 'Sacramento (916) Points Scores' : 'Sacramento (916) Nassau Scores'}
                                 </h4>
                                 <div className="space-y-2">
                                   {payoutMode === 'points' ? (
@@ -3757,13 +3757,13 @@ export default function Home() {
                               </div>
                             )}
 
-                            {/* 2/9/16 Who Owes Who Section - Only show when Cards game is NOT active */}
+                            {/* Sacramento (916) Who Owes Who Section - Only show when Cards game is NOT active */}
                             {((payoutMode === 'points' && pointValueNum > 0) || (payoutMode === 'nassau' && nassauValueNum > 0)) && 
                              !(selectedGame && gameState && gameState.cardHistory?.length > 0) && (
                               <div className="mt-4">
-                                <h4 className="text-md font-semibold text-gray-800 mb-3">Who Owes Who - 2/9/16</h4>
+                                <h4 className="text-md font-semibold text-gray-800 mb-3">Who Owes Who - Sacramento (916)</h4>
                                 {(() => {
-                                  // Calculate who owes who for 2/9/16 game
+                                  // Calculate who owes who for Sacramento (916) game
                                   const pointsPayouts: Record<string, number> = {};
                                   
                                   if (payoutMode === 'points' && pointValueNum > 0) {
@@ -3885,7 +3885,7 @@ export default function Home() {
             ) : (
               <Card>
                 <CardContent className="p-6 text-center">
-                  <h2 className="text-xl font-semibold text-gray-800 mb-2">2/9/16 Game</h2>
+                  <h2 className="text-xl font-semibold text-gray-800 mb-2">Sacramento (916) Game</h2>
                   <p className="text-gray-600">Select a group to start playing the points game.</p>
                 </CardContent>
               </Card>
@@ -4663,17 +4663,17 @@ export default function Home() {
                 </Card>
               </AccordionItem>
             
-              {/* 2/9/16 Game Rules */}
+              {/* Sacramento (916) Game Rules */}
               <AccordionItem value="2916" data-testid="accordion-item-2916">
                 <Card>
                   <AccordionTrigger className="px-6 pt-6 pb-4 hover:no-underline" data-testid="accordion-trigger-2916">
-                    <h2 className="text-lg font-bold text-gray-800"># 2/9/16 Game Rules</h2>
+                    <h2 className="text-lg font-bold text-gray-800"># Sacramento (916) Game Rules</h2>
                   </AccordionTrigger>
                   <AccordionContent>
                     <CardContent className="px-6 pb-6 pt-0">
                       <div className="space-y-4 text-gray-600">
                   <p className="leading-relaxed">
-                    The 2/9/16 Game is a stroke-based competition where players earn points based on their performance relative to other players on each hole.
+                    The Sacramento (916) Game is a stroke-based competition where players earn points based on their performance relative to other players on each hole.
                   </p>
 
                   <div>
@@ -4748,7 +4748,7 @@ export default function Home() {
                       3 Payout Systems - Points, Nassau, Both
                     </h3>
                     <p className="text-gray-600 mb-3">
-                      The 2/9/16 Game includes three payout systems that run simultaneously - choose your preferred method:
+                      The Sacramento (916) Game includes three payout systems that run simultaneously - choose your preferred method:
                     </p>
                     
                     <div className="space-y-4">
@@ -5273,7 +5273,7 @@ export default function Home() {
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold text-gray-800">Point Value</DialogTitle>
             <DialogDescription>
-              How much money each point is worth in the 2/9/16 payout system.
+              How much money each point is worth in the Sacramento (916) payout system.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
@@ -5400,7 +5400,7 @@ export default function Home() {
                 </Button>
               )}
 
-              {/* 2/9/16 Points */}
+              {/* Sacramento (916) Points */}
               {selectedPointsGame && parseFloat(pointValue) > 0 && (
                 <Button 
                   variant={tempSelectedGames.includes('points') ? 'default' : 'outline'}
@@ -5420,7 +5420,7 @@ export default function Home() {
                   <div className="flex items-center gap-3 w-full">
                     <span className="text-lg">#️⃣</span>
                     <div className="text-left">
-                      <div className="font-medium">2/9/16 Points</div>
+                      <div className="font-medium">Sacramento (916) Points</div>
                       <div className={`text-sm ${tempSelectedGames.includes('points') ? 'text-amber-600' : 'text-gray-600'}`}>
                         ${pointValue} per point
                       </div>
@@ -5492,7 +5492,7 @@ export default function Home() {
                 </Button>
               )}
 
-              {/* 2/9/16 Nassau */}
+              {/* Sacramento (916) Nassau */}
               {selectedPointsGame && parseFloat(nassauValue) > 0 && (
                 <Button 
                   variant={tempSelectedGames.includes('nassau') ? 'default' : 'outline'}
@@ -5512,7 +5512,7 @@ export default function Home() {
                   <div className="flex items-center gap-3 w-full">
                     <span className="text-lg">#️⃣</span>
                     <div className="text-left">
-                      <div className="font-medium">2/9/16 Nassau</div>
+                      <div className="font-medium">Sacramento (916) Nassau</div>
                       <div className={`text-sm ${tempSelectedGames.includes('nassau') ? 'text-amber-600' : 'text-gray-600'}`}>
                         ${nassauValue} per victory
                       </div>
@@ -5685,7 +5685,7 @@ export default function Home() {
             <hr className="my-6" />
 
             <h3>2) What ForeScore Does (and Doesn't Do)</h3>
-            <p>ForeScore provides tools to organize golf groups, track side-games (such as "2/9/16"), and calculate suggested payouts based on your group's rules.</p>
+            <p>ForeScore provides tools to organize golf groups, track side-games (such as "Sacramento (916)"), and calculate suggested payouts based on your group's rules.</p>
             
             <ul>
               <li><strong>No Gambling.</strong> ForeScore does not facilitate real-money gambling, wagering, or contests. Any real-world settlements are outside the Service and at users' sole discretion and risk. You are responsible for complying with all applicable laws where you play.</li>
@@ -5943,7 +5943,7 @@ export default function Home() {
                 >
                   <Hash className="h-5 w-5 text-gray-600" />
                   <div>
-                    <div className="font-medium text-gray-900">2/9/16</div>
+                    <div className="font-medium text-gray-900">Sacramento (916)</div>
                     <div className="text-sm text-gray-500">Points-based scoring</div>
                   </div>
                 </button>
@@ -6044,7 +6044,7 @@ function ScorecardTable({
       return txt.value;
     };
     
-    // 2/9/16 variants
+    // Sacramento (916) variants
     if (availableGames.has2916 && gameMetadata?.['2916']) {
       const meta = gameMetadata['2916'];
       const mode = decodeHTML(meta.mode || '');
@@ -6052,12 +6052,12 @@ function ScorecardTable({
       const [pointsValue = '', nassauValue = ''] = (meta.value || '').split('/').map((v: string) => v.trim());
       
       if (mode === 'Points & Nassau' || mode.includes('Points') && mode.includes('Nassau')) {
-        variants.push({ id: '2916:points', label: '2/9/16 Points', icon: '🎯', amount: pointsValue });
-        variants.push({ id: '2916:nassau', label: '2/9/16 Nassau', icon: '🎯', amount: nassauValue });
+        variants.push({ id: '2916:points', label: 'Sacramento (916) Points', icon: '🎯', amount: pointsValue });
+        variants.push({ id: '2916:nassau', label: 'Sacramento (916) Nassau', icon: '🎯', amount: nassauValue });
       } else if (mode === 'Points') {
-        variants.push({ id: '2916:points', label: '2/9/16 Points', icon: '🎯', amount: meta.value || '' });
+        variants.push({ id: '2916:points', label: 'Sacramento (916) Points', icon: '🎯', amount: meta.value || '' });
       } else if (mode === 'Nassau') {
-        variants.push({ id: '2916:nassau', label: '2/9/16 Nassau', icon: '🎯', amount: meta.value || '' });
+        variants.push({ id: '2916:nassau', label: 'Sacramento (916) Nassau', icon: '🎯', amount: meta.value || '' });
       }
     }
     

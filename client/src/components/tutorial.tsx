@@ -16,7 +16,7 @@ const tutorialSteps: TutorialStep[] = [
   {
     id: 1,
     title: "Welcome to ForeScore!",
-    content: "ForeScore adds fun competition to your golf rounds with three exciting game options! Play Bingo Bango Bongo for hole-by-hole excitement, try the 2/9/16 points system for stroke-based competition, or enjoy the Card penalty game for laughs when shots go wrong. All games make every hole more engaging!",
+    content: "ForeScore adds fun competition to your golf rounds with three exciting game options! Play Bingo Bango Bongo for hole-by-hole excitement, try the Sacramento (916) points system for stroke-based competition, or enjoy the Card penalty game for laughs when shots go wrong. All games make every hole more engaging!",
     visual: (
       <div className="text-center p-6 bg-gray-50 rounded-lg border">
         <div className="text-6xl mb-4">⛳</div>
@@ -49,8 +49,8 @@ const tutorialSteps: TutorialStep[] = [
   },
   {
     id: 3,
-    title: "Points-Based Games: BBB and 2/9/16",
-    content: "ForeScore includes two exciting points-based competitions! Bingo Bango Bongo awards points for achieving objectives on each hole (Bingo-first on green, Bango-closest to pin, Bongo-first in hole), while 2/9/16 is stroke-based competition. Both offer 'Points' and 'Nassau' payout systems that run simultaneously!",
+    title: "Points-Based Games: BBB and Sacramento (916)",
+    content: "ForeScore includes two exciting points-based competitions! Bingo Bango Bongo awards points for achieving objectives on each hole (Bingo-first on green, Bango-closest to pin, Bongo-first in hole), while Sacramento (916) is stroke-based competition. Both offer 'Points' and 'Nassau' payout systems that run simultaneously!",
     visual: (
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
@@ -61,7 +61,7 @@ const tutorialSteps: TutorialStep[] = [
           </div>
           <div className="text-center p-4 bg-gray-50 rounded-lg border">
             <Hash className="h-8 w-8 text-gray-600 mx-auto mb-2" />
-            <p className="font-medium text-gray-800">2/9/16 Game</p>
+            <p className="font-medium text-gray-800">Sacramento (916) Game</p>
             <p className="text-sm text-gray-600">Stroke competition</p>
           </div>
         </div>
@@ -160,7 +160,7 @@ const tutorialSteps: TutorialStep[] = [
   {
     id: 7,
     title: "Ready to Enhance Your Golf Round!",
-    content: "You're all set! Create your first group and add excitement to your golf round with ForeScore's three game options. Whether you want hole-by-hole objectives with BBB, stroke-based competition with 2/9/16, or penalty-based laughs with Cards, these games will make every hole more engaging!",
+    content: "You're all set! Create your first group and add excitement to your golf round with ForeScore's three game options. Whether you want hole-by-hole objectives with BBB, stroke-based competition with Sacramento (916), or penalty-based laughs with Cards, these games will make every hole more engaging!",
     visual: (
       <div className="text-center p-6 bg-gray-50 rounded-lg border">
         <Trophy className="h-12 w-12 text-gray-600 mx-auto mb-4" />

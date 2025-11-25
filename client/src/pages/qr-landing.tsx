@@ -12,6 +12,9 @@ import { useLocation } from "wouter";
 import { z } from "zod";
 import LegalDialogs from "@/components/LegalDialogs";
 import AppDownloadPrompt from "@/components/AppDownloadPrompt";
+import logoPath from "@assets/ForeScore_Logo_transparent_1763148840628.png";
+import payoutScreenshot from "@assets/image_1764097878852.png";
+import bbbScreenshot from "@assets/image_1764097900039.png";
 
 const registerSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -145,7 +148,7 @@ export default function QRLanding() {
         <div className="text-center mb-12">
           <div className="flex justify-center mb-4">
             <img 
-              src="/attached_assets/ForeScore_Logo_transparent_1763148840628.png" 
+              src={logoPath}
               alt="ForeScore Logo" 
               className="w-20 h-20 object-contain"
             />
@@ -299,7 +302,7 @@ export default function QRLanding() {
                 {/* Screen content */}
                 <div className="w-full h-full bg-white rounded-2xl overflow-hidden">
                   <img 
-                    src="/attached_assets/image_1764097878852.png" 
+                    src={payoutScreenshot}
                     alt="ForeScore - Who Owes Who Payouts Screen" 
                     className="w-full h-full object-cover"
                   />
@@ -313,7 +316,7 @@ export default function QRLanding() {
                 {/* Screen content */}
                 <div className="w-full h-full bg-white rounded-2xl overflow-hidden">
                   <img 
-                    src="/attached_assets/image_1764097900039.png" 
+                    src={bbbScreenshot}
                     alt="ForeScore - BBB Game Score Entry Screen" 
                     className="w-full h-full object-cover"
                   />

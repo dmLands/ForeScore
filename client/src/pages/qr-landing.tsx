@@ -1,9 +1,135 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { CheckCircle2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { CheckCircle2, Eye, EyeOff } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
+import { useLocation } from "wouter";
+import { z } from "zod";
+import LegalDialogs from "@/components/LegalDialogs";
+import AppDownloadPrompt from "@/components/AppDownloadPrompt";
+
+const registerSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  confirmPassword: z.string(),
+  termsAccepted: z.boolean().refine(val => val === true, {
+    message: "You must accept the Terms of Service and Privacy Policy to register"
+  }),
+  marketingConsent: z.boolean()
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+type RegisterForm = z.infer<typeof registerSchema>;
 
 export default function QRLanding() {
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const [formData, setFormData] = useState<RegisterForm>({
+    email: "",
+    password: "",
+    firstName: "",
+    lastName: "",
+    confirmPassword: "",
+    termsAccepted: false,
+    marketingConsent: false
+  });
+  const [errors, setErrors] = useState<Partial<Record<keyof RegisterForm, string>>>({});
+  const [showTermsDialog, setShowTermsDialog] = useState(false);
+  const [showPrivacyDialog, setShowPrivacyDialog] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const registerMutation = useMutation({
+    mutationFn: async (data: Omit<RegisterForm, 'confirmPassword'>) => {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message);
+      }
+      return response.json();
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: "Welcome to ForeScore!",
+        description: data.message || "Account created and you're now logged in.",
+      });
+      queryClient.setQueryData(['/api/auth/user'], data.user);
+      setLocation("/");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Registration failed",
+        description: error.message || "Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const validatedData = registerSchema.parse(formData);
+      setErrors({});
+      const { confirmPassword, ...registerData } = validatedData;
+      await registerMutation.mutateAsync(registerData);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const fieldErrors: Partial<Record<keyof RegisterForm, string>> = {};
+        error.errors.forEach((err) => {
+          if (err.path[0]) {
+            fieldErrors[err.path[0] as keyof RegisterForm] = err.message;
+          }
+        });
+        setErrors(fieldErrors);
+      }
+    }
+  };
+
+  const handleInputChange = (field: keyof RegisterForm) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({ ...prev, [field]: e.target.value }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: undefined }));
+    }
+  };
+
+  const handleCheckboxChange = (field: 'termsAccepted' | 'marketingConsent') => (checked: boolean) => {
+    setFormData(prev => ({ ...prev, [field]: checked }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: undefined }));
+    }
+  };
+
+  const handleDialogChange = (type: 'terms' | 'privacy', open: boolean) => {
+    if (type === 'terms') {
+      setShowTermsDialog(open);
+    } else {
+      setShowPrivacyDialog(open);
+    }
+  };
+
+  const openTermsDialog = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setShowTermsDialog(true);
+  };
+
+  const openPrivacyDialog = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setShowPrivacyDialog(true);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 relative overflow-hidden">
       {/* Background decoration */}
@@ -14,25 +140,29 @@ export default function QRLanding() {
         <div className="absolute bottom-20 right-10 w-16 h-16 rounded-full bg-green-500"></div>
       </div>
 
-      <div className="relative max-w-4xl mx-auto px-4 py-12">
+      <div className="relative max-w-5xl mx-auto px-4 py-12">
         {/* Header */}
         <div className="text-center mb-12">
           <div className="flex justify-center mb-4">
             <img 
-              src="/forescore-logo.png" 
+              src="@assets/ForeScore_Logo_transparent_1763148840628.png" 
               alt="ForeScore Logo" 
-              className="w-20 h-20"
+              className="w-20 h-20 object-contain"
             />
           </div>
           <h1 className="text-5xl font-bold text-gray-900 mb-4">
             Make Every Hole More Fun
           </h1>
-          <p className="text-xl text-gray-600 mb-6">
+          <p className="text-xl text-gray-600 mb-8">
             Turn your golf round into a competitive experience with automatic payout calculations
           </p>
-          <Badge variant="secondary" className="text-sm font-medium mb-8">
-            Free 7-Day Trial • No Credit Card Required
-          </Badge>
+          <Button
+            onClick={() => document.getElementById('register-section')?.scrollIntoView({ behavior: 'smooth' })}
+            size="lg"
+            className="h-14 text-lg font-semibold bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 shadow-lg"
+          >
+            Start Your Free Trial
+          </Button>
         </div>
 
         {/* How It Works */}
@@ -43,7 +173,7 @@ export default function QRLanding() {
           <div className="grid md:grid-cols-4 gap-6">
             {[
               { step: "1", title: "Create Your Group", desc: "Add your 2-4 golf buddies" },
-              { step: "2", title: "Pick Your Games", desc: "BBB, Sacramento (916), Cards, or all 3" },
+              { step: "2", title: "Pick Your Games", desc: "BBB, Sacramento (916), GIR, Cards, or any combination" },
               { step: "3", title: "Enter Scores", desc: "Log results hole-by-hole as you play" },
               { step: "4", title: "Instant Payouts", desc: "Get settlement calculations instantly" }
             ].map((item) => (
@@ -58,25 +188,25 @@ export default function QRLanding() {
           </div>
         </div>
 
-        {/* Game Types */}
+        {/* Game Types - 4 GAMES */}
         <div className="mb-16">
           <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
-            Three Competitive Game Types
+            Four Competitive Game Types
           </h2>
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* BBB */}
             <Card className="border-2 border-gray-200 hover:shadow-lg transition">
               <CardHeader className="pb-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center text-white text-xl font-bold">
+                <div className="flex items-center gap-2">
+                  <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center text-white text-lg font-bold">
                     🎲
                   </div>
-                  <CardTitle>Bingo Bango Bongo</CardTitle>
+                  <CardTitle className="text-base">Bingo Bango Bongo</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-gray-600">
-                  Earn up to 3 points per hole: first on the green, closest to the pin, first to hole out
+                <p className="text-xs text-gray-600">
+                  Earn up to 3 points per hole: first on green, closest to pin, first to hole out
                 </p>
               </CardContent>
             </Card>
@@ -84,16 +214,33 @@ export default function QRLanding() {
             {/* Sacramento */}
             <Card className="border-2 border-gray-200 hover:shadow-lg transition">
               <CardHeader className="pb-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white text-xl font-bold">
+                <div className="flex items-center gap-2">
+                  <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center text-white text-lg font-bold">
                     👑
                   </div>
-                  <CardTitle>Sacramento (916)</CardTitle>
+                  <CardTitle className="text-base">Sacramento (916)</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-gray-600">
-                  Classic points game where players earn 9 or 16 points based on performance per hole
+                <p className="text-xs text-gray-600">
+                  Classic points game where players earn 9 or 16 points per hole
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* GIR */}
+            <Card className="border-2 border-gray-200 hover:shadow-lg transition">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-10 h-10 bg-yellow-500 rounded-lg flex items-center justify-center text-white text-lg font-bold">
+                    🚩
+                  </div>
+                  <CardTitle className="text-base">GIR (Greens in Regulation)</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-xs text-gray-600">
+                  Hit the green in regulation and earn points. Configure bonus/penalty holes
                 </p>
               </CardContent>
             </Card>
@@ -101,71 +248,281 @@ export default function QRLanding() {
             {/* Cards */}
             <Card className="border-2 border-gray-200 hover:shadow-lg transition">
               <CardHeader className="pb-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-red-500 rounded-lg flex items-center justify-center text-white text-xl font-bold">
+                <div className="flex items-center gap-2">
+                  <div className="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center text-white text-lg font-bold">
                     🃏
                   </div>
-                  <CardTitle>Penalty Cards</CardTitle>
+                  <CardTitle className="text-base">Penalty Cards</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-gray-600">
-                  Collect penalty cards for golf mishaps. Payouts reward those who stay out of trouble
+                <p className="text-xs text-gray-600">
+                  Collect penalty cards for golf mishaps. Payouts reward those who stay clean
                 </p>
               </CardContent>
             </Card>
           </div>
         </div>
 
-        {/* Key Features */}
+        {/* Gameplay Showcase */}
         <div className="mb-16">
           <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
-            Smart Features
+            See ForeScore in Action
           </h2>
-          <div className="bg-white rounded-xl shadow-lg p-8 space-y-4">
-            {[
-              "Run multiple games simultaneously for layered competition",
-              "Flexible payout modes: Points, Nassau (Front/Back/Total), or both",
-              "Optimized settlement calculations—money changes hands once",
-              "Real-time leaderboards and live score tracking",
-              "Works offline—sync when you get cell service",
-              "Beautiful, intuitive mobile-first design"
-            ].map((feature, idx) => (
-              <div key={idx} className="flex gap-3">
-                <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700">{feature}</span>
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            {/* Left: Features */}
+            <div className="space-y-4">
+              {[
+                { icon: "🎯", title: "Real-Time Scoring", desc: "Enter hole results as you play and watch standings update instantly" },
+                { icon: "💰", title: "Live Payouts", desc: "See who's winning money before you finish the round" },
+                { icon: "📊", title: "Multiple Views", desc: "Switch between Points, Nassau (Front/Back/Total), or both payout modes" },
+                { icon: "🔄", title: "Smart Settlement", desc: "Our algorithm optimizes transactions—money changes hands only once" },
+                { icon: "📱", title: "Works Offline", desc: "No signal on the course? No problem. Sync automatically later" },
+                { icon: "🎨", title: "Beautiful Design", desc: "Clean, mobile-first interface that's a joy to use on the fairway" }
+              ].map((feature, idx) => (
+                <div key={idx} className="flex gap-4">
+                  <div className="text-3xl flex-shrink-0">{feature.icon}</div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900 text-sm">{feature.title}</h4>
+                    <p className="text-sm text-gray-600">{feature.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Right: Phone mockup placeholder with visual representation */}
+            <div className="flex justify-center">
+              <div className="relative w-64 h-96 bg-gradient-to-br from-emerald-600 to-green-600 rounded-3xl shadow-2xl p-3 border-8 border-gray-900">
+                {/* Notch */}
+                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-32 h-7 bg-gray-900 rounded-b-3xl z-20"></div>
+                {/* Screen content */}
+                <div className="w-full h-full bg-white rounded-2xl overflow-hidden flex flex-col">
+                  <div className="bg-gradient-to-r from-emerald-500 to-green-500 text-white p-4 text-center">
+                    <p className="font-bold text-lg">Sacramento Front 9</p>
+                    <p className="text-xs opacity-90">Hole 5 of 9</p>
+                  </div>
+                  <div className="flex-1 p-4 overflow-auto space-y-2">
+                    <div className="bg-gray-100 rounded p-2 text-xs">
+                      <div className="font-semibold text-gray-900">You: 23 points</div>
+                      <div className="text-gray-600">+$8.50</div>
+                    </div>
+                    <div className="bg-blue-50 rounded p-2 text-xs">
+                      <div className="font-semibold text-gray-900">Mike: 18 points</div>
+                      <div className="text-gray-600">-$4.25</div>
+                    </div>
+                    <div className="bg-red-50 rounded p-2 text-xs">
+                      <div className="font-semibold text-gray-900">Sarah: 15 points</div>
+                      <div className="text-gray-600">-$2.10</div>
+                    </div>
+                    <div className="bg-yellow-50 rounded p-2 text-xs">
+                      <div className="font-semibold text-gray-900">John: 14 points</div>
+                      <div className="text-gray-600">-$2.15</div>
+                    </div>
+                  </div>
+                  <div className="border-t border-gray-200 p-2">
+                    <button className="w-full bg-emerald-600 text-white text-xs py-2 rounded font-semibold">
+                      Enter Next Hole
+                    </button>
+                  </div>
+                </div>
               </div>
-            ))}
+            </div>
           </div>
         </div>
 
-        {/* CTA Section */}
-        <div className="text-center mb-16">
-          <div className="bg-white rounded-2xl shadow-2xl p-12 max-w-2xl mx-auto">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Ready to Upgrade Your Golf Game?
-            </h2>
-            <p className="text-lg text-gray-600 mb-8">
-              Get 7 days free. No credit card required. Cancel anytime.
-            </p>
-            <Button
-              onClick={() => window.location.href = '/register'}
-              size="lg"
-              className="w-full md:w-64 h-14 text-lg font-semibold bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 shadow-lg"
-            >
-              Start Your Free Trial
-            </Button>
-            <p className="text-sm text-gray-500 mt-6">
-              Already have an account? <a href="/login" className="text-emerald-600 hover:text-emerald-700 font-medium">Log in here</a>
-            </p>
-          </div>
+        {/* Registration Section */}
+        <div id="register-section" className="mb-16">
+          <Card className="max-w-2xl mx-auto shadow-2xl border-2 border-emerald-200 bg-white/98">
+            <CardHeader className="text-center pb-6">
+              <CardTitle className="text-3xl font-bold text-gray-900">Ready to Upgrade Your Golf Game?</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName">First Name</Label>
+                    <Input
+                      id="firstName"
+                      type="text"
+                      placeholder="John"
+                      value={formData.firstName}
+                      onChange={handleInputChange('firstName')}
+                      className={errors.firstName ? "border-red-500" : ""}
+                    />
+                    {errors.firstName && (
+                      <p className="text-sm text-red-500">{errors.firstName}</p>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName">Last Name</Label>
+                    <Input
+                      id="lastName"
+                      type="text"
+                      placeholder="Doe"
+                      value={formData.lastName}
+                      onChange={handleInputChange('lastName')}
+                      className={errors.lastName ? "border-red-500" : ""}
+                    />
+                    {errors.lastName && (
+                      <p className="text-sm text-red-500">{errors.lastName}</p>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={formData.email}
+                    onChange={handleInputChange('email')}
+                    className={errors.email ? "border-red-500" : ""}
+                  />
+                  {errors.email && (
+                    <p className="text-sm text-red-500">{errors.email}</p>
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="At least 6 characters"
+                      value={formData.password}
+                      onChange={handleInputChange('password')}
+                      className={errors.password ? "border-red-500 pr-10" : "pr-10"}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  {errors.password && (
+                    <p className="text-sm text-red-500">{errors.password}</p>
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="Confirm your password"
+                      value={formData.confirmPassword}
+                      onChange={handleInputChange('confirmPassword')}
+                      className={errors.confirmPassword ? "border-red-500 pr-10" : "pr-10"}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    >
+                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  {errors.confirmPassword && (
+                    <p className="text-sm text-red-500">{errors.confirmPassword}</p>
+                  )}
+                </div>
+                
+                <div className="space-y-4 pt-2">
+                  <div className="flex items-start space-x-3">
+                    <Checkbox
+                      id="terms-checkbox"
+                      checked={formData.termsAccepted}
+                      onCheckedChange={handleCheckboxChange('termsAccepted')}
+                      className="mt-1"
+                    />
+                    <div className="space-y-1 leading-none">
+                      <label
+                        htmlFor="terms-checkbox"
+                        className="text-sm cursor-pointer text-gray-900"
+                      >
+                        I accept the{" "}
+                        <button
+                          type="button"
+                          onClick={openTermsDialog}
+                          className="text-emerald-600 hover:text-emerald-700 underline"
+                        >
+                          Terms of Service
+                        </button>
+                        {" "}and{" "}
+                        <button
+                          type="button"
+                          onClick={openPrivacyDialog}
+                          className="text-emerald-600 hover:text-emerald-700 underline"
+                        >
+                          Privacy Policy
+                        </button>
+                      </label>
+                      {errors.termsAccepted && (
+                        <p className="text-sm text-red-500">{errors.termsAccepted}</p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-3">
+                    <Checkbox
+                      id="marketing-checkbox"
+                      checked={formData.marketingConsent}
+                      onCheckedChange={handleCheckboxChange('marketingConsent')}
+                      className="mt-1"
+                    />
+                    <label
+                      htmlFor="marketing-checkbox"
+                      className="text-sm cursor-pointer text-gray-900"
+                    >
+                      I agree to receive marketing communications
+                    </label>
+                  </div>
+                </div>
+                
+                <Button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-semibold py-3 text-lg"
+                  disabled={registerMutation.isPending}
+                >
+                  {registerMutation.isPending ? "Creating Account..." : "Start Free Trial"}
+                </Button>
+
+                <p className="text-xs text-center text-gray-500">
+                  7 days free • No credit card required • Cancel anytime
+                </p>
+              </form>
+
+              <AppDownloadPrompt />
+              
+              <div className="mt-4 text-center">
+                <p className="text-sm text-gray-600">
+                  Already have an account?{" "}
+                  <a href="/login" className="text-emerald-600 hover:text-emerald-700 font-medium">
+                    Sign in
+                  </a>
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Footer */}
-        <div className="text-center text-sm text-gray-500">
+        <div className="text-center text-sm text-gray-500 pb-8">
           <p>© 2025 ForeScore. All rights reserved.</p>
         </div>
       </div>
+
+      <LegalDialogs
+        showTerms={showTermsDialog}
+        showPrivacy={showPrivacyDialog}
+        onOpenChange={handleDialogChange}
+      />
     </div>
   );
 }

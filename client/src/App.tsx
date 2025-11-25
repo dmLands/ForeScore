@@ -10,6 +10,7 @@ import { useAnalytics } from "./hooks/use-analytics";
 import { VersionChecker } from "@/components/VersionChecker";
 import Home from "@/pages/home";
 import Landing from "@/pages/landing";
+import QRLanding from "@/pages/qr-landing";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
 import ForgotPassword from "@/pages/forgot-password";
@@ -71,6 +72,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={ProtectedHome} />
+      <Route path="/qr-landing" component={QRLanding} />
       <Route path="/qr" component={QRCodePage} />
       <Route path="/admin" component={AdminPage} />
       <Route path="/login" component={Login} />

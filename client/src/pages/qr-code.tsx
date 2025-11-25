@@ -2,7 +2,8 @@ import { QRCodeSVG } from 'qrcode.react';
 import logoPath from '@assets/IMG_8913_1760655687615.jpeg';
 
 export default function QRCodePage() {
-  const appUrl = window.location.origin.replace('qr.', '');
+  const baseUrl = window.location.origin.replace('qr.', '');
+  const qrLandingUrl = baseUrl + '/qr-landing';
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-white flex items-center justify-center p-6">
@@ -16,7 +17,7 @@ export default function QRCodePage() {
           <div className="bg-white p-6 rounded-xl border-4 border-emerald-500 flex justify-center">
             <div className="relative">
               <QRCodeSVG
-                value={appUrl}
+                value={qrLandingUrl}
                 size={256}
                 level="H"
                 fgColor="#0A9961"
@@ -34,20 +35,20 @@ export default function QRCodePage() {
           <div className="text-center space-y-4">
             <div className="space-y-1">
               <p className="text-lg font-semibold text-gray-900">
-                Scan to Open ForeScore
+                Scan to Learn About ForeScore
               </p>
               <p className="text-sm text-gray-500">
-                Track your golf game payouts instantly
+                Make your golf game more competitive
               </p>
             </div>
             
             <div className="pt-4 border-t border-gray-200">
               <a 
-                href={appUrl}
+                href={qrLandingUrl}
                 className="text-emerald-600 hover:text-emerald-700 font-medium text-sm"
                 data-testid="link-app"
               >
-                Or visit: {appUrl}
+                Or visit: {baseUrl}/qr-landing
               </a>
             </div>
           </div>

@@ -290,69 +290,18 @@ export default function QRLanding() {
               ))}
             </div>
 
-            {/* Right: Phone mockup showing Edit Payouts modal */}
+            {/* Right: Phone mockup showing actual app screenshots */}
             <div className="flex justify-center">
               <div className="relative w-64 h-96 bg-gradient-to-br from-emerald-600 to-green-600 rounded-3xl shadow-2xl p-3 border-8 border-gray-900">
                 {/* Notch */}
                 <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-32 h-7 bg-gray-900 rounded-b-3xl z-20"></div>
                 {/* Screen content */}
-                <div className="w-full h-full bg-white rounded-2xl overflow-hidden flex flex-col">
-                  {/* Modal Header */}
-                  <div className="bg-white border-b border-gray-200 p-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="font-bold text-sm text-gray-900">Edit Payouts</p>
-                      <span className="text-lg text-gray-400">✕</span>
-                    </div>
-                    <div className="flex gap-1 text-xs">
-                      <button className="px-2 py-1 bg-emerald-600 text-white rounded font-semibold">Points</button>
-                      <button className="px-2 py-1 bg-gray-100 text-gray-700 rounded">Nassau</button>
-                    </div>
-                  </div>
-                  
-                  {/* Scorecard preview */}
-                  <div className="flex-1 overflow-auto p-3 space-y-2 text-xs">
-                    {/* Player rows */}
-                    <div className="grid grid-cols-3 gap-1 font-semibold text-gray-600 border-b pb-1">
-                      <div>Player</div>
-                      <div className="text-right">Score</div>
-                      <div className="text-right">$ Due</div>
-                    </div>
-                    
-                    <div className="grid grid-cols-3 gap-1 items-center py-1 border-b">
-                      <div className="font-semibold text-gray-900">You (Red)</div>
-                      <div className="text-center bg-blue-50 rounded py-1">42</div>
-                      <div className="text-right text-green-600 font-bold">+$12</div>
-                    </div>
-                    
-                    <div className="grid grid-cols-3 gap-1 items-center py-1 border-b">
-                      <div className="font-semibold text-gray-900">Mike (Blue)</div>
-                      <div className="text-center bg-blue-50 rounded py-1">38</div>
-                      <div className="text-right text-red-600 font-bold">-$4</div>
-                    </div>
-                    
-                    <div className="grid grid-cols-3 gap-1 items-center py-1 border-b">
-                      <div className="font-semibold text-gray-900">Sarah (Grn)</div>
-                      <div className="text-center bg-blue-50 rounded py-1">35</div>
-                      <div className="text-right text-red-600 font-bold">-$6</div>
-                    </div>
-                    
-                    <div className="grid grid-cols-3 gap-1 items-center py-1">
-                      <div className="font-semibold text-gray-900">John (Ylw)</div>
-                      <div className="text-center bg-blue-50 rounded py-1">33</div>
-                      <div className="text-right text-red-600 font-bold">-$2</div>
-                    </div>
-                  </div>
-                  
-                  {/* Footer */}
-                  <div className="border-t border-gray-200 p-2 space-y-1">
-                    <div className="text-xs bg-gray-50 rounded p-1.5">
-                      <p className="text-gray-600">Settlement: 3 transactions</p>
-                      <p className="text-gray-500 text-xs">You → Mike ($4), Sarah ($6), John ($2)</p>
-                    </div>
-                    <button className="w-full bg-emerald-600 text-white text-xs py-1.5 rounded font-semibold">
-                      Save & Close
-                    </button>
-                  </div>
+                <div className="w-full h-full bg-white rounded-2xl overflow-hidden">
+                  <img 
+                    src="@assets/image_1764097878852.png" 
+                    alt="ForeScore - Who Owes Who Payouts Screen" 
+                    className="w-full h-full object-cover"
+                  />
                 </div>
               </div>
             </div>

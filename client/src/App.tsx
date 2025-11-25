@@ -64,9 +64,9 @@ function Router() {
   // Check if we're on the QR subdomain
   const isQRSubdomain = window.location.hostname.startsWith('qr.');
   
-  // If on QR subdomain, always show QR code page
+  // If on QR subdomain, always show marketing landing page
   if (isQRSubdomain) {
-    return <QRCodePage />;
+    return <QRLanding />;
   }
   
   return (

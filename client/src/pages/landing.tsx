@@ -20,9 +20,9 @@ export default function Landing() {
             {/* ForeScore Logo */}
             <div className="flex justify-center mb-4">
               <img 
-                src="/forescore-logo.png" 
+                src="/attached_assets/ForeScore_Logo_transparent_1763148840628.png" 
                 alt="ForeScore Logo" 
-                className="w-24 h-24"
+                className="w-24 h-24 object-contain"
               />
             </div>
             

@@ -145,7 +145,7 @@ export default function QRLanding() {
         <div className="text-center mb-12">
           <div className="flex justify-center mb-4">
             <img 
-              src="@assets/ForeScore_Logo_transparent_1763148840628.png" 
+              src="/attached_assets/ForeScore_Logo_transparent_1763148840628.png" 
               alt="ForeScore Logo" 
               className="w-20 h-20 object-contain"
             />
@@ -290,16 +290,31 @@ export default function QRLanding() {
               ))}
             </div>
 
-            {/* Right: Phone mockup showing actual app screenshots */}
-            <div className="flex justify-center">
-              <div className="relative w-64 h-96 bg-gradient-to-br from-emerald-600 to-green-600 rounded-3xl shadow-2xl p-3 border-8 border-gray-900">
+            {/* Right: Phone mockup showing actual app screenshots - Both displayed */}
+            <div className="flex justify-center gap-4">
+              {/* First screenshot */}
+              <div className="relative w-56 h-80 bg-gradient-to-br from-emerald-600 to-green-600 rounded-3xl shadow-2xl p-3 border-8 border-gray-900">
                 {/* Notch */}
                 <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-32 h-7 bg-gray-900 rounded-b-3xl z-20"></div>
                 {/* Screen content */}
                 <div className="w-full h-full bg-white rounded-2xl overflow-hidden">
                   <img 
-                    src="@assets/image_1764097878852.png" 
+                    src="/attached_assets/image_1764097878852.png" 
                     alt="ForeScore - Who Owes Who Payouts Screen" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+              
+              {/* Second screenshot */}
+              <div className="relative w-56 h-80 bg-gradient-to-br from-emerald-600 to-green-600 rounded-3xl shadow-2xl p-3 border-8 border-gray-900">
+                {/* Notch */}
+                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-32 h-7 bg-gray-900 rounded-b-3xl z-20"></div>
+                {/* Screen content */}
+                <div className="w-full h-full bg-white rounded-2xl overflow-hidden">
+                  <img 
+                    src="/attached_assets/image_1764097900039.png" 
+                    alt="ForeScore - BBB Game Score Entry Screen" 
                     className="w-full h-full object-cover"
                   />
                 </div>

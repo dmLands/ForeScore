@@ -294,11 +294,11 @@ export default function QRLanding() {
             </div>
 
             {/* Right: Phone mockup showing actual app screenshots - Both displayed */}
-            <div className="flex justify-center gap-4">
+            <div className="flex flex-col md:flex-row justify-center gap-4 md:gap-6">
               {/* First screenshot */}
-              <div className="relative w-56 h-80 bg-gradient-to-br from-emerald-600 to-green-600 rounded-3xl shadow-2xl p-3 border-8 border-gray-900">
+              <div className="relative w-48 h-64 md:w-56 md:h-80 bg-gradient-to-br from-emerald-600 to-green-600 rounded-3xl shadow-2xl p-3 border-8 border-gray-900 mx-auto md:mx-0">
                 {/* Notch */}
-                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-32 h-7 bg-gray-900 rounded-b-3xl z-20"></div>
+                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-28 md:w-32 h-6 md:h-7 bg-gray-900 rounded-b-3xl z-20"></div>
                 {/* Screen content */}
                 <div className="w-full h-full bg-white rounded-2xl overflow-hidden">
                   <img 
@@ -310,9 +310,9 @@ export default function QRLanding() {
               </div>
               
               {/* Second screenshot */}
-              <div className="relative w-56 h-80 bg-gradient-to-br from-emerald-600 to-green-600 rounded-3xl shadow-2xl p-3 border-8 border-gray-900">
+              <div className="relative w-48 h-64 md:w-56 md:h-80 bg-gradient-to-br from-emerald-600 to-green-600 rounded-3xl shadow-2xl p-3 border-8 border-gray-900 mx-auto md:mx-0">
                 {/* Notch */}
-                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-32 h-7 bg-gray-900 rounded-b-3xl z-20"></div>
+                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-28 md:w-32 h-6 md:h-7 bg-gray-900 rounded-b-3xl z-20"></div>
                 {/* Screen content */}
                 <div className="w-full h-full bg-white rounded-2xl overflow-hidden">
                   <img 

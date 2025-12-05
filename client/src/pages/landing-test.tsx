@@ -289,37 +289,39 @@ export default function LandingTest() {
       <section className="py-16 md:py-24 bg-emerald-50">
         <div className="max-w-5xl mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-12 text-center">
-            From First Tee to 19th Hole in 3 Steps
+            From the 1st Tee to 19th Hole in 3 Steps
           </h2>
           
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-6">
             {[
               {
                 step: "1",
-                icon: <Users className="h-8 w-8" />,
+                icon: <Users className="h-6 w-6" />,
                 title: "Create Your Group",
                 description: "Add up to 4 players, customize colors, and select which games you're playing"
               },
               {
                 step: "2", 
-                icon: <Smartphone className="h-8 w-8" />,
+                icon: <Smartphone className="h-6 w-6" />,
                 title: "Enter Scores As You Play",
                 description: "Quick hole-by-hole entry that works even without cell service"
               },
               {
                 step: "3",
-                icon: <Calculator className="h-8 w-8" />,
+                icon: <Calculator className="h-6 w-6" />,
                 title: "Instant Settlement",
                 description: "Our algorithm calculates optimal payouts - money only changes hands once"
               }
             ].map((item, idx) => (
               <div key={idx} className="relative">
-                <div className="bg-white rounded-2xl p-8 shadow-lg h-full">
-                  <div className="w-12 h-12 bg-emerald-600 text-white rounded-full flex items-center justify-center text-xl font-bold mb-4">
-                    {item.step}
+                <div className="bg-white rounded-2xl p-6 shadow-lg h-full">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center text-lg font-bold">
+                      {item.step}
+                    </div>
+                    <div className="text-emerald-600">{item.icon}</div>
                   </div>
-                  <div className="text-emerald-600 mb-4">{item.icon}</div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">{item.title}</h3>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">{item.title}</h3>
                   <p className="text-gray-600">{item.description}</p>
                 </div>
                 {idx < 2 && (

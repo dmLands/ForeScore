@@ -234,7 +234,7 @@ export default function LandingTest() {
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              4 Games. 1 App. Zero Math.
+              4 Games. 1 App. 0 Math.
             </h2>
             <p className="text-xl text-gray-600">
               Play any combination and get instant, optimized payouts

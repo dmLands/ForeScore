@@ -142,11 +142,11 @@ export default function LandingTest() {
               </div>
               
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-                Stop arguing about who owes what after the round
+                Stop arguing about who owes who after the round
               </h1>
               
               <p className="text-xl md:text-2xl text-emerald-100 mb-8 leading-relaxed">
-                The only golf payout calculator that handles 4+ games simultaneously with instant, fair settlements.
+                The Only Golf Betting Payouts Calculator<br />You hit the shots, we do the math
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">

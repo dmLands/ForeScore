@@ -385,7 +385,7 @@ export default function LandingTest() {
             Simple, Honest Pricing
           </h2>
           <p className="text-xl text-gray-600 mb-10">
-            Less than the cost of a sleeve of Pro V1s
+            Cheaper than the balls you'll lose next round
           </p>
           
           <Card className="border-2 border-emerald-500 shadow-2xl overflow-hidden">
@@ -394,8 +394,17 @@ export default function LandingTest() {
             </div>
             <CardContent className="pt-8 pb-10">
               <div className="mb-6">
-                <span className="text-5xl font-bold text-gray-900">$4.99</span>
-                <span className="text-gray-500">/month</span>
+                <div className="flex justify-center gap-8 items-baseline">
+                  <div>
+                    <span className="text-4xl font-bold text-gray-900">$1.99</span>
+                    <span className="text-gray-500">/month</span>
+                  </div>
+                  <span className="text-gray-400">or</span>
+                  <div>
+                    <span className="text-4xl font-bold text-gray-900">$16.99</span>
+                    <span className="text-gray-500">/year</span>
+                  </div>
+                </div>
               </div>
               <ul className="text-left space-y-3 mb-8">
                 {[

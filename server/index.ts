@@ -17,15 +17,6 @@ app.use((req, res, next) => {
   express.urlencoded({ extended: false, limit: '50mb' })(req, res, next);
 });
 
-// Redirect qr.forescore.xyz subdomain to main registration page
-app.use((req, res, next) => {
-  const hostname = req.hostname || req.get('host')?.split(':')[0];
-  if (hostname === 'qr.forescore.xyz') {
-    return res.redirect(301, 'https://forescore.xyz/register');
-  }
-  next();
-});
-
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;

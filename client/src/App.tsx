@@ -67,7 +67,7 @@ function Router() {
   
   // If on QR subdomain, always show marketing landing page
   if (isQRSubdomain) {
-    return <QRLanding />;
+    return <LandingTest />;
   }
   
   return (

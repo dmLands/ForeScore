@@ -11,7 +11,7 @@ import { queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { z } from "zod";
 import LegalDialogs from "@/components/LegalDialogs";
-import logoPath from "@assets/ForeScore_Logo_transparent_1763148840628.png";
+import logoPath from "@assets/ForeScore_Logo_invert_transparent_1764969876475.png";
 import payoutScreenshot from "@assets/image_1764097878852.png";
 import bbbScreenshot from "@assets/image_1764097900039.png";
 
@@ -142,11 +142,12 @@ export default function LandingTest() {
               </div>
               
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-                Stop arguing about who owes what after the round
+                Stop arguing about who owes who after the round
               </h1>
               
               <p className="text-xl md:text-2xl text-emerald-100 mb-8 leading-relaxed">
-                The only golf payout calculator that handles 4+ games simultaneously with instant, fair settlements.
+                The Only Golf Betting Payouts Calculator<br />
+                <span className="italic">You hit the shots, we do the math</span>
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
@@ -186,17 +187,17 @@ export default function LandingTest() {
             <div className="relative flex justify-center">
               <div className="relative">
                 {/* Main phone */}
-                <div className="relative w-56 h-[420px] bg-gray-900 rounded-[3rem] p-2 shadow-2xl transform rotate-3">
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-6 bg-gray-900 rounded-b-2xl z-10"></div>
-                  <div className="w-full h-full bg-white rounded-[2.5rem] overflow-hidden">
-                    <img src={payoutScreenshot} alt="ForeScore Payouts" className="w-full h-full object-cover" />
+                <div className="relative w-40 h-[300px] md:w-48 md:h-[360px] bg-gray-900 rounded-[2rem] p-1.5 shadow-2xl transform rotate-3">
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-4 bg-gray-900 rounded-b-xl z-10"></div>
+                  <div className="w-full h-full bg-white rounded-[1.5rem] overflow-hidden">
+                    <img src={payoutScreenshot} alt="ForeScore Payouts" className="w-full h-full object-contain" />
                   </div>
                 </div>
                 {/* Secondary phone */}
-                <div className="absolute -left-16 top-12 w-44 h-[330px] bg-gray-900 rounded-[2.5rem] p-2 shadow-2xl transform -rotate-6 hidden md:block">
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-5 bg-gray-900 rounded-b-xl z-10"></div>
-                  <div className="w-full h-full bg-white rounded-[2rem] overflow-hidden">
-                    <img src={bbbScreenshot} alt="ForeScore Game Entry" className="w-full h-full object-cover" />
+                <div className="absolute -left-12 top-8 w-32 h-[240px] md:w-36 md:h-[270px] bg-gray-900 rounded-[1.5rem] p-1.5 shadow-2xl transform -rotate-6 hidden md:block">
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-14 h-3 bg-gray-900 rounded-b-lg z-10"></div>
+                  <div className="w-full h-full bg-white rounded-[1.25rem] overflow-hidden">
+                    <img src={bbbScreenshot} alt="ForeScore Game Entry" className="w-full h-full object-contain" />
                   </div>
                 </div>
               </div>
@@ -213,14 +214,15 @@ export default function LandingTest() {
           </h2>
           <div className="grid md:grid-cols-3 gap-6 mt-10">
             {[
-              { emoji: "😤", text: "\"Wait, I thought I was up $15, not down $5!\"" },
-              { emoji: "🤯", text: "\"Hold on, let me recalculate this for the 4th time...\"" },
-              { emoji: "💸", text: "\"Just Venmo everyone $20 and call it even.\"" }
+              { emoji: "😤", text: "\"Wait, I thought I was up $15, not down $5!\"", name: "Mike T.", location: "Arizona" },
+              { emoji: "🤯", text: "\"Hold on, let me recalculate this for the 4th time...\"", name: "Dave R.", location: "California" },
+              { emoji: "💸", text: "\"Just Venmo everyone $20 and call it even.\"", name: "Chris M.", location: "Texas" }
             ].map((item, idx) => (
               <Card key={idx} className="bg-white border-2 border-gray-200 hover:border-emerald-300 transition-colors">
                 <CardContent className="pt-6 text-center">
                   <div className="text-4xl mb-4">{item.emoji}</div>
-                  <p className="text-gray-700 font-medium italic">{item.text}</p>
+                  <p className="text-gray-700 font-medium italic mb-3">{item.text}</p>
+                  <p className="text-sm text-gray-500">— {item.name}, {item.location}</p>
                 </CardContent>
               </Card>
             ))}
@@ -233,7 +235,7 @@ export default function LandingTest() {
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              4 Games. 1 App. Zero Math.
+              4 Games. 1 App. 0 Math.
             </h2>
             <p className="text-xl text-gray-600">
               Play any combination and get instant, optimized payouts
@@ -288,42 +290,44 @@ export default function LandingTest() {
       <section className="py-16 md:py-24 bg-emerald-50">
         <div className="max-w-5xl mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-12 text-center">
-            From First Tee to 19th Hole in 3 Steps
+            From the 1st Tee to 19th Hole in 3 Steps
           </h2>
           
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-6">
             {[
               {
                 step: "1",
-                icon: <Users className="h-8 w-8" />,
+                emoji: "👥",
                 title: "Create Your Group",
                 description: "Add up to 4 players, customize colors, and select which games you're playing"
               },
               {
                 step: "2", 
-                icon: <Smartphone className="h-8 w-8" />,
+                emoji: "📱",
                 title: "Enter Scores As You Play",
                 description: "Quick hole-by-hole entry that works even without cell service"
               },
               {
                 step: "3",
-                icon: <Calculator className="h-8 w-8" />,
+                emoji: "💵",
                 title: "Instant Settlement",
                 description: "Our algorithm calculates optimal payouts - money only changes hands once"
               }
             ].map((item, idx) => (
               <div key={idx} className="relative">
-                <div className="bg-white rounded-2xl p-8 shadow-lg h-full">
-                  <div className="w-12 h-12 bg-emerald-600 text-white rounded-full flex items-center justify-center text-xl font-bold mb-4">
-                    {item.step}
+                <div className="bg-white rounded-xl p-6 shadow-lg h-full">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center text-lg font-bold flex-shrink-0">
+                      {item.step}
+                    </div>
+                    <span className="text-2xl">{item.emoji}</span>
                   </div>
-                  <div className="text-emerald-600 mb-4">{item.icon}</div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">{item.title}</h3>
-                  <p className="text-gray-600">{item.description}</p>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">{item.title}</h3>
+                  <p className="text-sm text-gray-600">{item.description}</p>
                 </div>
                 {idx < 2 && (
-                  <div className="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2 text-emerald-300">
-                    <ArrowRight className="h-8 w-8" />
+                  <div className="hidden md:block absolute top-1/2 -right-3 transform -translate-y-1/2 text-emerald-300">
+                    <ArrowRight className="h-6 w-6" />
                   </div>
                 )}
               </div>
@@ -369,7 +373,7 @@ export default function LandingTest() {
             ))}
           </div>
           <blockquote className="text-2xl md:text-3xl font-medium mb-6 leading-relaxed">
-            "Finally, an app that handles all our side games without the spreadsheet headaches. The optimized payouts feature alone is worth it."
+            "Finally, an app that handles all our side games without the arguments and uncertainty. The optimized payouts feature alone is worth it."
           </blockquote>
           <p className="text-gray-400">— Weekend Warriors Golf Group, Sacramento CA</p>
         </div>
@@ -377,49 +381,91 @@ export default function LandingTest() {
 
       {/* Pricing */}
       <section className="py-16 md:py-24 bg-gray-50">
-        <div className="max-w-xl mx-auto px-4 text-center">
+        <div className="max-w-3xl mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
             Simple, Honest Pricing
           </h2>
           <p className="text-xl text-gray-600 mb-10">
-            Less than the cost of a sleeve of Pro V1s
+            Cheaper than the balls you'll lose next round
           </p>
           
-          <Card className="border-2 border-emerald-500 shadow-2xl overflow-hidden">
-            <div className="bg-emerald-600 text-white py-3 text-sm font-medium">
-              7-DAY FREE TRIAL
-            </div>
-            <CardContent className="pt-8 pb-10">
-              <div className="mb-6">
-                <span className="text-5xl font-bold text-gray-900">$4.99</span>
-                <span className="text-gray-500">/month</span>
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Monthly Plan */}
+            <Card className="border-2 border-gray-200 shadow-lg overflow-hidden">
+              <div className="bg-gray-100 text-gray-700 py-3 text-sm font-medium">
+                MONTHLY
               </div>
-              <ul className="text-left space-y-3 mb-8">
-                {[
-                  "All 4 game types included",
-                  "Unlimited groups & rounds",
-                  "Real-time scoring",
-                  "Offline mode",
-                  "Custom penalty cards",
-                  "Optimized settlements"
-                ].map((feature, idx) => (
-                  <li key={idx} className="flex items-center gap-3">
-                    <Check className="h-5 w-5 text-emerald-600 flex-shrink-0" />
-                    <span className="text-gray-700">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-              <Button 
-                onClick={scrollToSignup}
-                size="lg" 
-                className="w-full h-14 text-lg font-semibold bg-emerald-600 hover:bg-emerald-700"
-                data-testid="button-pricing-signup"
-              >
-                Start Your Free Trial
-              </Button>
-              <p className="text-sm text-gray-500 mt-4">No credit card required to start</p>
-            </CardContent>
-          </Card>
+              <CardContent className="pt-6 pb-8">
+                <div className="mb-4">
+                  <span className="text-4xl font-bold text-gray-900">$1.99</span>
+                  <span className="text-gray-500">/month</span>
+                </div>
+                <p className="text-sm text-gray-500 mb-6">Billed monthly</p>
+                <ul className="text-left space-y-2 mb-6">
+                  {[
+                    "All 4 game types",
+                    "Unlimited rounds",
+                    "Works offline",
+                    "Custom cards"
+                  ].map((feature, idx) => (
+                    <li key={idx} className="flex items-center gap-2 text-sm">
+                      <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" />
+                      <span className="text-gray-700">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Button 
+                  onClick={scrollToSignup}
+                  variant="outline"
+                  size="lg" 
+                  className="w-full h-12 font-semibold"
+                  data-testid="button-pricing-monthly"
+                >
+                  Start Free Trial
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Annual Plan */}
+            <Card className="border-2 border-emerald-500 shadow-2xl overflow-hidden relative">
+              <div className="absolute -top-0 -right-0 bg-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
+                BEST VALUE
+              </div>
+              <div className="bg-emerald-600 text-white py-3 text-sm font-medium">
+                ANNUAL
+              </div>
+              <CardContent className="pt-6 pb-8">
+                <div className="mb-4">
+                  <span className="text-4xl font-bold text-gray-900">$16.99</span>
+                  <span className="text-gray-500">/year</span>
+                </div>
+                <p className="text-sm text-emerald-600 font-medium mb-6">Save $7 vs monthly!</p>
+                <ul className="text-left space-y-2 mb-6">
+                  {[
+                    "All 4 game types",
+                    "Unlimited rounds",
+                    "Works offline",
+                    "Custom cards"
+                  ].map((feature, idx) => (
+                    <li key={idx} className="flex items-center gap-2 text-sm">
+                      <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" />
+                      <span className="text-gray-700">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Button 
+                  onClick={scrollToSignup}
+                  size="lg" 
+                  className="w-full h-12 font-semibold bg-emerald-600 hover:bg-emerald-700"
+                  data-testid="button-pricing-annual"
+                >
+                  Start Free Trial
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <p className="text-sm text-gray-500 mt-6">7-day free trial • No credit card required to start</p>
         </div>
       </section>
 

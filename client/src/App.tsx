@@ -23,6 +23,7 @@ import EmailPreferences from "@/pages/email-preferences";
 import NotFound from "@/pages/not-found";
 import AdminPage from "@/pages/admin";
 import QRCodePage from "@/pages/qr-code";
+import CompleteAccount from "@/pages/complete-account";
 
 // Guard component that wraps Home to check subscription access
 function ProtectedHome() {
@@ -85,6 +86,7 @@ function Router() {
       <Route path="/email-preferences" component={EmailPreferences} />
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/reset-password" component={ResetPassword} />
+      <Route path="/complete-account" component={CompleteAccount} />
       <Route component={NotFound} />
     </Switch>
   );

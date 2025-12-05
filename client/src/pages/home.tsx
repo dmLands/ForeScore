@@ -11,7 +11,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Users, Gamepad2, BookOpen, ChevronRight, Edit, Layers, Trophy, ArrowLeft, Info, HelpCircle, LogOut, Menu, Loader2, User, FileText, Mail, Crown, Clock, CreditCard, AlertTriangle, Hash, Flag, Zap, MoreHorizontal } from "lucide-react";
+import { Plus, Users, Gamepad2, BookOpen, ChevronRight, Edit, Layers, Trophy, ArrowLeft, Info, HelpCircle, LogOut, Menu, Loader2, User, FileText, Mail, Crown, Clock, CreditCard, AlertTriangle, Hash, Flag, Zap, MoreHorizontal, Lock } from "lucide-react";
 import { CreateGroupModal } from "@/components/create-group-modal";
 import { BottomNavigation } from "@/components/bottom-navigation";
 import { Tutorial } from "@/components/tutorial";
@@ -1697,6 +1697,14 @@ export default function Home() {
                             <span className="text-xs text-gray-500">{(user as any).email || 'Not set'}</span>
                           </div>
                         </DropdownMenuItem>
+                        {(user as any).isQuickSignup && !(user as any).firstName && (
+                          <DropdownMenuItem asChild>
+                            <Link href="/complete-account" className="cursor-pointer text-emerald-600 hover:text-emerald-700 font-medium">
+                              <Lock className="h-4 w-4 mr-2" />
+                              Complete Account Setup
+                            </Link>
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem asChild>
                           <Link href="/manage-subscription" className="cursor-pointer text-gray-900 hover:text-gray-700">
                             <CreditCard className="h-4 w-4 mr-2" />

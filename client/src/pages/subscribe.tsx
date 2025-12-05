@@ -2,15 +2,16 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { useStripe, Elements, PaymentElement, useElements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
-import { CheckCircle, Clock, CreditCard, Users, Calculator, Trophy } from "lucide-react";
+import { CheckCircle, Clock, CreditCard, Users, Calculator, Trophy, Eye, EyeOff, Lock } from "lucide-react";
 
-// Load Stripe
 if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
   throw new Error('Missing required Stripe key: VITE_STRIPE_PUBLIC_KEY');
 }
@@ -28,6 +29,167 @@ interface SubscriptionPlans {
   monthly: SubscriptionPlan;
   annual: SubscriptionPlan;
 }
+
+interface User {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  isQuickSignup: boolean | null;
+}
+
+const PasswordSetupForm = ({ 
+  user, 
+  onComplete 
+}: { 
+  user: User; 
+  onComplete: () => void;
+}) => {
+  const { toast } = useToast();
+  const [firstName, setFirstName] = useState(user.firstName || "");
+  const [lastName, setLastName] = useState(user.lastName || "");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const convertAccountMutation = useMutation({
+    mutationFn: async (data: { firstName: string; lastName: string; password: string }) => {
+      const response = await apiRequest('POST', '/api/auth/convert-account', data);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(['/api/auth/user'], data.user);
+      toast({
+        title: "Account secured!",
+        description: "Your password has been set. Proceeding to payment...",
+      });
+      onComplete();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update account. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newErrors: Record<string, string> = {};
+
+    if (!firstName.trim()) {
+      newErrors.firstName = "First name is required";
+    }
+    if (!lastName.trim()) {
+      newErrors.lastName = "Last name is required";
+    }
+    if (!password || password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+    if (password !== confirmPassword) {
+      newErrors.confirmPassword = "Passwords don't match";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    setErrors({});
+    convertAccountMutation.mutate({ firstName: firstName.trim(), lastName: lastName.trim(), password });
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <Label htmlFor="firstName" className="text-sm">First Name</Label>
+          <Input
+            id="firstName"
+            placeholder="John"
+            value={firstName}
+            onChange={(e) => { setFirstName(e.target.value); setErrors(prev => ({ ...prev, firstName: "" })); }}
+            className={errors.firstName ? "border-red-500" : ""}
+            data-testid="input-firstname"
+          />
+          {errors.firstName && <p className="text-xs text-red-500">{errors.firstName}</p>}
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="lastName" className="text-sm">Last Name</Label>
+          <Input
+            id="lastName"
+            placeholder="Doe"
+            value={lastName}
+            onChange={(e) => { setLastName(e.target.value); setErrors(prev => ({ ...prev, lastName: "" })); }}
+            className={errors.lastName ? "border-red-500" : ""}
+            data-testid="input-lastname"
+          />
+          {errors.lastName && <p className="text-xs text-red-500">{errors.lastName}</p>}
+        </div>
+      </div>
+
+      <div className="space-y-1">
+        <Label htmlFor="password" className="text-sm">Create Password</Label>
+        <div className="relative">
+          <Input
+            id="password"
+            type={showPassword ? "text" : "password"}
+            placeholder="Min 6 characters"
+            value={password}
+            onChange={(e) => { setPassword(e.target.value); setErrors(prev => ({ ...prev, password: "" })); }}
+            className={errors.password ? "border-red-500 pr-10" : "pr-10"}
+            data-testid="input-password"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            data-testid="button-toggle-password"
+          >
+            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        </div>
+        {errors.password && <p className="text-xs text-red-500">{errors.password}</p>}
+      </div>
+
+      <div className="space-y-1">
+        <Label htmlFor="confirmPassword" className="text-sm">Confirm Password</Label>
+        <div className="relative">
+          <Input
+            id="confirmPassword"
+            type={showConfirmPassword ? "text" : "password"}
+            placeholder="Confirm your password"
+            value={confirmPassword}
+            onChange={(e) => { setConfirmPassword(e.target.value); setErrors(prev => ({ ...prev, confirmPassword: "" })); }}
+            className={errors.confirmPassword ? "border-red-500 pr-10" : "pr-10"}
+            data-testid="input-confirm-password"
+          />
+          <button
+            type="button"
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            data-testid="button-toggle-confirm-password"
+          >
+            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        </div>
+        {errors.confirmPassword && <p className="text-xs text-red-500">{errors.confirmPassword}</p>}
+      </div>
+
+      <Button
+        type="submit"
+        className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+        disabled={convertAccountMutation.isPending}
+        data-testid="button-set-password"
+      >
+        {convertAccountMutation.isPending ? "Saving..." : "Continue to Payment"}
+      </Button>
+    </form>
+  );
+};
 
 const SubscribeForm = ({ selectedPlan, onSubscriptionComplete }: { 
   selectedPlan: string; 
@@ -48,10 +210,9 @@ const SubscribeForm = ({ selectedPlan, onSubscriptionComplete }: {
     setIsLoading(true);
 
     try {
-      // For trial subscriptions, we use SetupIntent for payment method collection
       const result = await stripe.confirmSetup({
         elements,
-        redirect: 'if_required', // Avoids SecurityError in Replit iframe
+        redirect: 'if_required',
       });
 
       if (result.error) {
@@ -61,7 +222,6 @@ const SubscribeForm = ({ selectedPlan, onSubscriptionComplete }: {
           variant: "destructive",
         });
       } else {
-        // Payment method setup succeeded - create subscription immediately
         try {
           const setupIntentId = result.setupIntent?.id;
           if (setupIntentId) {
@@ -70,7 +230,6 @@ const SubscribeForm = ({ selectedPlan, onSubscriptionComplete }: {
             });
             const data = await response.json();
             
-            // Subscription is now active - invalidate queries and redirect
             await queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
             await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
             
@@ -79,7 +238,6 @@ const SubscribeForm = ({ selectedPlan, onSubscriptionComplete }: {
               description: "Your subscription is now active. Welcome to ForeScore!",
             });
             
-            // Redirect to home - subscription is active
             onSubscriptionComplete();
           }
         } catch (error) {
@@ -204,7 +362,6 @@ export default function Subscribe() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   
-  // Initialize plan and auto-flow from URL parameter BEFORE first render
   const [selectedPlan, setSelectedPlan] = useState<string>(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const planParam = urlParams.get('plan');
@@ -220,13 +377,18 @@ export default function Subscribe() {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [subscriptionCreated, setSubscriptionCreated] = useState(false);
   const [autoFlowError, setAutoFlowError] = useState<string | null>(null);
+  const [passwordSetupComplete, setPasswordSetupComplete] = useState(false);
 
-  // Fetch subscription plans
+  const { data: user, isLoading: userLoading } = useQuery<User>({
+    queryKey: ['/api/auth/user'],
+  });
+
   const { data: plans } = useQuery<SubscriptionPlans>({
     queryKey: ['/api/subscription/plans'],
   });
 
-  // Create subscription mutation
+  const isQuickSignupUser = user?.isQuickSignup && !user?.firstName;
+
   const createSubscriptionMutation = useMutation({
     mutationFn: async (planKey: string) => {
       const response = await apiRequest('POST', '/api/subscription/create', { planKey });
@@ -255,12 +417,14 @@ export default function Subscribe() {
     },
   });
 
-  // Auto-trigger payment flow for users coming from welcome-trial page
   useEffect(() => {
     if (isAutoFlow && !subscriptionCreated && !createSubscriptionMutation.isPending) {
+      if (isQuickSignupUser && !passwordSetupComplete) {
+        return;
+      }
       createSubscriptionMutation.mutate(selectedPlan);
     }
-  }, [isAutoFlow]);
+  }, [isAutoFlow, passwordSetupComplete, isQuickSignupUser]);
 
   const handlePlanSelect = async () => {
     if (!selectedPlan) return;
@@ -268,14 +432,56 @@ export default function Subscribe() {
   };
 
   const handleSubscriptionComplete = () => {
-    // Subscription is active immediately - no processing screen needed
-    // Just redirect to home
     setLocation('/');
   };
 
-  // Show loading state when auto-flow is processing
+  const handlePasswordComplete = () => {
+    setPasswordSetupComplete(true);
+    createSubscriptionMutation.mutate(selectedPlan);
+  };
+
+  if (userLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="max-w-md w-full">
+          <Card>
+            <CardHeader className="text-center">
+              <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+              </div>
+              <CardTitle className="text-2xl">Loading...</CardTitle>
+            </CardHeader>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  if (isQuickSignupUser && !passwordSetupComplete) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="max-w-md w-full">
+          <Card>
+            <CardHeader className="text-center">
+              <div className="mx-auto w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-4">
+                <Lock className="w-8 h-8 text-emerald-600" />
+              </div>
+              <CardTitle className="text-2xl">Secure Your Account</CardTitle>
+              <CardDescription>
+                Before subscribing, let's set up your password so you can always access your account.
+              </CardDescription>
+            </CardHeader>
+            
+            <CardContent>
+              <PasswordSetupForm user={user} onComplete={handlePasswordComplete} />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   if (isAutoFlow && !subscriptionCreated) {
-    // Show error with retry option if auto-flow failed
     if (autoFlowError) {
       return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -317,7 +523,6 @@ export default function Subscribe() {
       );
     }
     
-    // Show loading spinner while setting up
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="max-w-md w-full">
@@ -337,7 +542,6 @@ export default function Subscribe() {
     );
   }
 
-  // Show payment form when ready
   if (subscriptionCreated && clientSecret) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -378,10 +582,8 @@ export default function Subscribe() {
     );
   }
 
-  // Manual plan selection flow (when no plan parameter in URL)
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <div className="bg-white shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="text-center">
@@ -394,7 +596,6 @@ export default function Subscribe() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Pricing Plans - Side by side, smaller tiles */}
         <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto mb-6">
           {plans && (
             <>
@@ -415,7 +616,6 @@ export default function Subscribe() {
           )}
         </div>
 
-        {/* CTA Button - Now below pricing */}
         <div className="text-center mb-8">
           <Button
             onClick={handlePlanSelect}
@@ -447,7 +647,6 @@ export default function Subscribe() {
           </div>
         </div>
 
-        {/* Features Section - Now last */}
         <div className="grid md:grid-cols-3 gap-6">
           <div className="text-center">
             <div className="mx-auto w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-3">

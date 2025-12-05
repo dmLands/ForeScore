@@ -213,14 +213,15 @@ export default function LandingTest() {
           </h2>
           <div className="grid md:grid-cols-3 gap-6 mt-10">
             {[
-              { emoji: "😤", text: "\"Wait, I thought I was up $15, not down $5!\"" },
-              { emoji: "🤯", text: "\"Hold on, let me recalculate this for the 4th time...\"" },
-              { emoji: "💸", text: "\"Just Venmo everyone $20 and call it even.\"" }
+              { emoji: "😤", text: "\"Wait, I thought I was up $15, not down $5!\"", name: "Mike", state: "California" },
+              { emoji: "🤯", text: "\"Hold on, let me recalculate this for the 4th time...\"", name: "Dave", state: "Arizona" },
+              { emoji: "💸", text: "\"Just Venmo everyone $20 and call it even.\"", name: "Tom", state: "Texas" }
             ].map((item, idx) => (
               <Card key={idx} className="bg-white border-2 border-gray-200 hover:border-emerald-300 transition-colors">
                 <CardContent className="pt-6 text-center">
                   <div className="text-4xl mb-4">{item.emoji}</div>
                   <p className="text-gray-700 font-medium italic">{item.text}</p>
+                  <p className="text-sm text-gray-500 mt-2">— {item.name}, {item.state}</p>
                 </CardContent>
               </Card>
             ))}

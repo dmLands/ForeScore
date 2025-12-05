@@ -138,15 +138,15 @@ export default function LandingTest() {
             <div className="text-center md:text-left">
               <div className="flex items-center justify-center md:justify-start gap-3 mb-6">
                 <img src={logoPath} alt="ForeScore" className="w-14 h-14" />
-                <span className="text-2xl font-bold">ForeScore</span>
+                <span className="text-3xl font-bold">ForeScore</span>
               </div>
               
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold leading-tight mb-6">
                 Stop arguing about who owes who after the round
               </h1>
               
               <p className="text-xl md:text-2xl text-emerald-100 mb-8 leading-relaxed">
-                The Only Golf Betting Payouts Calculator<br />You hit the shots, we do the math
+                The Only Golf Betting Payouts Calculator
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">

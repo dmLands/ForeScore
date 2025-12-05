@@ -382,31 +382,31 @@ export default function LandingTest() {
       <section className="py-16 md:py-24 bg-gray-50">
         <div className="max-w-xl mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Simple, Honest Pricing
+            Cheaper than the balls you'll lose next round
           </h2>
           <p className="text-xl text-gray-600 mb-10">
-            Cheaper than the balls you'll lose next round
+            Simple, Affordable Pricing
           </p>
           
           <Card className="border-2 border-emerald-500 shadow-2xl overflow-hidden">
-            <div className="bg-emerald-600 text-white py-3 text-sm font-medium">
+            <div className="bg-emerald-600 text-white py-4 text-lg font-bold tracking-wide">
               7-DAY FREE TRIAL
             </div>
             <CardContent className="pt-8 pb-10">
               <div className="mb-6">
-                <div className="flex justify-center gap-8 items-baseline">
+                <div className="flex justify-center gap-6 items-baseline">
                   <div>
-                    <span className="text-4xl font-bold text-gray-900">$1.99</span>
-                    <span className="text-gray-500">/month</span>
+                    <span className="text-2xl font-bold text-gray-900">$1.99</span>
+                    <span className="text-gray-500 text-sm">/month</span>
                   </div>
-                  <span className="text-gray-400">or</span>
+                  <span className="text-gray-400 text-sm">or</span>
                   <div>
-                    <span className="text-4xl font-bold text-gray-900">$16.99</span>
-                    <span className="text-gray-500">/year</span>
+                    <span className="text-2xl font-bold text-gray-900">$16.99</span>
+                    <span className="text-gray-500 text-sm">/year</span>
                   </div>
                 </div>
               </div>
-              <ul className="text-left space-y-3 mb-8">
+              <ul className="space-y-3 mb-8 inline-block text-left">
                 {[
                   "All 4 game types included",
                   "Unlimited groups & rounds",

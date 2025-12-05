@@ -11,7 +11,7 @@ import { queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { z } from "zod";
 import LegalDialogs from "@/components/LegalDialogs";
-import logoPath from "@assets/ForeScore_Logo_transparent_1763148840628.png";
+import logoPath from "@assets/ForeScore_Logo_invert_transparent_1764970687346.png";
 import payoutScreenshot from "@assets/image_1764097878852.png";
 import bbbScreenshot from "@assets/image_1764097900039.png";
 

@@ -46,6 +46,9 @@ export const users = pgTable("users", {
   autoTrialStatus: varchar("auto_trial_status").$type<'eligible' | 'active' | 'expired' | null>(),
   autoTrialActivatedAt: timestamp("auto_trial_activated_at"),
   autoTrialEndsAt: timestamp("auto_trial_ends_at"),
+  // Quick signup fields for QR landing email-only registration
+  isQuickSignup: integer("is_quick_signup").notNull().default(0), // 0 = full account, 1 = email-only quick signup
+  quickSignupConvertedAt: timestamp("quick_signup_converted_at"), // When user set password and converted to full account
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

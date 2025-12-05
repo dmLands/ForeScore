@@ -8,7 +8,8 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
-  createLocalUser(user: { email: string; firstName: string; lastName: string; passwordHash: string; authMethod: string; termsAcceptedAt?: Date; marketingConsentAt?: Date; marketingPreferenceStatus?: 'subscribed' | 'unsubscribed' }): Promise<User>;
+  createLocalUser(user: { email: string; firstName?: string | null; lastName?: string | null; passwordHash?: string | null; authMethod: string; termsAcceptedAt?: Date; marketingConsentAt?: Date; marketingPreferenceStatus?: 'subscribed' | 'unsubscribed'; isQuickSignup?: number }): Promise<User>;
+  updateUser(userId: string, updates: Partial<{ firstName: string; lastName: string; passwordHash: string; isQuickSignup: number; quickSignupConvertedAt: Date }>): Promise<User | undefined>;
   deleteUser(userId: string): Promise<boolean>;
   updateMarketingPreferences(userId: string, data: { marketingPreferenceStatus: 'subscribed' | 'unsubscribed'; marketingUnsubscribeAt?: Date }): Promise<User | undefined>;
   // Legacy subscription methods for V7.0 (deprecated - use Stripe subscription methods below)
@@ -104,20 +105,30 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async createLocalUser(userData: { email: string; firstName: string; lastName: string; passwordHash: string; authMethod: string; termsAcceptedAt?: Date; marketingConsentAt?: Date; marketingPreferenceStatus?: 'subscribed' | 'unsubscribed' }): Promise<User> {
+  async createLocalUser(userData: { email: string; firstName?: string | null; lastName?: string | null; passwordHash?: string | null; authMethod: string; termsAcceptedAt?: Date; marketingConsentAt?: Date; marketingPreferenceStatus?: 'subscribed' | 'unsubscribed'; isQuickSignup?: number }): Promise<User> {
     const [user] = await db
       .insert(users)
       .values({
         id: randomUUID(),
         email: userData.email.toLowerCase(),
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        passwordHash: userData.passwordHash,
+        firstName: userData.firstName ?? null,
+        lastName: userData.lastName ?? null,
+        passwordHash: userData.passwordHash ?? null,
         authMethod: userData.authMethod,
         termsAcceptedAt: userData.termsAcceptedAt,
         marketingConsentAt: userData.marketingConsentAt,
         marketingPreferenceStatus: userData.marketingPreferenceStatus || 'subscribed',
+        isQuickSignup: userData.isQuickSignup ?? 0,
       })
+      .returning();
+    return user;
+  }
+
+  async updateUser(userId: string, updates: Partial<{ firstName: string; lastName: string; passwordHash: string; isQuickSignup: number; quickSignupConvertedAt: Date }>): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(users.id, userId))
       .returning();
     return user;
   }

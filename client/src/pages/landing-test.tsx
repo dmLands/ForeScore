@@ -1,0 +1,605 @@
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Eye, EyeOff, Check, Star, Smartphone, Zap, Users, Calculator, Trophy, ArrowRight } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
+import { useLocation } from "wouter";
+import { z } from "zod";
+import LegalDialogs from "@/components/LegalDialogs";
+import logoPath from "@assets/ForeScore_Logo_transparent_1763148840628.png";
+import payoutScreenshot from "@assets/image_1764097878852.png";
+import bbbScreenshot from "@assets/image_1764097900039.png";
+
+const registerSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  confirmPassword: z.string(),
+  termsAccepted: z.boolean().refine(val => val === true, {
+    message: "You must accept the Terms of Service and Privacy Policy"
+  }),
+  marketingConsent: z.boolean()
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+type RegisterForm = z.infer<typeof registerSchema>;
+
+export default function LandingTest() {
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const [formData, setFormData] = useState<RegisterForm>({
+    email: "",
+    password: "",
+    firstName: "",
+    lastName: "",
+    confirmPassword: "",
+    termsAccepted: false,
+    marketingConsent: false
+  });
+  const [errors, setErrors] = useState<Partial<Record<keyof RegisterForm, string>>>({});
+  const [showTermsDialog, setShowTermsDialog] = useState(false);
+  const [showPrivacyDialog, setShowPrivacyDialog] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const registerMutation = useMutation({
+    mutationFn: async (data: Omit<RegisterForm, 'confirmPassword'>) => {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message);
+      }
+      return response.json();
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: "Welcome to ForeScore!",
+        description: data.message || "Account created and you're now logged in.",
+      });
+      queryClient.setQueryData(['/api/auth/user'], data.user);
+      setLocation("/");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Registration failed",
+        description: error.message || "Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const validatedData = registerSchema.parse(formData);
+      setErrors({});
+      const { confirmPassword, ...registerData } = validatedData;
+      await registerMutation.mutateAsync(registerData);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const fieldErrors: Partial<Record<keyof RegisterForm, string>> = {};
+        error.errors.forEach((err) => {
+          if (err.path[0]) {
+            fieldErrors[err.path[0] as keyof RegisterForm] = err.message;
+          }
+        });
+        setErrors(fieldErrors);
+      }
+    }
+  };
+
+  const handleInputChange = (field: keyof RegisterForm) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({ ...prev, [field]: e.target.value }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: undefined }));
+    }
+  };
+
+  const handleCheckboxChange = (field: 'termsAccepted' | 'marketingConsent') => (checked: boolean) => {
+    setFormData(prev => ({ ...prev, [field]: checked }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: undefined }));
+    }
+  };
+
+  const handleDialogChange = (type: 'terms' | 'privacy', open: boolean) => {
+    if (type === 'terms') {
+      setShowTermsDialog(open);
+    } else {
+      setShowPrivacyDialog(open);
+    }
+  };
+
+  const scrollToSignup = () => {
+    document.getElementById('signup-section')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  return (
+    <div className="min-h-screen bg-white">
+      {/* Hero Section */}
+      <section className="relative bg-gradient-to-br from-emerald-900 via-green-800 to-teal-900 text-white overflow-hidden">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNiIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMSkiIHN0cm9rZS13aWR0aD0iMiIvPjwvZz48L3N2Zz4=')] opacity-20"></div>
+        
+        <div className="relative max-w-6xl mx-auto px-4 py-16 md:py-24">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            {/* Left: Copy */}
+            <div className="text-center md:text-left">
+              <div className="flex items-center justify-center md:justify-start gap-3 mb-6">
+                <img src={logoPath} alt="ForeScore" className="w-14 h-14" />
+                <span className="text-2xl font-bold">ForeScore</span>
+              </div>
+              
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+                Stop arguing about who owes what after the round
+              </h1>
+              
+              <p className="text-xl md:text-2xl text-emerald-100 mb-8 leading-relaxed">
+                The only golf payout calculator that handles 4+ games simultaneously with instant, fair settlements.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+                <Button 
+                  onClick={scrollToSignup}
+                  size="lg" 
+                  className="h-14 px-8 text-lg font-semibold bg-white text-emerald-900 hover:bg-emerald-50 shadow-xl"
+                  data-testid="button-hero-signup"
+                >
+                  Start Free 7-Day Trial
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+                <Button 
+                  onClick={() => setLocation('/login')}
+                  variant="outline" 
+                  size="lg"
+                  className="h-14 px-8 text-lg font-semibold border-2 border-white/30 text-white hover:bg-white/10 bg-transparent"
+                  data-testid="button-hero-login"
+                >
+                  Already a Member? Log In
+                </Button>
+              </div>
+              
+              <div className="flex items-center justify-center md:justify-start gap-6 mt-8 text-emerald-200 text-sm">
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4" />
+                  <span>No credit card required</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4" />
+                  <span>Works offline</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Right: App Screenshots */}
+            <div className="relative flex justify-center">
+              <div className="relative">
+                {/* Main phone */}
+                <div className="relative w-56 h-[420px] bg-gray-900 rounded-[3rem] p-2 shadow-2xl transform rotate-3">
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-6 bg-gray-900 rounded-b-2xl z-10"></div>
+                  <div className="w-full h-full bg-white rounded-[2.5rem] overflow-hidden">
+                    <img src={payoutScreenshot} alt="ForeScore Payouts" className="w-full h-full object-cover" />
+                  </div>
+                </div>
+                {/* Secondary phone */}
+                <div className="absolute -left-16 top-12 w-44 h-[330px] bg-gray-900 rounded-[2.5rem] p-2 shadow-2xl transform -rotate-6 hidden md:block">
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-5 bg-gray-900 rounded-b-xl z-10"></div>
+                  <div className="w-full h-full bg-white rounded-[2rem] overflow-hidden">
+                    <img src={bbbScreenshot} alt="ForeScore Game Entry" className="w-full h-full object-cover" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pain Point Section */}
+      <section className="py-16 md:py-24 bg-gray-50">
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+            Sound familiar?
+          </h2>
+          <div className="grid md:grid-cols-3 gap-6 mt-10">
+            {[
+              { emoji: "😤", text: "\"Wait, I thought I was up $15, not down $5!\"" },
+              { emoji: "🤯", text: "\"Hold on, let me recalculate this for the 4th time...\"" },
+              { emoji: "💸", text: "\"Just Venmo everyone $20 and call it even.\"" }
+            ].map((item, idx) => (
+              <Card key={idx} className="bg-white border-2 border-gray-200 hover:border-emerald-300 transition-colors">
+                <CardContent className="pt-6 text-center">
+                  <div className="text-4xl mb-4">{item.emoji}</div>
+                  <p className="text-gray-700 font-medium italic">{item.text}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Games Section */}
+      <section className="py-16 md:py-24">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              4 Games. 1 App. Zero Math.
+            </h2>
+            <p className="text-xl text-gray-600">
+              Play any combination and get instant, optimized payouts
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              {
+                icon: "🎲",
+                name: "Bingo Bango Bongo",
+                color: "from-purple-500 to-purple-600",
+                description: "3 points per hole for first on green, closest to pin, first to hole out"
+              },
+              {
+                icon: "👑",
+                name: "Sacramento (916)",
+                color: "from-blue-500 to-blue-600", 
+                description: "Classic points game with 9 or 16 points distributed per hole"
+              },
+              {
+                icon: "🃏",
+                name: "Card Game",
+                color: "from-red-500 to-red-600",
+                description: "Penalty cards for golf mishaps with fair payout calculations"
+              },
+              {
+                icon: "🎯",
+                name: "GIR Game",
+                color: "from-emerald-500 to-emerald-600",
+                description: "Greens in Regulation with custom penalty & bonus holes"
+              }
+            ].map((game, idx) => (
+              <Card key={idx} className="group hover:shadow-xl transition-all duration-300 border-2 border-gray-100 hover:border-gray-200 overflow-hidden">
+                <div className={`h-2 bg-gradient-to-r ${game.color}`}></div>
+                <CardContent className="pt-6">
+                  <div className="text-4xl mb-3">{game.icon}</div>
+                  <h3 className="font-bold text-lg text-gray-900 mb-2">{game.name}</h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">{game.description}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          
+          <div className="text-center mt-10">
+            <p className="text-gray-600 mb-4">Plus: Points Mode, Nassau Mode, or Both - you choose how to settle up</p>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="py-16 md:py-24 bg-emerald-50">
+        <div className="max-w-5xl mx-auto px-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-12 text-center">
+            From First Tee to 19th Hole in 3 Steps
+          </h2>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                step: "1",
+                icon: <Users className="h-8 w-8" />,
+                title: "Create Your Group",
+                description: "Add up to 4 players, customize colors, and select which games you're playing"
+              },
+              {
+                step: "2", 
+                icon: <Smartphone className="h-8 w-8" />,
+                title: "Enter Scores As You Play",
+                description: "Quick hole-by-hole entry that works even without cell service"
+              },
+              {
+                step: "3",
+                icon: <Calculator className="h-8 w-8" />,
+                title: "Instant Settlement",
+                description: "Our algorithm calculates optimal payouts - money only changes hands once"
+              }
+            ].map((item, idx) => (
+              <div key={idx} className="relative">
+                <div className="bg-white rounded-2xl p-8 shadow-lg h-full">
+                  <div className="w-12 h-12 bg-emerald-600 text-white rounded-full flex items-center justify-center text-xl font-bold mb-4">
+                    {item.step}
+                  </div>
+                  <div className="text-emerald-600 mb-4">{item.icon}</div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">{item.title}</h3>
+                  <p className="text-gray-600">{item.description}</p>
+                </div>
+                {idx < 2 && (
+                  <div className="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2 text-emerald-300">
+                    <ArrowRight className="h-8 w-8" />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Features Grid */}
+      <section className="py-16 md:py-24">
+        <div className="max-w-6xl mx-auto px-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-12 text-center">
+            Built by Golfers, for Golfers
+          </h2>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              { icon: <Zap className="h-6 w-6" />, title: "Real-Time Updates", desc: "Live leaderboards update as you enter scores" },
+              { icon: <Smartphone className="h-6 w-6" />, title: "Works Offline", desc: "No signal on the course? No problem. Sync later." },
+              { icon: <Calculator className="h-6 w-6" />, title: "Smart Settlement", desc: "Optimized transactions - minimal money movement" },
+              { icon: <Trophy className="h-6 w-6" />, title: "Multiple Payout Modes", desc: "Points, Nassau (Front/Back/Total), or both" },
+              { icon: <Users className="h-6 w-6" />, title: "Up to 4 Players", desc: "Perfect for your regular foursome" },
+              { icon: <Star className="h-6 w-6" />, title: "Custom Cards", desc: "Create your own penalty cards with custom values" }
+            ].map((feature, idx) => (
+              <div key={idx} className="flex gap-4 p-6 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
+                <div className="text-emerald-600 flex-shrink-0">{feature.icon}</div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-1">{feature.title}</h3>
+                  <p className="text-sm text-gray-600">{feature.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Social Proof */}
+      <section className="py-16 md:py-20 bg-gray-900 text-white">
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <div className="flex justify-center gap-1 mb-4">
+            {[1,2,3,4,5].map(i => (
+              <Star key={i} className="h-6 w-6 fill-yellow-400 text-yellow-400" />
+            ))}
+          </div>
+          <blockquote className="text-2xl md:text-3xl font-medium mb-6 leading-relaxed">
+            "Finally, an app that handles all our side games without the spreadsheet headaches. The optimized payouts feature alone is worth it."
+          </blockquote>
+          <p className="text-gray-400">— Weekend Warriors Golf Group, Sacramento CA</p>
+        </div>
+      </section>
+
+      {/* Pricing */}
+      <section className="py-16 md:py-24 bg-gray-50">
+        <div className="max-w-xl mx-auto px-4 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            Simple, Honest Pricing
+          </h2>
+          <p className="text-xl text-gray-600 mb-10">
+            Less than the cost of a sleeve of Pro V1s
+          </p>
+          
+          <Card className="border-2 border-emerald-500 shadow-2xl overflow-hidden">
+            <div className="bg-emerald-600 text-white py-3 text-sm font-medium">
+              7-DAY FREE TRIAL
+            </div>
+            <CardContent className="pt-8 pb-10">
+              <div className="mb-6">
+                <span className="text-5xl font-bold text-gray-900">$4.99</span>
+                <span className="text-gray-500">/month</span>
+              </div>
+              <ul className="text-left space-y-3 mb-8">
+                {[
+                  "All 4 game types included",
+                  "Unlimited groups & rounds",
+                  "Real-time scoring",
+                  "Offline mode",
+                  "Custom penalty cards",
+                  "Optimized settlements"
+                ].map((feature, idx) => (
+                  <li key={idx} className="flex items-center gap-3">
+                    <Check className="h-5 w-5 text-emerald-600 flex-shrink-0" />
+                    <span className="text-gray-700">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+              <Button 
+                onClick={scrollToSignup}
+                size="lg" 
+                className="w-full h-14 text-lg font-semibold bg-emerald-600 hover:bg-emerald-700"
+                data-testid="button-pricing-signup"
+              >
+                Start Your Free Trial
+              </Button>
+              <p className="text-sm text-gray-500 mt-4">No credit card required to start</p>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* Sign Up Section */}
+      <section id="signup-section" className="py-16 md:py-24 bg-gradient-to-br from-emerald-900 via-green-800 to-teal-900">
+        <div className="max-w-md mx-auto px-4">
+          <Card className="shadow-2xl border-0">
+            <CardContent className="pt-8 pb-8">
+              <div className="text-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Create Your Account</h2>
+                <p className="text-gray-600">Start your free 7-day trial today</p>
+              </div>
+              
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label htmlFor="firstName" className="text-sm">First Name</Label>
+                    <Input
+                      id="firstName"
+                      placeholder="John"
+                      value={formData.firstName}
+                      onChange={handleInputChange('firstName')}
+                      className={errors.firstName ? "border-red-500" : ""}
+                      data-testid="input-firstname"
+                    />
+                    {errors.firstName && <p className="text-xs text-red-500">{errors.firstName}</p>}
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="lastName" className="text-sm">Last Name</Label>
+                    <Input
+                      id="lastName"
+                      placeholder="Doe"
+                      value={formData.lastName}
+                      onChange={handleInputChange('lastName')}
+                      className={errors.lastName ? "border-red-500" : ""}
+                      data-testid="input-lastname"
+                    />
+                    {errors.lastName && <p className="text-xs text-red-500">{errors.lastName}</p>}
+                  </div>
+                </div>
+                
+                <div className="space-y-1">
+                  <Label htmlFor="email" className="text-sm">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="john@example.com"
+                    value={formData.email}
+                    onChange={handleInputChange('email')}
+                    className={errors.email ? "border-red-500" : ""}
+                    data-testid="input-email"
+                  />
+                  {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
+                </div>
+                
+                <div className="space-y-1">
+                  <Label htmlFor="password" className="text-sm">Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Min 6 characters"
+                      value={formData.password}
+                      onChange={handleInputChange('password')}
+                      className={errors.password ? "border-red-500 pr-10" : "pr-10"}
+                      data-testid="input-password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      data-testid="button-toggle-password"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  {errors.password && <p className="text-xs text-red-500">{errors.password}</p>}
+                </div>
+                
+                <div className="space-y-1">
+                  <Label htmlFor="confirmPassword" className="text-sm">Confirm Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="Confirm your password"
+                      value={formData.confirmPassword}
+                      onChange={handleInputChange('confirmPassword')}
+                      className={errors.confirmPassword ? "border-red-500 pr-10" : "pr-10"}
+                      data-testid="input-confirm-password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      data-testid="button-toggle-confirm-password"
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  {errors.confirmPassword && <p className="text-xs text-red-500">{errors.confirmPassword}</p>}
+                </div>
+                
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-start gap-2">
+                    <Checkbox
+                      id="terms"
+                      checked={formData.termsAccepted}
+                      onCheckedChange={handleCheckboxChange('termsAccepted')}
+                      className="mt-1"
+                      data-testid="checkbox-terms"
+                    />
+                    <Label htmlFor="terms" className="text-sm text-gray-600 font-normal leading-tight">
+                      I agree to the{" "}
+                      <button type="button" onClick={() => setShowTermsDialog(true)} className="text-emerald-600 hover:underline" data-testid="link-terms">
+                        Terms of Service
+                      </button>{" "}
+                      and{" "}
+                      <button type="button" onClick={() => setShowPrivacyDialog(true)} className="text-emerald-600 hover:underline" data-testid="link-privacy">
+                        Privacy Policy
+                      </button>
+                    </Label>
+                  </div>
+                  {errors.termsAccepted && <p className="text-xs text-red-500">{errors.termsAccepted}</p>}
+                  
+                  <div className="flex items-start gap-2">
+                    <Checkbox
+                      id="marketing"
+                      checked={formData.marketingConsent}
+                      onCheckedChange={handleCheckboxChange('marketingConsent')}
+                      className="mt-1"
+                      data-testid="checkbox-marketing"
+                    />
+                    <Label htmlFor="marketing" className="text-sm text-gray-600 font-normal">
+                      Send me tips and updates (optional)
+                    </Label>
+                  </div>
+                </div>
+                
+                <Button
+                  type="submit"
+                  disabled={registerMutation.isPending}
+                  className="w-full h-12 text-lg font-semibold bg-emerald-600 hover:bg-emerald-700"
+                  data-testid="button-submit-signup"
+                >
+                  {registerMutation.isPending ? "Creating Account..." : "Start Free Trial"}
+                </Button>
+              </form>
+              
+              <p className="text-center text-sm text-gray-500 mt-6">
+                Already have an account?{" "}
+                <button onClick={() => setLocation('/login')} className="text-emerald-600 hover:underline font-medium" data-testid="link-login">
+                  Log in
+                </button>
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-8 bg-gray-900 text-gray-400 text-center text-sm">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <img src={logoPath} alt="ForeScore" className="w-8 h-8" />
+            <span className="text-white font-semibold">ForeScore</span>
+          </div>
+          <p>&copy; {new Date().getFullYear()} ForeScore. All rights reserved.</p>
+          <div className="flex justify-center gap-6 mt-4">
+            <button onClick={() => setShowTermsDialog(true)} className="hover:text-white" data-testid="link-footer-terms">Terms</button>
+            <button onClick={() => setShowPrivacyDialog(true)} className="hover:text-white" data-testid="link-footer-privacy">Privacy</button>
+          </div>
+        </div>
+      </footer>
+
+      <LegalDialogs
+        showTerms={showTermsDialog}
+        showPrivacy={showPrivacyDialog}
+        onOpenChange={handleDialogChange}
+      />
+    </div>
+  );
+}

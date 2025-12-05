@@ -11,6 +11,7 @@ import { VersionChecker } from "@/components/VersionChecker";
 import Home from "@/pages/home";
 import Landing from "@/pages/landing";
 import QRLanding from "@/pages/qr-landing";
+import LandingTest from "@/pages/landing-test";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
 import ForgotPassword from "@/pages/forgot-password";
@@ -73,6 +74,7 @@ function Router() {
     <Switch>
       <Route path="/" component={ProtectedHome} />
       <Route path="/qr-landing" component={QRLanding} />
+      <Route path="/landing-test" component={LandingTest} />
       <Route path="/qr" component={QRCodePage} />
       <Route path="/admin" component={AdminPage} />
       <Route path="/login" component={Login} />

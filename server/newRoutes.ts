@@ -6,7 +6,7 @@ import { storage } from "./storage.js";
 import { setupAuth, isAuthenticated, generateRoomToken, requireAdmin } from "./replitAuth.js";
 import { calculateCardGameDetails, calculate2916Points, validateCardAssignment, calculateCardsGame, calculatePointsGame, calculateNassauGame, buildNassauNetsFromPointsGame, combineGames, settleWhoOwesWho, combineTotals, generateSettlement, calculateBBBPointsGame, calculateBBBNassauGame, calculateGIRPointsGame, calculateGIRNassauGame, calculateGIRPoints } from "./secureGameLogic.js";
 import { SecureWebSocketManager } from "./secureWebSocket.js";
-import { registerUser, authenticateUser, registerSchema, loginSchema } from "./localAuth.js";
+import { registerUser, authenticateUser, registerSchema, loginSchema, quickSignupUser, quickLoginUser, convertQuickSignup, quickSignupSchema, convertAccountSchema } from "./localAuth.js";
 import { insertGroupSchema, insertGameStateSchema, insertPointsGameSchema, cardValuesSchema, pointsGameSettingsSchema, gameStates, roomStates, userPreferences, insertUserPreferencesSchema, passwordResetTokens, insertPasswordResetTokenSchema, users, type Card, type CardAssignment } from "@shared/schema";
 import { APP_VERSION } from "@shared/version";
 import { db } from "./db.js";
@@ -187,6 +187,142 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.status(400).json({ 
         message: error instanceof Error ? error.message : "Registration failed" 
+      });
+    }
+  });
+
+  // Quick signup - email only for QR landing (faster onboarding)
+  app.post('/api/auth/quick-signup', async (req, res) => {
+    try {
+      const validatedData = quickSignupSchema.parse(req.body);
+      const { user, isReturningUser } = await quickSignupUser(validatedData);
+      
+      // Start auto-trial immediately for quick signups
+      const [updatedUser] = await db
+        .update(users)
+        .set({
+          autoTrialStatus: 'active',
+          autoTrialActivatedAt: new Date(),
+          autoTrialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, user.id))
+        .returning();
+      
+      console.log(`✅ Quick signup ${isReturningUser ? '(returning)' : '(new)'} for ${user.email}, trial started`);
+      
+      // Create session with extended lifetime (30 days for quick signups)
+      (req as any).user = {
+        claims: {
+          sub: updatedUser.id,
+          email: updatedUser.email,
+          first_name: updatedUser.firstName || null,
+          last_name: updatedUser.lastName || null,
+        },
+        expires_at: Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60), // 30 days
+      };
+      
+      req.login((req as any).user, async (err) => {
+        if (err) {
+          console.error('❌ Auto-login failed after quick signup:', err);
+          return res.status(500).json({ message: "Signup successful but login failed. Please try again." });
+        }
+        
+        const { passwordHash, ...userResponse } = updatedUser;
+        res.status(isReturningUser ? 200 : 201).json({ 
+          message: isReturningUser ? "Welcome back!" : "Welcome to ForeScore!",
+          user: userResponse,
+          isReturningUser,
+          isQuickSignup: true
+        });
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: 'Invalid data', 
+          errors: error.errors 
+        });
+      }
+      res.status(400).json({ 
+        message: error instanceof Error ? error.message : "Quick signup failed" 
+      });
+    }
+  });
+
+  // Quick login - email only for returning quick signup users
+  app.post('/api/auth/quick-login', async (req, res) => {
+    try {
+      const { email } = req.body;
+      if (!email || typeof email !== 'string') {
+        return res.status(400).json({ message: "Email is required" });
+      }
+      
+      const user = await quickLoginUser(email);
+      
+      console.log(`✅ Quick login for returning user ${user.email}`);
+      
+      // Create session with extended lifetime (30 days)
+      (req as any).user = {
+        claims: {
+          sub: user.id,
+          email: user.email,
+          first_name: user.firstName || null,
+          last_name: user.lastName || null,
+        },
+        expires_at: Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60), // 30 days
+      };
+      
+      req.login((req as any).user, async (err) => {
+        if (err) {
+          console.error('❌ Quick login session creation failed:', err);
+          return res.status(500).json({ message: "Login failed. Please try again." });
+        }
+        
+        const { passwordHash, ...userResponse } = user;
+        res.json({ 
+          message: "Welcome back!",
+          user: userResponse,
+          isQuickSignup: true
+        });
+      });
+    } catch (error) {
+      res.status(401).json({ 
+        message: error instanceof Error ? error.message : "Login failed" 
+      });
+    }
+  });
+
+  // Convert quick signup to full account (set password and name)
+  app.post('/api/auth/convert-account', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req as any).user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const validatedData = convertAccountSchema.parse(req.body);
+      const updatedUser = await convertQuickSignup(userId, validatedData);
+      
+      if (!updatedUser) {
+        return res.status(400).json({ message: "Failed to update account" });
+      }
+      
+      console.log(`✅ Quick signup converted to full account for ${updatedUser.email}`);
+      
+      const { passwordHash, ...userResponse } = updatedUser;
+      res.json({ 
+        message: "Account upgraded successfully!",
+        user: userResponse
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: 'Invalid data', 
+          errors: error.errors 
+        });
+      }
+      res.status(400).json({ 
+        message: error instanceof Error ? error.message : "Account conversion failed" 
       });
     }
   });

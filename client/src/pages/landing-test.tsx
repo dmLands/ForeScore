@@ -382,10 +382,10 @@ export default function LandingTest() {
       <section className="py-16 md:py-24 bg-gray-50">
         <div className="max-w-xl mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Cheaper than the balls you'll lose next round
+            Simple, Affordable Pricing
           </h2>
           <p className="text-xl text-gray-600 mb-10">
-            Simple, Affordable Pricing
+            Cheaper than the balls you'll lose next round
           </p>
           
           <Card className="border-2 border-emerald-500 shadow-2xl overflow-hidden">

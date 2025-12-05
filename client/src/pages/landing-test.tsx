@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Eye, EyeOff, Check, Star, Smartphone, Zap, Users, Calculator, Trophy, ArrowRight } from "lucide-react";
+import { Check, Star, Smartphone, Zap, Users, Calculator, Trophy, ArrowRight, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
@@ -15,44 +15,31 @@ import logoPath from "@assets/ForeScore_Logo_invert_transparent_1764970687346.pn
 import payoutScreenshot from "@assets/image_1764097878852.png";
 import bbbScreenshot from "@assets/image_1764097900039.png";
 
-const registerSchema = z.object({
+const quickSignupSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  confirmPassword: z.string(),
   termsAccepted: z.boolean().refine(val => val === true, {
     message: "You must accept the Terms of Service and Privacy Policy"
   }),
   marketingConsent: z.boolean()
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
 });
 
-type RegisterForm = z.infer<typeof registerSchema>;
+type QuickSignupForm = z.infer<typeof quickSignupSchema>;
 
 export default function LandingTest() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const [formData, setFormData] = useState<RegisterForm>({
+  const [formData, setFormData] = useState<QuickSignupForm>({
     email: "",
-    password: "",
-    firstName: "",
-    lastName: "",
-    confirmPassword: "",
     termsAccepted: false,
     marketingConsent: false
   });
-  const [errors, setErrors] = useState<Partial<Record<keyof RegisterForm, string>>>({});
+  const [errors, setErrors] = useState<Partial<Record<keyof QuickSignupForm, string>>>({});
   const [showTermsDialog, setShowTermsDialog] = useState(false);
   const [showPrivacyDialog, setShowPrivacyDialog] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const registerMutation = useMutation({
-    mutationFn: async (data: Omit<RegisterForm, 'confirmPassword'>) => {
-      const response = await fetch("/api/auth/register", {
+  const quickSignupMutation = useMutation({
+    mutationFn: async (data: { email: string; marketingConsent: boolean }) => {
+      const response = await fetch("/api/auth/quick-signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -65,15 +52,17 @@ export default function LandingTest() {
     },
     onSuccess: (data: any) => {
       toast({
-        title: "Welcome to ForeScore!",
-        description: data.message || "Account created and you're now logged in.",
+        title: data.isReturningUser ? "Welcome back!" : "Welcome to ForeScore!",
+        description: data.isReturningUser 
+          ? "Signed you right back in."
+          : "Your trial is now active. Let's set up your first group!",
       });
       queryClient.setQueryData(['/api/auth/user'], data.user);
       setLocation("/");
     },
     onError: (error: any) => {
       toast({
-        title: "Registration failed",
+        title: "Signup failed",
         description: error.message || "Please try again.",
         variant: "destructive",
       });
@@ -83,16 +72,18 @@ export default function LandingTest() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const validatedData = registerSchema.parse(formData);
+      const validatedData = quickSignupSchema.parse(formData);
       setErrors({});
-      const { confirmPassword, ...registerData } = validatedData;
-      await registerMutation.mutateAsync(registerData);
+      await quickSignupMutation.mutateAsync({
+        email: validatedData.email,
+        marketingConsent: validatedData.marketingConsent
+      });
     } catch (error) {
       if (error instanceof z.ZodError) {
-        const fieldErrors: Partial<Record<keyof RegisterForm, string>> = {};
+        const fieldErrors: Partial<Record<keyof QuickSignupForm, string>> = {};
         error.errors.forEach((err) => {
           if (err.path[0]) {
-            fieldErrors[err.path[0] as keyof RegisterForm] = err.message;
+            fieldErrors[err.path[0] as keyof QuickSignupForm] = err.message;
           }
         });
         setErrors(fieldErrors);
@@ -100,10 +91,10 @@ export default function LandingTest() {
     }
   };
 
-  const handleInputChange = (field: keyof RegisterForm) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({ ...prev, [field]: e.target.value }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }));
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({ ...prev, email: e.target.value }));
+    if (errors.email) {
+      setErrors(prev => ({ ...prev, email: undefined }));
     }
   };
 
@@ -435,104 +426,35 @@ export default function LandingTest() {
         </div>
       </section>
 
-      {/* Sign Up Section */}
+      {/* Sign Up Section - SIMPLIFIED EMAIL ONLY */}
       <section id="signup-section" className="py-16 md:py-24 bg-gradient-to-br from-emerald-900 via-green-800 to-teal-900">
         <div className="max-w-md mx-auto px-4">
           <Card className="shadow-2xl border-0">
             <CardContent className="pt-8 pb-8">
               <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Create Your Account</h2>
-                <p className="text-gray-600">Start your free 7-day trial today</p>
+                <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Mail className="h-8 w-8 text-emerald-600" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Start Your Free Trial</h2>
+                <p className="text-gray-600">Just your email - that's it!</p>
+                <p className="text-sm text-gray-500 mt-1">No password needed now. Create one later if you want.</p>
               </div>
               
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label htmlFor="firstName" className="text-sm">First Name</Label>
-                    <Input
-                      id="firstName"
-                      placeholder="John"
-                      value={formData.firstName}
-                      onChange={handleInputChange('firstName')}
-                      className={errors.firstName ? "border-red-500" : ""}
-                      data-testid="input-firstname"
-                    />
-                    {errors.firstName && <p className="text-xs text-red-500">{errors.firstName}</p>}
-                  </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="lastName" className="text-sm">Last Name</Label>
-                    <Input
-                      id="lastName"
-                      placeholder="Doe"
-                      value={formData.lastName}
-                      onChange={handleInputChange('lastName')}
-                      className={errors.lastName ? "border-red-500" : ""}
-                      data-testid="input-lastname"
-                    />
-                    {errors.lastName && <p className="text-xs text-red-500">{errors.lastName}</p>}
-                  </div>
-                </div>
-                
                 <div className="space-y-1">
-                  <Label htmlFor="email" className="text-sm">Email</Label>
+                  <Label htmlFor="email" className="text-sm font-medium">Email Address</Label>
                   <Input
                     id="email"
                     type="email"
-                    placeholder="john@example.com"
+                    placeholder="you@example.com"
                     value={formData.email}
-                    onChange={handleInputChange('email')}
-                    className={errors.email ? "border-red-500" : ""}
+                    onChange={handleInputChange}
+                    className={`h-12 text-lg ${errors.email ? "border-red-500" : ""}`}
                     data-testid="input-email"
+                    autoComplete="email"
+                    autoFocus
                   />
                   {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
-                </div>
-                
-                <div className="space-y-1">
-                  <Label htmlFor="password" className="text-sm">Password</Label>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Min 6 characters"
-                      value={formData.password}
-                      onChange={handleInputChange('password')}
-                      className={errors.password ? "border-red-500 pr-10" : "pr-10"}
-                      data-testid="input-password"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                      data-testid="button-toggle-password"
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                  {errors.password && <p className="text-xs text-red-500">{errors.password}</p>}
-                </div>
-                
-                <div className="space-y-1">
-                  <Label htmlFor="confirmPassword" className="text-sm">Confirm Password</Label>
-                  <div className="relative">
-                    <Input
-                      id="confirmPassword"
-                      type={showConfirmPassword ? "text" : "password"}
-                      placeholder="Confirm your password"
-                      value={formData.confirmPassword}
-                      onChange={handleInputChange('confirmPassword')}
-                      className={errors.confirmPassword ? "border-red-500 pr-10" : "pr-10"}
-                      data-testid="input-confirm-password"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                      data-testid="button-toggle-confirm-password"
-                    >
-                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                  {errors.confirmPassword && <p className="text-xs text-red-500">{errors.confirmPassword}</p>}
                 </div>
                 
                 <div className="space-y-3 pt-2">
@@ -573,15 +495,28 @@ export default function LandingTest() {
                 
                 <Button
                   type="submit"
-                  disabled={registerMutation.isPending}
-                  className="w-full h-12 text-lg font-semibold bg-emerald-600 hover:bg-emerald-700"
+                  disabled={quickSignupMutation.isPending}
+                  className="w-full h-14 text-lg font-semibold bg-emerald-600 hover:bg-emerald-700 mt-4"
                   data-testid="button-submit-signup"
                 >
-                  {registerMutation.isPending ? "Creating Account..." : "Start Free Trial"}
+                  {quickSignupMutation.isPending ? "Starting Trial..." : "Start Free 7-Day Trial"}
                 </Button>
+                
+                <p className="text-center text-xs text-gray-500 mt-2">
+                  You'll be playing in 10 seconds!
+                </p>
               </form>
               
-              <p className="text-center text-sm text-gray-500 mt-6">
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-200"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">or</span>
+                </div>
+              </div>
+              
+              <p className="text-center text-sm text-gray-500">
                 Already have an account?{" "}
                 <button onClick={() => setLocation('/login')} className="text-emerald-600 hover:underline font-medium" data-testid="link-login">
                   Log in

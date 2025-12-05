@@ -11,7 +11,7 @@ import { queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { z } from "zod";
 import LegalDialogs from "@/components/LegalDialogs";
-import logoPath from "@assets/ForeScore_Logo_transparent_1763148840628.png";
+import logoPath from "@assets/ForeScore_Logo_invert_transparent_1764969363530.png";
 import payoutScreenshot from "@assets/image_1764097878852.png";
 import bbbScreenshot from "@assets/image_1764097900039.png";
 
@@ -132,7 +132,7 @@ export default function LandingTest() {
       <section className="relative bg-gradient-to-br from-emerald-900 via-green-800 to-teal-900 text-white overflow-hidden">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNiIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMSkiIHN0cm9rZS13aWR0aD0iMiIvPjwvZz48L3N2Zz4=')] opacity-20"></div>
         
-        <div className="relative max-w-6xl mx-auto px-4 py-16 md:py-24">
+        <div className="relative max-w-6xl mx-auto px-4 py-10 md:py-16">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             {/* Left: Copy */}
             <div className="text-center md:text-left">
@@ -206,21 +206,22 @@ export default function LandingTest() {
       </section>
 
       {/* Pain Point Section */}
-      <section className="py-16 md:py-24 bg-gray-50">
+      <section className="py-10 md:py-14 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
             Sound familiar?
           </h2>
-          <div className="grid md:grid-cols-3 gap-6 mt-10">
+          <div className="grid md:grid-cols-3 gap-6 mt-8">
             {[
-              { emoji: "😤", text: "\"Wait, I thought I was up $15, not down $5!\"" },
-              { emoji: "🤯", text: "\"Hold on, let me recalculate this for the 4th time...\"" },
-              { emoji: "💸", text: "\"Just Venmo everyone $20 and call it even.\"" }
+              { emoji: "😤", text: "\"Wait, I thought I was up $15, not down $5!\"", name: "Mike J.", location: "CA" },
+              { emoji: "🤯", text: "\"Hold on, let me recalculate this for the 4th time...\"", name: "Dave R.", location: "TX" },
+              { emoji: "💸", text: "\"Just Venmo everyone $20 and call it even.\"", name: "Chris M.", location: "AZ" }
             ].map((item, idx) => (
               <Card key={idx} className="bg-white border-2 border-gray-200 hover:border-emerald-300 transition-colors">
-                <CardContent className="pt-6 text-center">
-                  <div className="text-4xl mb-4">{item.emoji}</div>
-                  <p className="text-gray-700 font-medium italic">{item.text}</p>
+                <CardContent className="pt-6 pb-4 text-center">
+                  <div className="text-4xl mb-3">{item.emoji}</div>
+                  <p className="text-gray-700 font-medium italic mb-3">{item.text}</p>
+                  <p className="text-sm text-gray-500">— {item.name}, {item.location}</p>
                 </CardContent>
               </Card>
             ))}
@@ -229,11 +230,11 @@ export default function LandingTest() {
       </section>
 
       {/* Games Section */}
-      <section className="py-16 md:py-24">
+      <section className="py-10 md:py-14">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center mb-12">
+          <div className="text-center mb-10">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              4 Games. 1 App. Zero Math.
+              4 Games. 1 App. 0 Math.
             </h2>
             <p className="text-xl text-gray-600">
               Play any combination and get instant, optimized payouts
@@ -285,45 +286,47 @@ export default function LandingTest() {
       </section>
 
       {/* How It Works */}
-      <section className="py-16 md:py-24 bg-emerald-50">
+      <section className="py-10 md:py-14 bg-emerald-50">
         <div className="max-w-5xl mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-12 text-center">
-            From First Tee to 19th Hole in 3 Steps
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-10 text-center">
+            From the 1st Tee to 19th Hole in 3 Steps
           </h2>
           
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-6">
             {[
               {
                 step: "1",
-                icon: <Users className="h-8 w-8" />,
+                emoji: "👥",
                 title: "Create Your Group",
                 description: "Add up to 4 players, customize colors, and select which games you're playing"
               },
               {
-                step: "2", 
-                icon: <Smartphone className="h-8 w-8" />,
+                step: "2",
+                emoji: "📱",
                 title: "Enter Scores As You Play",
                 description: "Quick hole-by-hole entry that works even without cell service"
               },
               {
                 step: "3",
-                icon: <Calculator className="h-8 w-8" />,
+                emoji: "💰",
                 title: "Instant Settlement",
                 description: "Our algorithm calculates optimal payouts - money only changes hands once"
               }
             ].map((item, idx) => (
               <div key={idx} className="relative">
-                <div className="bg-white rounded-2xl p-8 shadow-lg h-full">
-                  <div className="w-12 h-12 bg-emerald-600 text-white rounded-full flex items-center justify-center text-xl font-bold mb-4">
-                    {item.step}
+                <div className="bg-white rounded-xl p-6 shadow-lg h-full">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-emerald-600 text-white rounded-full flex items-center justify-center text-lg font-bold flex-shrink-0">
+                      {item.step}
+                    </div>
+                    <span className="text-2xl">{item.emoji}</span>
                   </div>
-                  <div className="text-emerald-600 mb-4">{item.icon}</div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">{item.title}</h3>
-                  <p className="text-gray-600">{item.description}</p>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">{item.title}</h3>
+                  <p className="text-sm text-gray-600">{item.description}</p>
                 </div>
                 {idx < 2 && (
-                  <div className="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2 text-emerald-300">
-                    <ArrowRight className="h-8 w-8" />
+                  <div className="hidden md:block absolute top-1/2 -right-3 transform -translate-y-1/2 text-emerald-300">
+                    <ArrowRight className="h-6 w-6" />
                   </div>
                 )}
               </div>
@@ -333,9 +336,9 @@ export default function LandingTest() {
       </section>
 
       {/* Features Grid */}
-      <section className="py-16 md:py-24">
+      <section className="py-10 md:py-14">
         <div className="max-w-6xl mx-auto px-4">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-12 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-10 text-center">
             Built by Golfers, for Golfers
           </h2>
           
@@ -361,7 +364,7 @@ export default function LandingTest() {
       </section>
 
       {/* Social Proof */}
-      <section className="py-16 md:py-20 bg-gray-900 text-white">
+      <section className="py-10 md:py-14 bg-gray-900 text-white">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <div className="flex justify-center gap-1 mb-4">
             {[1,2,3,4,5].map(i => (
@@ -369,62 +372,83 @@ export default function LandingTest() {
             ))}
           </div>
           <blockquote className="text-2xl md:text-3xl font-medium mb-6 leading-relaxed">
-            "Finally, an app that handles all our side games without the spreadsheet headaches. The optimized payouts feature alone is worth it."
+            "Finally, an app that handles all our side games without the arguments and uncertainty. The optimized payouts feature alone is worth it."
           </blockquote>
           <p className="text-gray-400">— Weekend Warriors Golf Group, Sacramento CA</p>
         </div>
       </section>
 
       {/* Pricing */}
-      <section className="py-16 md:py-24 bg-gray-50">
-        <div className="max-w-xl mx-auto px-4 text-center">
+      <section className="py-10 md:py-14 bg-gray-50">
+        <div className="max-w-3xl mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
             Simple, Honest Pricing
           </h2>
-          <p className="text-xl text-gray-600 mb-10">
-            Less than the cost of a sleeve of Pro V1s
+          <p className="text-xl text-gray-600 mb-8">
+            Cheaper than the balls you'll lose next round
           </p>
           
-          <Card className="border-2 border-emerald-500 shadow-2xl overflow-hidden">
-            <div className="bg-emerald-600 text-white py-3 text-sm font-medium">
-              7-DAY FREE TRIAL
-            </div>
-            <CardContent className="pt-8 pb-10">
-              <div className="mb-6">
-                <span className="text-5xl font-bold text-gray-900">$4.99</span>
-                <span className="text-gray-500">/month</span>
+          <div className="grid md:grid-cols-2 gap-6 mb-6">
+            {/* Monthly Plan */}
+            <Card className="border-2 border-gray-200 shadow-lg overflow-hidden">
+              <CardContent className="pt-6 pb-6">
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">Monthly</h3>
+                <div className="mb-4">
+                  <span className="text-4xl font-bold text-gray-900">$1.99</span>
+                  <span className="text-gray-500">/month</span>
+                </div>
+                <p className="text-sm text-gray-500">Billed monthly</p>
+              </CardContent>
+            </Card>
+            
+            {/* Annual Plan */}
+            <Card className="border-2 border-emerald-500 shadow-xl overflow-hidden relative">
+              <div className="absolute top-0 right-0 bg-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
+                BEST VALUE
               </div>
-              <ul className="text-left space-y-3 mb-8">
-                {[
-                  "All 4 game types included",
-                  "Unlimited groups & rounds",
-                  "Real-time scoring",
-                  "Offline mode",
-                  "Custom penalty cards",
-                  "Optimized settlements"
-                ].map((feature, idx) => (
-                  <li key={idx} className="flex items-center gap-3">
-                    <Check className="h-5 w-5 text-emerald-600 flex-shrink-0" />
-                    <span className="text-gray-700">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-              <Button 
-                onClick={scrollToSignup}
-                size="lg" 
-                className="w-full h-14 text-lg font-semibold bg-emerald-600 hover:bg-emerald-700"
-                data-testid="button-pricing-signup"
-              >
-                Start Your Free Trial
-              </Button>
-              <p className="text-sm text-gray-500 mt-4">No credit card required to start</p>
-            </CardContent>
-          </Card>
+              <CardContent className="pt-6 pb-6">
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">Annual</h3>
+                <div className="mb-4">
+                  <span className="text-4xl font-bold text-gray-900">$16.99</span>
+                  <span className="text-gray-500">/year</span>
+                </div>
+                <p className="text-sm text-emerald-600 font-medium">Save $6.89 vs monthly</p>
+              </CardContent>
+            </Card>
+          </div>
+          
+          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+            <p className="text-sm font-medium text-emerald-600 mb-4">7-DAY FREE TRIAL INCLUDED</p>
+            <ul className="grid grid-cols-2 gap-3 text-left mb-6">
+              {[
+                "All 4 game types",
+                "Unlimited rounds",
+                "Real-time scoring",
+                "Works offline",
+                "Custom cards",
+                "Smart settlements"
+              ].map((feature, idx) => (
+                <li key={idx} className="flex items-center gap-2 text-sm">
+                  <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" />
+                  <span className="text-gray-700">{feature}</span>
+                </li>
+              ))}
+            </ul>
+            <Button 
+              onClick={scrollToSignup}
+              size="lg" 
+              className="w-full h-12 text-lg font-semibold bg-emerald-600 hover:bg-emerald-700"
+              data-testid="button-pricing-signup"
+            >
+              Start Your Free Trial
+            </Button>
+            <p className="text-xs text-gray-500 mt-3">No credit card required to start</p>
+          </div>
         </div>
       </section>
 
       {/* Sign Up Section */}
-      <section id="signup-section" className="py-16 md:py-24 bg-gradient-to-br from-emerald-900 via-green-800 to-teal-900">
+      <section id="signup-section" className="py-10 md:py-16 bg-gradient-to-br from-emerald-900 via-green-800 to-teal-900">
         <div className="max-w-md mx-auto px-4">
           <Card className="shadow-2xl border-0">
             <CardContent className="pt-8 pb-8">

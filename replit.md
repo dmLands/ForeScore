@@ -4,6 +4,17 @@
 ForeScore is a secure, full-stack Progressive Web App designed as a companion for golf penalty games like "Animal." It provides enterprise-grade local authentication, server-side security validation, and comprehensive game management. The application supports group management, card game mechanics using a Proportional Share Algorithm, isolated 2/9/16 points games, and multiple payout calculation views. A key feature is the GIR (Greens in Regulation) game with user-configurable penalty and bonus holes. All game calculations are performed server-side to prevent tampering, ensuring secure user authentication, session management, and subscription access control. The project aims to be a robust, reliable, and secure platform for managing golf penalty games, aspiring to be the leading digital tool in this niche.
 
 ## Recent Changes
+### V9.7 (COMPLETED) - December 2025
+- **Quick Email-Only Registration for QR Users**:
+  - **Streamlined Signup Flow**: QR code users (qr.forescore.xyz) can now sign up with just email - no password required initially
+  - **Schema Updates**: Added `isQuickSignup` and `quickSignupToken` fields to users table for tracking quick signup users
+  - **Backend Endpoints**: Added `/api/auth/quick-signup` (email-only registration), `/api/auth/quick-login` (token-based re-login), and `/api/auth/convert-account` (password addition)
+  - **Password at Payment**: Quick signup users must set a password before making payment - enforced both on frontend (subscribe.tsx) and backend
+  - **Complete Account Page**: New /complete-account page allows quick signup users to add password and name at any time
+  - **Menu Integration**: "Complete Account Setup" option appears in hamburger menu for quick signup users without passwords
+  - **Backend Security Enforcement**: Subscription creation endpoints (`/api/subscription/create` and `/api/subscription/create-after-setup`) block unconverted quick-signup users from subscribing
+  - **Session Persistence**: 7-day session cookies ensure users stay logged in without browser cache dependency
+
 ### V9.6 (COMPLETED) - November 2025
 - **Scorecard UX Improvements**:
   - **Removed Dollar Values**: Eliminated $ denominations from game selector buttons for cleaner, more compact UI

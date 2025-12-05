@@ -206,7 +206,7 @@ export default function LandingTest() {
       </section>
 
       {/* Pain Point Section */}
-      <section className="py-10 md:py-14 bg-gray-50">
+      <section className="py-12 md:py-16 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
             Sound familiar?
@@ -230,7 +230,7 @@ export default function LandingTest() {
       </section>
 
       {/* Games Section */}
-      <section className="py-10 md:py-14">
+      <section className="py-12 md:py-16">
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-10">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -286,7 +286,7 @@ export default function LandingTest() {
       </section>
 
       {/* How It Works */}
-      <section className="py-10 md:py-14 bg-emerald-50">
+      <section className="py-12 md:py-16 bg-emerald-50">
         <div className="max-w-5xl mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-10 text-center">
             From the 1st Tee to 19th Hole in 3 Steps
@@ -336,7 +336,7 @@ export default function LandingTest() {
       </section>
 
       {/* Features Grid */}
-      <section className="py-10 md:py-14">
+      <section className="py-12 md:py-16">
         <div className="max-w-6xl mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-10 text-center">
             Built by Golfers, for Golfers
@@ -364,7 +364,7 @@ export default function LandingTest() {
       </section>
 
       {/* Social Proof */}
-      <section className="py-10 md:py-14 bg-gray-900 text-white">
+      <section className="py-12 md:py-16 bg-gray-900 text-white">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <div className="flex justify-center gap-1 mb-4">
             {[1,2,3,4,5].map(i => (
@@ -379,7 +379,7 @@ export default function LandingTest() {
       </section>
 
       {/* Pricing */}
-      <section className="py-10 md:py-14 bg-gray-50">
+      <section className="py-12 md:py-16 bg-gray-50">
         <div className="max-w-3xl mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
             Simple, Honest Pricing

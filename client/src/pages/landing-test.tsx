@@ -372,7 +372,7 @@ export default function LandingTest() {
             ))}
           </div>
           <blockquote className="text-2xl md:text-3xl font-medium mb-6 leading-relaxed">
-            "Finally, an app that handles all our side games without the spreadsheet headaches. The optimized payouts feature alone is worth it."
+            "Finally, an app that handles all our side games without the arguments and uncertainty. The optimized payouts feature alone is worth it."
           </blockquote>
           <p className="text-gray-400">— Weekend Warriors Golf Group, Sacramento CA</p>
         </div>

@@ -455,6 +455,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Invalid plan selected' });
       }
       
+      // Security: Block unconverted quick-signup users from subscribing
+      const user = await storage.getUser(userId);
+      if (user?.isQuickSignup && !user?.passwordHash) {
+        return res.status(403).json({ 
+          message: 'Please complete your account setup first',
+          redirectTo: '/complete-account',
+          requiresAccountConversion: true
+        });
+      }
+      
       // STEP 1: Create SetupIntent to collect payment method first
       const setupIntent = await stripeService.createSetupIntent(userId, planKey);
       res.json({
@@ -656,6 +666,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!userId) {
         return res.status(401).json({ message: 'User not authenticated' });
+      }
+      
+      // Security: Block unconverted quick-signup users from subscribing
+      const user = await storage.getUser(userId);
+      if (user?.isQuickSignup && !user?.passwordHash) {
+        return res.status(403).json({ 
+          message: 'Please complete your account setup first',
+          redirectTo: '/complete-account',
+          requiresAccountConversion: true
+        });
       }
       
       // Create the subscription in Stripe and database

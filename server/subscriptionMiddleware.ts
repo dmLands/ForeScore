@@ -72,7 +72,10 @@ export async function requireSubscriptionAccess(
  */
 export const PUBLIC_ROUTES = [
   '/api/auth/login',
-  '/api/auth/register', 
+  '/api/auth/register',
+  '/api/auth/quick-signup',
+  '/api/auth/quick-login',
+  '/api/auth/convert-account',
   '/api/auth/logout',
   '/api/auth/user',
   '/api/auth/forgot-password',
@@ -80,11 +83,12 @@ export const PUBLIC_ROUTES = [
   '/api/auth/update-password',
   '/api/subscription/plans',
   '/api/subscription/create',
+  '/api/subscription/create-after-setup',
   '/api/subscription/status',
   '/api/subscription/cancel',
   '/api/webhooks/stripe',
-  '/api/admin/cleanup-old-games', // Admin routes that don't require user subscription
-  '/api/user/preferences', // User preferences needed for app initialization
+  '/api/admin/cleanup-old-games',
+  '/api/user/preferences',
 ];
 
 /**

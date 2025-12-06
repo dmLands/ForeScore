@@ -229,58 +229,63 @@ export default function LandingTest() {
       </section>
 
       {/* Games Section */}
-      <section className="py-16 md:py-24">
+      <section className="py-10 md:py-16">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <div className="text-center mb-4">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
               4 Games. 1 App. 0 Math.
             </h2>
-            <p className="text-xl text-gray-600">
+            <p className="text-base md:text-lg text-gray-600">
               Play any combination and get instant, optimized payouts
             </p>
           </div>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Scroll indicator for mobile */}
+          <p className="text-sm text-gray-500 mb-3 md:hidden flex items-center justify-center gap-1">
+            <span>Swipe to see more</span>
+            <ArrowRight className="h-4 w-4 animate-pulse" />
+          </p>
+          
+          {/* Horizontal scroll on mobile, grid on desktop */}
+          <div className="flex md:grid md:grid-cols-4 gap-3 overflow-x-auto pb-4 md:pb-0 snap-x snap-mandatory scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
             {[
               {
                 icon: "🎲",
                 name: "Bingo Bango Bongo",
                 color: "from-purple-500 to-purple-600",
-                description: "3 points per hole for first on green, closest to pin, first to hole out"
+                description: "First on green, closest to pin, first to hole out"
               },
               {
                 icon: "👑",
                 name: "Sacramento (916)",
                 color: "from-blue-500 to-blue-600", 
-                description: "Classic points game with 9 or 16 points distributed per hole"
-              },
-              {
-                icon: "🃏",
-                name: "Card Game",
-                color: "from-red-500 to-red-600",
-                description: "Penalty cards for golf mishaps with fair payout calculations"
+                description: "9 or 16 points distributed per hole"
               },
               {
                 icon: "🎯",
                 name: "GIR Game",
                 color: "from-emerald-500 to-emerald-600",
-                description: "Greens in Regulation with custom penalty & bonus holes"
+                description: "Greens in Regulation with penalty & bonus holes"
+              },
+              {
+                icon: "🃏",
+                name: "Animal",
+                color: "from-red-500 to-red-600",
+                description: "Penalty cards for golf mishaps"
               }
             ].map((game, idx) => (
-              <Card key={idx} className="group hover:shadow-xl transition-all duration-300 border-2 border-gray-100 hover:border-gray-200 overflow-hidden">
-                <div className={`h-2 bg-gradient-to-r ${game.color}`}></div>
-                <CardContent className="pt-6">
-                  <div className="text-4xl mb-3">{game.icon}</div>
-                  <h3 className="font-bold text-lg text-gray-900 mb-2">{game.name}</h3>
-                  <p className="text-sm text-gray-600 leading-relaxed">{game.description}</p>
+              <Card key={idx} className="flex-shrink-0 w-[200px] md:w-auto snap-center group hover:shadow-lg transition-all duration-300 border border-gray-200 hover:border-gray-300 overflow-hidden">
+                <div className={`h-1.5 bg-gradient-to-r ${game.color}`}></div>
+                <CardContent className="p-4">
+                  <div className="text-2xl mb-2">{game.icon}</div>
+                  <h3 className="font-bold text-sm text-gray-900 mb-1">{game.name}</h3>
+                  <p className="text-xs text-gray-600 leading-snug">{game.description}</p>
                 </CardContent>
               </Card>
             ))}
           </div>
           
-          <div className="text-center mt-10">
-            <p className="text-gray-600 mb-4">Plus: Points Mode, Nassau Mode, or Both - you choose how to settle up</p>
-          </div>
+          <p className="text-center text-sm text-gray-500 mt-4">Points Mode, Nassau Mode, or Both</p>
         </div>
       </section>
 

@@ -38,7 +38,7 @@ export default function LandingTest() {
   const [showPrivacyDialog, setShowPrivacyDialog] = useState(false);
 
   const quickSignupMutation = useMutation({
-    mutationFn: async (data: { email: string; marketingConsent: boolean }) => {
+    mutationFn: async (data: { email: string; termsAccepted: boolean; marketingConsent: boolean }) => {
       const response = await fetch("/api/auth/quick-signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -51,14 +51,8 @@ export default function LandingTest() {
       return response.json();
     },
     onSuccess: (data: any) => {
-      toast({
-        title: data.isReturningUser ? "Welcome back!" : "Welcome to ForeScore!",
-        description: data.isReturningUser 
-          ? "Signed you right back in."
-          : "Your trial is now active. Let's create your first game!",
-      });
       queryClient.setQueryData(['/api/auth/user'], data.user);
-      window.location.href = "/";
+      window.location.href = data.isReturningUser ? "/" : "/?showTutorial=true";
     },
     onError: (error: any) => {
       toast({

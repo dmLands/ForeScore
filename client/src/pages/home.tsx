@@ -741,6 +741,7 @@ export default function Home() {
   const [joinCode, setJoinCode] = useState("");
   const [showCreateCardDialog, setShowCreateCardDialog] = useState(false);
   const [showCreateGameDialog, setShowCreateGameDialog] = useState(false);
+  const [showTutorialArrow, setShowTutorialArrow] = useState(false);
   const [newGameName, setNewGameName] = useState("");
   const [customCardName, setCustomCardName] = useState("");
   const [customCardEmoji, setCustomCardEmoji] = useState("");
@@ -849,6 +850,16 @@ export default function Home() {
       queryClient.refetchQueries({ queryKey: ['/api/game-state', selectedGame.id, 'payouts'] });
     }
   }, [selectedGame?.id, selectedGroup?.id, queryClient]);
+
+  // Check for tutorial arrow on new user signup
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('showTutorial') === 'true') {
+      setShowTutorialArrow(true);
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
 
   // Auto-select Sacramento (916) game for current game session - GAME SESSION ISOLATION FIX
   useEffect(() => {
@@ -1656,7 +1667,7 @@ export default function Home() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <img 
-              src={new URL('@assets/ForeScore_Logo_transparent_1763148840628.png', import.meta.url).href}
+              src={new URL('@assets/ForeScore_Logo_invert_transparent_1764970687346.png', import.meta.url).href}
               alt="ForeScore Logo" 
               className="h-8 w-8"
               data-testid="img-logo"
@@ -1783,13 +1794,29 @@ export default function Home() {
         {currentTab === 'groups' && (
           <div className="p-4">
             <div className="mb-6 space-y-3">
-              <Button 
-                onClick={() => setShowCreateGameDialog(true)}
-                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white p-4 h-auto text-lg font-semibold shadow-lg"
-              >
-                <Plus className="mr-2 h-5 w-5" />
-                Create New Game
-              </Button>
+              <div className="relative">
+                <Button 
+                  onClick={() => {
+                    setShowTutorialArrow(false);
+                    setShowCreateGameDialog(true);
+                  }}
+                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-white p-4 h-auto text-lg font-semibold shadow-lg"
+                  data-testid="button-create-new-game"
+                >
+                  <Plus className="mr-2 h-5 w-5" />
+                  Create New Game
+                </Button>
+                
+                {/* Tutorial arrow for new users */}
+                {showTutorialArrow && (
+                  <div className="absolute -top-16 left-1/2 -translate-x-1/2 flex flex-col items-center animate-bounce">
+                    <div className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg whitespace-nowrap">
+                      Start here!
+                    </div>
+                    <div className="w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-gray-900" />
+                  </div>
+                )}
+              </div>
               
             </div>
 

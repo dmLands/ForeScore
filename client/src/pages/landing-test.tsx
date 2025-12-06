@@ -372,21 +372,6 @@ export default function LandingTest() {
         </div>
       </section>
 
-      {/* Social Proof */}
-      <section className="py-16 md:py-20 bg-gray-900 text-white">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <div className="flex justify-center gap-1 mb-4">
-            {[1,2,3,4,5].map(i => (
-              <Star key={i} className="h-6 w-6 fill-yellow-400 text-yellow-400" />
-            ))}
-          </div>
-          <blockquote className="text-2xl md:text-3xl font-medium mb-6 leading-relaxed">
-            "Finally, an app that handles all our side games without the arguments and uncertainty. The optimized payouts feature alone is worth it."
-          </blockquote>
-          <p className="text-gray-400">— Weekend Warriors Golf Group, Sacramento CA</p>
-        </div>
-      </section>
-
       {/* Pricing */}
       <section className="py-16 md:py-24 bg-gray-50">
         <div className="max-w-xl mx-auto px-4 text-center">
@@ -442,6 +427,21 @@ export default function LandingTest() {
               <p className="text-sm text-gray-500 mt-4">No credit card required to start</p>
             </CardContent>
           </Card>
+        </div>
+      </section>
+
+      {/* Social Proof - Testimonial */}
+      <section className="py-12 md:py-16 bg-gray-900 text-white">
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <div className="flex justify-center gap-1 mb-4">
+            {[1,2,3,4,5].map(i => (
+              <Star key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+            ))}
+          </div>
+          <blockquote className="text-xl md:text-2xl font-medium mb-4 leading-relaxed">
+            "Finally, an app that handles all our side games without the arguments and uncertainty. The optimized payouts feature alone is worth it."
+          </blockquote>
+          <p className="text-gray-400 text-sm">— Weekend Warriors Golf Group, Sacramento CA</p>
         </div>
       </section>
 

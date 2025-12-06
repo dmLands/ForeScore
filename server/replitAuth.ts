@@ -39,6 +39,7 @@ export function getSession() {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       maxAge: sessionTtl,
+      domain: process.env.NODE_ENV === 'production' ? '.forescore.xyz' : undefined,
     },
   });
 }

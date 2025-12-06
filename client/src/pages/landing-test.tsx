@@ -197,22 +197,30 @@ export default function LandingTest() {
       </section>
 
       {/* Pain Point Section */}
-      <section className="py-16 md:py-24 bg-gray-50">
+      <section className="py-12 md:py-24 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+          <h2 className="text-2xl md:text-4xl font-bold text-gray-900 mb-4">
             Sound familiar?
           </h2>
-          <div className="grid md:grid-cols-3 gap-6 mt-10">
+          
+          {/* Scroll indicator for mobile */}
+          <p className="text-sm text-gray-500 mb-4 md:hidden flex items-center justify-center gap-1">
+            <span>Swipe to see more</span>
+            <ArrowRight className="h-4 w-4 animate-pulse" />
+          </p>
+          
+          {/* Horizontal scroll on mobile, grid on desktop */}
+          <div className="flex md:grid md:grid-cols-3 gap-4 mt-6 overflow-x-auto pb-4 md:pb-0 snap-x snap-mandatory scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
             {[
+              { emoji: "💸", text: "\"Just Venmo everyone $20 and call it even.\"", name: "Tom", state: "Texas" },
               { emoji: "😤", text: "\"Wait, I thought I was up $15, not down $5!\"", name: "Mike", state: "California" },
-              { emoji: "🤯", text: "\"Hold on, let me recalculate this for the 4th time...\"", name: "Dave", state: "Arizona" },
-              { emoji: "💸", text: "\"Just Venmo everyone $20 and call it even.\"", name: "Tom", state: "Texas" }
+              { emoji: "🤯", text: "\"Hold on, let me recalculate this for the 4th time...\"", name: "Dave", state: "Arizona" }
             ].map((item, idx) => (
-              <Card key={idx} className="bg-white border-2 border-gray-200 hover:border-emerald-300 transition-colors">
+              <Card key={idx} className="flex-shrink-0 w-[280px] md:w-auto snap-center bg-white border-2 border-gray-200 hover:border-emerald-300 transition-colors">
                 <CardContent className="pt-6 text-center">
                   <div className="text-4xl mb-4">{item.emoji}</div>
-                  <p className="text-gray-700 font-medium italic">{item.text}</p>
-                  <p className="text-sm text-gray-500 mt-2">— {item.name}, {item.state}</p>
+                  <p className="text-gray-700 font-medium italic text-sm">{item.text}</p>
+                  <p className="text-xs text-gray-500 mt-2">— {item.name}, {item.state}</p>
                 </CardContent>
               </Card>
             ))}

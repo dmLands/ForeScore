@@ -55,10 +55,10 @@ export default function LandingTest() {
         title: data.isReturningUser ? "Welcome back!" : "Welcome to ForeScore!",
         description: data.isReturningUser 
           ? "Signed you right back in."
-          : "Your trial is now active. Let's set up your first group!",
+          : "Your trial is now active. Let's create your first game!",
       });
       queryClient.setQueryData(['/api/auth/user'], data.user);
-      setLocation("/");
+      window.location.href = "/";
     },
     onError: (error: any) => {
       toast({

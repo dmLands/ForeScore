@@ -153,8 +153,8 @@ export default function LandingTest() {
                 <Button 
                   onClick={() => setLocation('/login')}
                   variant="outline" 
-                  size="lg"
-                  className="h-14 px-8 text-lg font-semibold border-2 border-white/30 text-white hover:bg-white/10 bg-transparent"
+                  size="default"
+                  className="h-10 px-6 text-sm font-normal border border-white/30 text-white hover:bg-white/10 bg-transparent"
                   data-testid="button-hero-login"
                 >
                   Already a Member? Log In

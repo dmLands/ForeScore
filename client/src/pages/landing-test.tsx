@@ -197,39 +197,37 @@ export default function LandingTest() {
       </section>
 
       {/* Pain Point Section */}
-      <section className="py-12 md:py-24 bg-gray-50">
+      <section className="py-10 md:py-20 bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-2xl md:text-4xl font-bold text-gray-900 mb-4">
             Sound familiar?
           </h2>
           
-          {/* Scroll indicator for mobile */}
-          <p className="text-sm text-gray-500 mb-4 md:hidden flex items-center justify-center gap-1">
-            <span>Swipe to see more</span>
-            <ArrowRight className="h-4 w-4 animate-pulse" />
-          </p>
-          
           {/* Horizontal scroll on mobile, grid on desktop */}
-          <div className="flex md:grid md:grid-cols-3 gap-4 mt-6 overflow-x-auto pb-4 md:pb-0 snap-x snap-mandatory scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
-            {[
-              { emoji: "💸", text: "\"Just Venmo everyone $20 and call it even.\"", name: "Tom", state: "Texas" },
-              { emoji: "😤", text: "\"Wait, I thought I was up $15, not down $5!\"", name: "Mike", state: "California" },
-              { emoji: "🤯", text: "\"Hold on, let me recalculate this for the 4th time...\"", name: "Dave", state: "Arizona" }
-            ].map((item, idx) => (
-              <Card key={idx} className="flex-shrink-0 w-[280px] md:w-auto snap-center bg-white border-2 border-gray-200 hover:border-emerald-300 transition-colors">
-                <CardContent className="pt-6 text-center">
-                  <div className="text-4xl mb-4">{item.emoji}</div>
-                  <p className="text-gray-700 font-medium italic text-sm">{item.text}</p>
-                  <p className="text-xs text-gray-500 mt-2">— {item.name}, {item.state}</p>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="relative">
+            <div className="flex md:grid md:grid-cols-3 gap-4 overflow-x-auto pb-2 md:pb-0 snap-x snap-mandatory scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
+              {[
+                { emoji: "💸", text: "\"Just Venmo everyone $20 and call it even.\"", name: "Tom", state: "Texas" },
+                { emoji: "😤", text: "\"Wait, I thought I was up $15, not down $5!\"", name: "Mike", state: "California" },
+                { emoji: "🤯", text: "\"Hold on, let me recalculate this for the 4th time...\"", name: "Dave", state: "Arizona" }
+              ].map((item, idx) => (
+                <Card key={idx} className="flex-shrink-0 w-[280px] md:w-auto snap-center bg-white border-2 border-gray-200 hover:border-emerald-300 transition-colors">
+                  <CardContent className="pt-5 pb-4 text-center">
+                    <div className="text-3xl mb-3">{item.emoji}</div>
+                    <p className="text-gray-700 font-medium italic text-sm">{item.text}</p>
+                    <p className="text-xs text-gray-500 mt-2">— {item.name}, {item.state}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            {/* Fade indicator on right edge - mobile only */}
+            <div className="absolute right-0 top-0 bottom-2 w-12 bg-gradient-to-l from-gray-50 to-transparent pointer-events-none md:hidden" />
           </div>
         </div>
       </section>
 
       {/* Games Section */}
-      <section className="py-10 md:py-16">
+      <section className="py-8 md:py-14">
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-4">
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
@@ -240,52 +238,50 @@ export default function LandingTest() {
             </p>
           </div>
           
-          {/* Scroll indicator for mobile */}
-          <p className="text-sm text-gray-500 mb-3 md:hidden flex items-center justify-center gap-1">
-            <span>Swipe to see more</span>
-            <ArrowRight className="h-4 w-4 animate-pulse" />
-          </p>
-          
           {/* Horizontal scroll on mobile, grid on desktop */}
-          <div className="flex md:grid md:grid-cols-4 gap-3 overflow-x-auto pb-4 md:pb-0 snap-x snap-mandatory scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
-            {[
-              {
-                icon: "🎲",
-                name: "Bingo Bango Bongo",
-                color: "from-purple-500 to-purple-600",
-                description: "First on green, closest to pin, first to hole out"
-              },
-              {
-                icon: "👑",
-                name: "Sacramento (916)",
-                color: "from-blue-500 to-blue-600", 
-                description: "9 or 16 points distributed per hole"
-              },
-              {
-                icon: "🎯",
-                name: "GIR Game",
-                color: "from-emerald-500 to-emerald-600",
-                description: "Greens in Regulation with penalty & bonus holes"
-              },
-              {
-                icon: "🃏",
-                name: "Animal",
-                color: "from-red-500 to-red-600",
-                description: "Penalty cards for golf mishaps"
-              }
-            ].map((game, idx) => (
-              <Card key={idx} className="flex-shrink-0 w-[200px] md:w-auto snap-center group hover:shadow-lg transition-all duration-300 border border-gray-200 hover:border-gray-300 overflow-hidden">
-                <div className={`h-1.5 bg-gradient-to-r ${game.color}`}></div>
-                <CardContent className="p-4">
-                  <div className="text-2xl mb-2">{game.icon}</div>
-                  <h3 className="font-bold text-sm text-gray-900 mb-1">{game.name}</h3>
-                  <p className="text-xs text-gray-600 leading-snug">{game.description}</p>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="relative">
+            <div className="flex md:grid md:grid-cols-4 gap-3 overflow-x-auto pb-2 md:pb-0 snap-x snap-mandatory scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
+              {[
+                {
+                  icon: "🎲",
+                  name: "Bingo Bango Bongo",
+                  color: "from-purple-500 to-purple-600",
+                  description: "First on green, closest to pin, first to hole out"
+                },
+                {
+                  icon: "👑",
+                  name: "Sacramento (916)",
+                  color: "from-blue-500 to-blue-600", 
+                  description: "9 or 16 points distributed per hole"
+                },
+                {
+                  icon: "🎯",
+                  name: "GIR Game",
+                  color: "from-emerald-500 to-emerald-600",
+                  description: "Greens in Regulation with penalty & bonus holes"
+                },
+                {
+                  icon: "🃏",
+                  name: "Animal",
+                  color: "from-red-500 to-red-600",
+                  description: "Penalty cards for golf mishaps"
+                }
+              ].map((game, idx) => (
+                <Card key={idx} className="flex-shrink-0 w-[200px] md:w-auto snap-center group hover:shadow-lg transition-all duration-300 border border-gray-200 hover:border-gray-300 overflow-hidden">
+                  <div className={`h-1.5 bg-gradient-to-r ${game.color}`}></div>
+                  <CardContent className="p-3">
+                    <div className="text-2xl mb-1">{game.icon}</div>
+                    <h3 className="font-bold text-sm text-gray-900 mb-0.5">{game.name}</h3>
+                    <p className="text-xs text-gray-600 leading-snug">{game.description}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            {/* Fade indicator on right edge - mobile only */}
+            <div className="absolute right-0 top-0 bottom-2 w-12 bg-gradient-to-l from-white to-transparent pointer-events-none md:hidden" />
           </div>
           
-          <p className="text-center text-sm text-gray-500 mt-4">Points Mode, Nassau Mode, or Both</p>
+          <p className="text-center text-sm text-gray-500 mt-3">Points Mode, Nassau Mode, or Both</p>
         </div>
       </section>
 

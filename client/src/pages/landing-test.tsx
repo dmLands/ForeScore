@@ -402,6 +402,7 @@ export default function LandingTest() {
               7-DAY FREE TRIAL
             </div>
             <CardContent className="pt-8 pb-10">
+              <p className="text-gray-600 mb-4">Perfect for your regular foursome—use it every round.</p>
               <div className="mb-6">
                 <div className="flex justify-center gap-6 items-baseline">
                   <div>

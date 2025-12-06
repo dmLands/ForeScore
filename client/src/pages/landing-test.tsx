@@ -335,31 +335,31 @@ export default function LandingTest() {
       </section>
 
       {/* Features Grid */}
-      <section className="py-16 md:py-24">
+      <section className="py-12 md:py-16">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
               Built by Golfers, for Golfers
             </h2>
-            <p className="text-xl text-gray-600">
+            <p className="text-lg text-gray-600">
               Designed for your regular foursome and weekly money games
             </p>
           </div>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
             {[
-              { icon: <Zap className="h-6 w-6" />, title: "Real-Time Updates", desc: "Live leaderboards update as you enter scores" },
-              { icon: <Smartphone className="h-6 w-6" />, title: "Works Offline", desc: "No signal on the course? No problem. Sync later." },
-              { icon: <Calculator className="h-6 w-6" />, title: "Smart Settlement", desc: "Optimized transactions - minimal money movement" },
-              { icon: <Trophy className="h-6 w-6" />, title: "Multiple Payout Modes", desc: "Points, Nassau (Front/Back/Total), or both" },
-              { icon: <Users className="h-6 w-6" />, title: "Up to 4 Players", desc: "Perfect for your regular foursome" },
-              { icon: <Star className="h-6 w-6" />, title: "Custom Cards", desc: "Create your own penalty cards with custom values" }
+              { icon: <Zap className="h-5 w-5" />, title: "Real-Time Updates", desc: "Live leaderboards update as you enter scores" },
+              { icon: <Smartphone className="h-5 w-5" />, title: "Works Offline", desc: "No signal on the course? No problem." },
+              { icon: <Calculator className="h-5 w-5" />, title: "Smart Settlement", desc: "Optimized transactions - minimal money movement" },
+              { icon: <Trophy className="h-5 w-5" />, title: "Multiple Payout Modes", desc: "Points, Nassau, or both" },
+              { icon: <Users className="h-5 w-5" />, title: "Up to 4 Players", desc: "Perfect for your regular foursome" },
+              { icon: <Star className="h-5 w-5" />, title: "Custom Cards", desc: "Create your own penalty cards" }
             ].map((feature, idx) => (
-              <div key={idx} className="flex gap-4 p-6 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
-                <div className="text-emerald-600 flex-shrink-0">{feature.icon}</div>
+              <div key={idx} className="flex gap-3 p-3 md:p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                <div className="text-emerald-600 flex-shrink-0 mt-0.5">{feature.icon}</div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">{feature.title}</h3>
-                  <p className="text-sm text-gray-600">{feature.desc}</p>
+                  <h3 className="font-semibold text-gray-900 text-sm md:text-base">{feature.title}</h3>
+                  <p className="text-xs md:text-sm text-gray-600">{feature.desc}</p>
                 </div>
               </div>
             ))}

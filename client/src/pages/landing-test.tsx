@@ -76,6 +76,7 @@ export default function LandingTest() {
       setErrors({});
       await quickSignupMutation.mutateAsync({
         email: validatedData.email,
+        termsAccepted: validatedData.termsAccepted,
         marketingConsent: validatedData.marketingConsent
       });
     } catch (error) {

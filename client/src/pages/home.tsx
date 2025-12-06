@@ -1809,7 +1809,7 @@ export default function Home() {
                 
                 {/* Tutorial arrow for new users */}
                 {showTutorialArrow && (
-                  <div className="absolute -top-16 left-1/2 -translate-x-1/2 flex flex-col items-center animate-bounce">
+                  <div className="absolute -top-12 left-1/2 -translate-x-1/2 flex flex-col items-center animate-bounce">
                     <div className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg whitespace-nowrap">
                       Start here!
                     </div>

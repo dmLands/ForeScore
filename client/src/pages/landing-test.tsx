@@ -52,7 +52,10 @@ export default function LandingTest() {
     },
     onSuccess: (data: any) => {
       queryClient.setQueryData(['/api/auth/user'], data.user);
-      window.location.href = data.isReturningUser ? "/" : "/?showTutorial=true";
+      // Redirect to main domain to exit QR subdomain landing page
+      const isQRSubdomain = window.location.hostname.startsWith('qr.');
+      const baseUrl = isQRSubdomain ? 'https://forescore.xyz' : '';
+      window.location.href = data.isReturningUser ? `${baseUrl}/` : `${baseUrl}/?showTutorial=true`;
     },
     onError: (error: any) => {
       toast({

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RefreshCw } from 'lucide-react';
@@ -9,6 +9,8 @@ const VERSION_CHECK_INTERVAL = 5 * 60 * 1000;
 export function VersionChecker() {
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [isReloading, setIsReloading] = useState(false);
+  const initialLoadRef = useRef(true);
+  const hasShownUpdateRef = useRef(false);
 
   useEffect(() => {
     const checkVersion = async () => {
@@ -22,8 +24,9 @@ export function VersionChecker() {
         });
         const data = await response.json();
         
-        if (data.version !== APP_VERSION) {
+        if (data.version !== APP_VERSION && !hasShownUpdateRef.current) {
           console.log(`Update available: ${APP_VERSION} → ${data.version}`);
+          hasShownUpdateRef.current = true;
           setUpdateAvailable(true);
         }
       } catch (error) {
@@ -39,17 +42,42 @@ export function VersionChecker() {
 
   useEffect(() => {
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.addEventListener('message', (event) => {
-        if (event.data.type === 'SW_UPDATED') {
+      const handleMessage = (event: MessageEvent) => {
+        if (event.data.type === 'SW_UPDATED' && !hasShownUpdateRef.current) {
           console.log(`Service Worker updated to version ${event.data.version}`);
+          hasShownUpdateRef.current = true;
           setUpdateAvailable(true);
         }
-      });
+      };
 
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        console.log('Service Worker controller changed, update available');
-        setUpdateAvailable(true);
-      });
+      const handleControllerChange = async () => {
+        // Ignore the first controllerchange event on initial page load
+        if (initialLoadRef.current) {
+          initialLoadRef.current = false;
+          return;
+        }
+
+        // Only show update if there's actually a waiting service worker
+        const registration = await navigator.serviceWorker.getRegistration();
+        if (registration?.waiting && !hasShownUpdateRef.current) {
+          console.log('Service Worker controller changed with waiting worker, update available');
+          hasShownUpdateRef.current = true;
+          setUpdateAvailable(true);
+        }
+      };
+
+      navigator.serviceWorker.addEventListener('message', handleMessage);
+      navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
+
+      // Mark initial load complete after a short delay
+      setTimeout(() => {
+        initialLoadRef.current = false;
+      }, 2000);
+
+      return () => {
+        navigator.serviceWorker.removeEventListener('message', handleMessage);
+        navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
+      };
     }
   }, []);
 

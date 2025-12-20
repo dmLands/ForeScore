@@ -2645,20 +2645,18 @@ export default function Home() {
                                 >
                                   Edit Payouts
                                 </Button>
-                                {isAdmin && (
-                                  <Button 
-                                    onClick={() => {
-                                      setTempSelectedGamesForScorecard([]); // Start with empty to trigger auto-select
-                                      setShowScorecardModal(true);
-                                    }}
-                                    variant="outline"
-                                    size="sm"
-                                    className="btn-interactive hover-lift border-blue-500 text-blue-600 hover:bg-blue-50"
-                                    data-testid="button-scorecard"
-                                  >
-                                    📊 Scorecard
-                                  </Button>
-                                )}
+                                <Button 
+                                  onClick={() => {
+                                    setTempSelectedGamesForScorecard([]); // Start with empty to trigger auto-select
+                                    setShowScorecardModal(true);
+                                  }}
+                                  variant="outline"
+                                  size="sm"
+                                  className="btn-interactive hover-lift border-blue-500 text-blue-600 hover:bg-blue-50"
+                                  data-testid="button-scorecard"
+                                >
+                                  📊 Scorecard
+                                </Button>
                               </div>
                               
                               {(() => {
@@ -6002,36 +6000,34 @@ export default function Home() {
         </>
       )}
 
-      {/* Scorecard Modal (Admin Feature) */}
-      {isAdmin && (
-        <Dialog open={showScorecardModal} onOpenChange={setShowScorecardModal}>
-          <DialogContent className="sm:max-w-6xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-semibold text-gray-800">📊 Scorecard</DialogTitle>
-              <DialogDescription>
-                Detailed hole-by-hole breakdown for all active games
-              </DialogDescription>
-            </DialogHeader>
-            
-            {selectedGame && (
-              <ScorecardTable
-                gameStateId={selectedGame.id}
-                selectedGames={tempSelectedGamesForScorecard}
-                onSelectedGamesChange={setTempSelectedGamesForScorecard}
-              />
-            )}
-            
-            <div className="flex justify-end pt-4">
-              <Button 
-                onClick={() => setShowScorecardModal(false)}
-                variant="outline"
-              >
-                Close
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
+      {/* Scorecard Modal */}
+      <Dialog open={showScorecardModal} onOpenChange={setShowScorecardModal}>
+        <DialogContent className="sm:max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold text-gray-800">📊 Scorecard</DialogTitle>
+            <DialogDescription>
+              Detailed hole-by-hole breakdown for all active games
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedGame && (
+            <ScorecardTable
+              gameStateId={selectedGame.id}
+              selectedGames={tempSelectedGamesForScorecard}
+              onSelectedGamesChange={setTempSelectedGamesForScorecard}
+            />
+          )}
+          
+          <div className="flex justify-end pt-4">
+            <Button 
+              onClick={() => setShowScorecardModal(false)}
+              variant="outline"
+            >
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* PWA Install Button - Floating Action Button */}
       <div className="fixed bottom-24 right-4 z-50" data-testid="button-install-home">
@@ -6044,7 +6040,7 @@ export default function Home() {
   );
 }
 
-// Scorecard Table Component (Admin Feature)
+// Scorecard Table Component
 function ScorecardTable({ 
   gameStateId, 
   selectedGames, 

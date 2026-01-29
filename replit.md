@@ -4,6 +4,18 @@
 ForeScore is a secure, full-stack Progressive Web App designed as a companion for golf penalty games like "Animal." It provides enterprise-grade local authentication, server-side security validation, and comprehensive game management. The application supports group management, card game mechanics using a Proportional Share Algorithm, isolated 2/9/16 points games, and multiple payout calculation views. A key feature is the GIR (Greens in Regulation) game with user-configurable penalty and bonus holes. All game calculations are performed server-side to prevent tampering, ensuring secure user authentication, session management, and subscription access control. The project aims to be a robust, reliable, and secure platform for managing golf penalty games, aspiring to be the leading digital tool in this niche.
 
 ## Recent Changes
+### V9.8 (COMPLETED) - January 2026
+- **iOS App Store Preparation**:
+  - **Platform Detection**: Added `client/src/lib/platform.ts` with `isNativeIOS()`, `usePlatform()` hook, and `canShowPayments()` to detect Capacitor/native context
+  - **Conditional Payment UI**: Subscribe page shows iOS-specific "Manage on Web" prompt instead of Stripe checkout when running in iOS app
+  - **Hidden Trial Banner**: TrialCountdownBanner returns null on iOS/native to avoid showing upgrade prompts
+  - **Manage Subscription iOS Flow**: Removed pricing displays and payment actions on iOS, replaced with "Manage on Web" button linking to forescore.xyz
+  - **Legal Compliance**: Added LegalFooter component with Privacy Policy and Terms links to landing, login, register, and iOS subscription pages
+  - **Capacitor Configuration**: Created `capacitor.config.json` with iOS-specific settings for App Store submission
+  - **Build Instructions**: Created `IOS_BUILD_INSTRUCTIONS.md` with complete guide for building and submitting iOS app
+  - **Guarded Stripe Initialization**: Stripe only loads on web platform (`canShowPayments()`) to prevent iOS errors
+  - **VersionChecker Fix**: Improved update detection to only trigger on actual new deployments, not every page refresh
+
 ### V9.7 (COMPLETED) - December 2025
 - **Quick Email-Only Registration for QR Users**:
   - **Streamlined Signup Flow**: QR code users (qr.forescore.xyz) can now sign up with just email - no password required initially

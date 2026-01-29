@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { usePlatform } from "@/lib/platform";
+import { LegalFooter } from "@/components/LegalFooter";
 
 interface SubscriptionAccess {
   hasAccess: boolean;
@@ -249,8 +250,8 @@ export default function ManageSubscription() {
           
         </Card>
 
-        {/* Billing Information Card - Active Subscriptions Only */}
-        {currentAccessInfo?.hasAccess && statusInfo.status === 'active' && (
+        {/* Billing Information Card - Active Subscriptions Only - Web Only (no pricing on iOS) */}
+        {currentAccessInfo?.hasAccess && statusInfo.status === 'active' && !(isIOS || isNative) && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
@@ -355,6 +356,31 @@ export default function ManageSubscription() {
                     </div>
                   </div>
                 )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        
+        {/* iOS - Show subscription status info without pricing */}
+        {currentAccessInfo?.hasAccess && (isIOS || isNative) && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <CheckCircle className="w-5 h-5 text-green-600" />
+                <span>Subscription Status</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-start space-x-3">
+                  <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-medium text-green-900">Your subscription is active</h4>
+                    <p className="text-sm text-green-700 mt-1">
+                      To view billing details or make changes, visit forescore.xyz in your web browser.
+                    </p>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -558,6 +584,11 @@ export default function ManageSubscription() {
             </div>
           </CardContent>
         </Card>
+        
+        {/* Legal Footer - Apple compliance (only show on iOS) */}
+        {(isIOS || isNative) && (
+          <LegalFooter className="mt-6" />
+        )}
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ import { Link, useLocation } from "wouter";
 import { z } from "zod";
 import { Eye, EyeOff } from "lucide-react";
 import AppDownloadPrompt from "@/components/AppDownloadPrompt";
+import { LegalFooter } from "@/components/LegalFooter";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -172,6 +173,9 @@ export default function Login() {
               </Link>
             </p>
           </div>
+          
+          {/* Legal Footer - Apple compliance */}
+          <LegalFooter className="mt-6 pt-4 border-t border-gray-200" />
         </CardContent>
       </Card>
     </div>

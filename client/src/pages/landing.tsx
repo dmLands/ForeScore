@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import AppDownloadPrompt from "@/components/AppDownloadPrompt";
+import { LegalFooter } from "@/components/LegalFooter";
 import logoPath from "@assets/ForeScore_Logo_transparent_1763148840628.png";
 
 export default function Landing() {
@@ -131,6 +132,9 @@ export default function Landing() {
                 </CardContent>
               </Card>
             </div>
+            
+            {/* Legal Footer - Apple compliance */}
+            <LegalFooter className="mt-6 pt-4 border-t border-gray-200" />
           </CardContent>
         </Card>
       </div>

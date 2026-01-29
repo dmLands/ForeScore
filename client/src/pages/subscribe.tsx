@@ -9,13 +9,22 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { useStripe, Elements, PaymentElement, useElements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
+import { loadStripe, Stripe } from '@stripe/stripe-js';
 import { CheckCircle, Clock, CreditCard, Users, Calculator, Trophy, Eye, EyeOff, Lock } from "lucide-react";
+import { usePlatform, canShowPayments } from "@/lib/platform";
+import { IOSSubscriptionPrompt } from "@/components/IOSSubscriptionPrompt";
 
-if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
-  throw new Error('Missing required Stripe key: VITE_STRIPE_PUBLIC_KEY');
-}
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+// Only initialize Stripe on web platform (not iOS/native)
+let stripePromise: Promise<Stripe | null> | null = null;
+const getStripe = () => {
+  if (!stripePromise && canShowPayments()) {
+    const key = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
+    if (key) {
+      stripePromise = loadStripe(key);
+    }
+  }
+  return stripePromise;
+};
 
 interface SubscriptionPlan {
   priceId: string;
@@ -361,6 +370,17 @@ const PlanCard = ({
 export default function Subscribe() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { isIOS, isNative } = usePlatform();
+
+  // On iOS/native, show the web redirect prompt instead of Stripe
+  if (isIOS || isNative) {
+    return (
+      <IOSSubscriptionPrompt 
+        title="Subscribe to ForeScore"
+        description="Set up your subscription through our website for the best experience."
+      />
+    );
+  }
   
   const [selectedPlan, setSelectedPlan] = useState<string>(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -559,7 +579,7 @@ export default function Subscribe() {
             
             <CardContent>
               <Elements 
-                stripe={stripePromise} 
+                stripe={getStripe()} 
                 options={{ 
                   clientSecret,
                   appearance: {

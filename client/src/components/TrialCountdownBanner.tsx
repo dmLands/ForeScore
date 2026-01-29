@@ -3,12 +3,19 @@ import { Button } from "@/components/ui/button";
 import { Clock, X } from "lucide-react";
 import { useLocation } from "wouter";
 import { useState, useEffect } from "react";
+import { usePlatform } from "@/lib/platform";
 
 export default function TrialCountdownBanner() {
   const { subscriptionAccess } = useAuth();
   const [, setLocation] = useLocation();
   const [dismissed, setDismissed] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState<string>("");
+  const { isIOS, isNative } = usePlatform();
+
+  // Don't show upgrade banner on iOS/native - payments handled on web
+  if (isIOS || isNative) {
+    return null;
+  }
 
   // Calculate time remaining
   useEffect(() => {

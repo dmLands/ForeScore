@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff } from "lucide-react";
 import AppDownloadPrompt from "@/components/AppDownloadPrompt";
 import LegalDialogs from "@/components/LegalDialogs";
+import { LegalFooter } from "@/components/LegalFooter";
 
 const registerSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -331,7 +332,7 @@ export default function Register() {
               </Link>
             </p>
             
-{registerMutation.isSuccess && (
+            {registerMutation.isSuccess && (
               <div className="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
                 <p className="text-sm text-green-800 font-medium">
                   Account created successfully! Redirecting to sign in...
@@ -339,6 +340,9 @@ export default function Register() {
               </div>
             )}
           </div>
+          
+          {/* Legal Footer - Apple compliance */}
+          <LegalFooter className="mt-6 pt-4 border-t border-gray-200" />
         </CardContent>
       </Card>
       

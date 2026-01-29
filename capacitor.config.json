@@ -1,0 +1,35 @@
+{
+  "appId": "xyz.forescore.app",
+  "appName": "ForeScore",
+  "webDir": "dist/public",
+  "server": {
+    "androidScheme": "https",
+    "iosScheme": "https",
+    "hostname": "forescore.xyz"
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "preferredContentMode": "mobile",
+    "scrollEnabled": true,
+    "allowsLinkPreview": true,
+    "backgroundColor": "#ffffff"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "launchAutoHide": true,
+      "backgroundColor": "#ffffff",
+      "showSpinner": false,
+      "splashFullScreen": true,
+      "splashImmersive": true
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#ffffff"
+    },
+    "Keyboard": {
+      "resize": "body",
+      "resizeOnFullScreen": true
+    }
+  }
+}

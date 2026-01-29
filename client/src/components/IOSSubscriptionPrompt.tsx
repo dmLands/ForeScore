@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ExternalLink, Globe, CheckCircle, Smartphone } from "lucide-react";
+import { LegalFooter } from "./LegalFooter";
 
 interface IOSSubscriptionPromptProps {
   variant?: 'full-page' | 'card';
@@ -68,6 +69,9 @@ export function IOSSubscriptionPrompt({
           </div>
         </div>
       </div>
+      
+      {/* Legal Footer - Apple compliance */}
+      <LegalFooter className="mt-6 pt-4 border-t border-gray-200" />
     </>
   );
 

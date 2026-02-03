@@ -1,64 +1,64 @@
 workflows:
   ios_forescore:
-  name: iOS ForeScore -> TestFlight
-  instance_type: mac_mini_m2
-  max_build_duration: 120
+    name: iOS ForeScore -> TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 120
 
-  integrations:
-    app_store_connect: codemagic
+    integrations:
+      app_store_connect: codemagic
 
-  environment:
-    node: latest
+    environment:
+      node: latest
 
-    vars:
-      # REQUIRED — numeric Apple ID from App Store Connect
-      APP_STORE_APPLE_ID: "1555555551"
+      vars:
+        # REQUIRED — numeric Apple ID from App Store Connect
+        APP_STORE_APPLE_ID: "1555555551"
 
-      # MUST match Xcode + App Store Connect bundle id
-      BUNDLE_ID: "xyz.forescore.app"
+        # MUST match Xcode + App Store Connect bundle id
+        BUNDLE_ID: "xyz.forescore.app"
 
-      # Typical Capacitor defaults
-      XCODE_WORKSPACE: "ios/App/App.xcworkspace"
-      XCODE_SCHEME: "App"
+        # Typical Capacitor defaults
+        XCODE_WORKSPACE: "ios/App/App.xcworkspace"
+        XCODE_SCHEME: "App"
 
-    ios_signing:
-      distribution_type: app_store
-      bundle_identifier: "xyz.forescore.app"
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: "xyz.forescore.app"
 
-  scripts:
-    - name: Install JS dependencies
-      script: |
-        npm ci
+    scripts:
+      - name: Install JS dependencies
+        script: |
+          npm ci
 
-    - name: Build web app
-      script: |
-        npm run build
+      - name: Build web app
+        script: |
+          npm run build
 
-    - name: Sync Capacitor iOS project
-      script: |
-        npx cap sync ios
+      - name: Sync Capacitor iOS project
+        script: |
+          npx cap sync ios
 
-    - name: Install CocoaPods
-      script: |
-        cd ios/App
-        pod install
+      - name: Install CocoaPods
+        script: |
+          cd ios/App
+          pod install
 
-    - name: Apply signing profiles
-      script: |
-        xcode-project use-profiles
+      - name: Apply signing profiles
+        script: |
+          xcode-project use-profiles
 
-    - name: Build IPA
-      script: |
-        cd ios/App
-        xcode-project build-ipa \
-          --workspace "$XCODE_WORKSPACE" \
-          --scheme "$XCODE_SCHEME"
+      - name: Build IPA
+        script: |
+          cd ios/App
+          xcode-project build-ipa \
+            --workspace "$XCODE_WORKSPACE" \
+            --scheme "$XCODE_SCHEME"
 
-  artifacts:
-    - ios/App/build/ios/ipa/*.ipa
-    - /tmp/xcodebuild_logs/*.log
+    artifacts:
+      - ios/App/build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
 
-  publishing:
-    app_store_connect:
-      auth: integration
-      submit_to_testflight: true
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true

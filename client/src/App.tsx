@@ -7,7 +7,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 import { initGA } from "./lib/analytics";
 import { useAnalytics } from "./hooks/use-analytics";
-import { VersionChecker } from "@/components/VersionChecker";
 import Home from "@/pages/home";
 import Landing from "@/pages/landing";
 import QRLanding from "@/pages/qr-landing";
@@ -101,7 +100,6 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <VersionChecker />
         <Toaster />
         <Router />
       </TooltipProvider>

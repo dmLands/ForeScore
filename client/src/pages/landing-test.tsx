@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -33,6 +33,11 @@ export default function LandingTest() {
     termsAccepted: false,
     marketingConsent: false
   });
+
+  // Ensure page always starts at top on load
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   const [errors, setErrors] = useState<Partial<Record<keyof QuickSignupForm, string>>>({});
   const [showTermsDialog, setShowTermsDialog] = useState(false);
   const [showPrivacyDialog, setShowPrivacyDialog] = useState(false);

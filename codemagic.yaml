@@ -9,47 +9,50 @@ ios_forescore:
 
   environment:
     node: latest
+
     vars:
+      # REQUIRED — numeric Apple ID from App Store Connect
       APP_STORE_APPLE_ID: "1555555551"
+
+      # MUST match Xcode + App Store Connect bundle id
       BUNDLE_ID: "xyz.forescore.app"
+
+      # Typical Capacitor defaults
       XCODE_WORKSPACE: "ios/App/App.xcworkspace"
       XCODE_SCHEME: "App"
+
     ios_signing:
       distribution_type: app_store
       bundle_identifier: "xyz.forescore.app"
 
   scripts:
-    - name: Install JS deps
+    - name: Install JS dependencies
       script: |
-        set -e
         npm ci
 
-    - name: Build web
+    - name: Build web app
       script: |
-        set -e
         npm run build
 
-    - name: Sync Capacitor iOS
+    - name: Sync Capacitor iOS project
       script: |
-        set -e
         npx cap sync ios
 
-    - name: CocoaPods install
+    - name: Install CocoaPods
       script: |
-        set -e
         cd ios/App
         pod install
 
     - name: Apply signing profiles
       script: |
-        set -e
         xcode-project use-profiles
 
     - name: Build IPA
       script: |
-        set -e
-        cd "$CM_BUILD_DIR/ios/App"
-        xcode-project build-ipa --workspace "$XCODE_WORKSPACE" --scheme "$XCODE_SCHEME"
+        cd ios/App
+        xcode-project build-ipa \
+          --workspace "$XCODE_WORKSPACE" \
+          --scheme "$XCODE_SCHEME"
 
   artifacts:
     - ios/App/build/ios/ipa/*.ipa

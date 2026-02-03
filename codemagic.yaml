@@ -1,112 +1,80 @@
 workflows:
-ios-forescore:
-  name: iOS ForeScore (Capacitor) -> TestFlight
-  max_build_duration: 120
+ios_forescore:
+  name: iOS ForeScore -> TestFlight
   instance_type: mac_mini_m2
-
-  integrations:
-    # This must match the App Store Connect API key name you set in Codemagic UI
-    app_store_connect: codemagic
+  max_build_duration: 120
 
   environment:
     node: latest
-
-    # Uses Codemagic-managed signing identities/profiles
-    ios_signing:
-      distribution_type: app_store
-      # IMPORTANT: set this to your REAL bundle id used by the Xcode project
-      # Example from your earlier package was "xyz.forescore.app"
-      bundle_identifier: xyz.forescore.app
-
     vars:
-      # Required for build number increment via App Store Connect
-      # Find in App Store Connect -> App Information (Apple ID)
-      APP_STORE_APPLE_ID: 1555555551
+      # REQUIRED: numeric Apple ID from App Store Connect (App Information)
+      APP_STORE_APPLE_ID: "1555555551"
 
-      # Capacitor default workspace/scheme (common defaults):
+      # REQUIRED: must match your Xcode bundle id + App Store Connect bundle id
+      BUNDLE_ID: "xyz.forescore.app"
+
+      # Typical Capacitor defaults (adjust if your project differs)
       XCODE_WORKSPACE: "ios/App/App.xcworkspace"
       XCODE_SCHEME: "App"
 
-    # Optional but recommended for deterministic installs
-    npm: true
+    ios_signing:
+      distribution_type: app_store
+      bundle_identifier: "xyz.forescore.app"
 
-  triggering:
-    events:
-      - push
-    branch_patterns:
-      - pattern: main
-        include: true
-        source: true
+  integrations:
+    # Must match the name of your App Store Connect integration in Codemagic UI
+    app_store_connect: codemagic
 
   scripts:
-    - name: Install npm dependencies
+    - name: Install JS deps
       script: |
-        set -e
+        set -euo pipefail
         npm ci
 
-    - name: Build web app
+    - name: Build web
       script: |
-        set -e
+        set -euo pipefail
         npm run build
 
-    - name: Sync Capacitor iOS project
+    - name: Sync Capacitor iOS
       script: |
-        set -e
+        set -euo pipefail
         npx cap sync ios
 
-    - name: Install CocoaPods
+    - name: CocoaPods install
       script: |
-        set -e
+        set -euo pipefail
         cd ios/App
         pod install
 
-    - name: Apply code signing profiles to Xcode project
+    - name: Apply signing profiles
       script: |
-        set -e
+        set -euo pipefail
         xcode-project use-profiles
 
-    - name: Increment build number (from App Store Connect)
+    - name: Increment build number
       script: |
-        set -e
+        set -euo pipefail
         cd "$CM_BUILD_DIR/ios/App"
-
-        LATEST_BUILD_NUMBER=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID")
-        if [ -z "$LATEST_BUILD_NUMBER" ]; then
-          # If no builds exist yet, fall back to Codemagic build number
-          UPDATED_BUILD_NUMBER=$BUILD_NUMBER
+        LATEST=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID" || echo "")
+        if [ -z "$LATEST" ]; then
+          NEXT="$BUILD_NUMBER"
         else
-          UPDATED_BUILD_NUMBER=$(($LATEST_BUILD_NUMBER + 1))
+          NEXT=$((LATEST + 1))
         fi
+        agvtool new-version -all "$NEXT"
 
-        agvtool new-version -all "$UPDATED_BUILD_NUMBER"
-
-    - name: Build IPA for distribution
+    - name: Build IPA
       script: |
-        set -e
+        set -euo pipefail
         cd "$CM_BUILD_DIR/ios/App"
-
-        xcode-project build-ipa \
-          --workspace "$XCODE_WORKSPACE" \
-          --scheme "$XCODE_SCHEME"
+        xcode-project build-ipa --workspace "$XCODE_WORKSPACE" --scheme "$XCODE_SCHEME"
 
   artifacts:
     - ios/App/build/ios/ipa/*.ipa
     - /tmp/xcodebuild_logs/*.log
-    - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app
-    - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
 
   publishing:
     app_store_connect:
       auth: integration
       submit_to_testflight: true
-
-      # Optional: push to specific TestFlight groups (must match group names exactly)
-      # beta_groups:
-      #   - Internal Testers
-
-    email:
-      recipients:
-        - you@example.com
-      notify:
-        success: true
-        failure: true

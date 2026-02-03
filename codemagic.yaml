@@ -1,5 +1,5 @@
 workflows:
-ios_forescore:
+  ios_forescore:
   name: iOS ForeScore -> TestFlight
   instance_type: mac_mini_m2
   max_build_duration: 120

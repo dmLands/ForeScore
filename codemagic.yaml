@@ -23,8 +23,8 @@ workflows:
     scripts:
       - name: Install JS dependencies
         script: |
-              npm config set production false
-              npm ci
+          npm config set production false
+          npm ci
 
       - name: Build web app
         script: |
@@ -33,6 +33,17 @@ workflows:
       - name: Sync Capacitor iOS project
         script: |
           ./node_modules/.bin/cap sync ios
+
+      # NEW: locate the actual workspace/project paths present in CI
+      - name: Locate Xcode workspace
+        script: |
+          set -e
+          echo "Listing ios directory:"
+          ls -la ios || true
+          echo "Searching for workspace:"
+          find ios -maxdepth 3 -name "*.xcworkspace" -print || true
+          echo "Searching for xcodeproj:"
+          find ios -maxdepth 3 -name "*.xcodeproj" -print || true
 
       - name: Install CocoaPods
         script: |
@@ -43,11 +54,20 @@ workflows:
         script: |
           xcode-project use-profiles
 
+      # NEW: auto-detect workspace path so builds don't break if the folder name differs
       - name: Build IPA
         script: |
-          cd ios/App
+          set -euo pipefail
+          WORKSPACE="$(find ios -maxdepth 3 -name '*.xcworkspace' | head -n 1)"
+          if [ -z "$WORKSPACE" ]; then
+            echo "No .xcworkspace found. Contents of ios/:"
+            ls -la ios || true
+            find ios -maxdepth 3 -name '*.xcodeproj' -print || true
+            exit 1
+          fi
+          echo "Using workspace: $WORKSPACE"
           xcode-project build-ipa \
-            --workspace "$XCODE_WORKSPACE" \
+            --workspace "$WORKSPACE" \
             --scheme "$XCODE_SCHEME"
 
     artifacts:

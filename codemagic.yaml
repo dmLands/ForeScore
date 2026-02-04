@@ -23,7 +23,10 @@ workflows:
     scripts:
       - name: Install JS dependencies
         script: |
-          npm ci --include=dev
+      - name: Install JS dependencies
+        script: |
+              npm config set production false
+              npm ci
 
       - name: Build web app
         script: |
@@ -31,7 +34,7 @@ workflows:
 
       - name: Sync Capacitor iOS project
         script: |
-          npx @capacitor/cli cap sync ios
+          ./node_modules/.bin/cap sync ios
 
       - name: Install CocoaPods
         script: |

@@ -58,14 +58,24 @@ workflows:
       - name: Build IPA
         script: |
           set -euo pipefail
-          WORKSPACE="$(find ios -maxdepth 3 -name '*.xcworkspace' | head -n 1)"
-          if [ -z "$WORKSPACE" ]; then
-            echo "No .xcworkspace found. Contents of ios/:"
-            ls -la ios || true
-            find ios -maxdepth 3 -name '*.xcodeproj' -print || true
+
+          # Prefer the CocoaPods workspace (includes Pods)
+          if [ -d "ios/App/App.xcworkspace" ]; then
+            WORKSPACE="ios/App/App.xcworkspace"
+          else
+            WORKSPACE="$(find ios -maxdepth 4 -name '*.xcworkspace' \
+              | grep -v 'project.xcworkspace' \
+              | head -n 1)"
+          fi
+
+          if [ -z "${WORKSPACE:-}" ]; then
+            echo "No usable .xcworkspace found. Workspaces:"
+            find ios -maxdepth 4 -name '*.xcworkspace' -print || true
             exit 1
           fi
+
           echo "Using workspace: $WORKSPACE"
+
           xcode-project build-ipa \
             --workspace "$WORKSPACE" \
             --scheme "$XCODE_SCHEME"

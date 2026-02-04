@@ -11,13 +11,8 @@ workflows:
       node: latest
 
       vars:
-        # REQUIRED — numeric Apple ID from App Store Connect
         APP_STORE_APPLE_ID: "1555555551"
-
-        # MUST match Xcode + App Store Connect bundle id
         BUNDLE_ID: "xyz.forescore.app"
-
-        # Typical Capacitor defaults
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
 
@@ -28,7 +23,7 @@ workflows:
     scripts:
       - name: Install JS dependencies
         script: |
-          npm ci
+          npm ci --include=dev
 
       - name: Build web app
         script: |
@@ -36,7 +31,7 @@ workflows:
 
       - name: Sync Capacitor iOS project
         script: |
-          npx cap sync ios
+          npx @capacitor/cli cap sync ios
 
       - name: Install CocoaPods
         script: |

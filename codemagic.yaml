@@ -71,7 +71,7 @@ workflows:
             --scheme "$XCODE_SCHEME"
 
     artifacts:
-      - ios/App/build/ios/ipa/*.ipa
+      - ios/**/build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
 
     publishing:

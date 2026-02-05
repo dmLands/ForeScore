@@ -66,21 +66,18 @@ workflows:
               | grep -v 'project.xcworkspace' \
               | head -n 1)"
           fi
-
-          if [ -z "${WORKSPACE:-}" ]; then
-            echo "No usable .xcworkspace found. Workspaces:"
-            find ios -maxdepth 4 -name '*.xcworkspace' -print || true
-            exit 1
-          fi
+          
+          mkdir -p build/ios.ipa
 
           echo "Using workspace: $WORKSPACE"
 
           xcode-project build-ipa \
             --workspace "$WORKSPACE" \
-            --scheme "$XCODE_SCHEME"
+            --scheme "$XCODE_SCHEME" \
+            --ipa-directory build/ios/ipa
 
     artifacts:
-      - ios/**/build/ios/ipa/*.ipa
+      - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
 
 

@@ -4,11 +4,10 @@ workflows:
     instance_type: mac_mini_m2
     max_build_duration: 120
 
-    integrations:
-      app_store_connect: codemagic
-
     environment:
       node: latest
+      groups:
+                - ForeScore
 
       vars:
         APP_STORE_APPLE_ID: "1555555551"

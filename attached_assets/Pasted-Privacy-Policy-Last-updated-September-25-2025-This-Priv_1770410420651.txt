@@ -1,0 +1,112 @@
+Privacy Policy
+Last updated: September 25, 2025
+
+This Privacy Policy explains how ForeScore, a service of danoNano, LLC (dba ForeScore) ("ForeScore," "we," "our," or "us"), collects, uses, and shares information when you use our websites, web apps, mobile apps, and related services (collectively, the "Service"). By using the Service, you agree to the practices described in this Privacy Policy.
+
+1. Information We Collect
+We may collect the following types of information:
+
+Account Information: Name, email address, password or other login credentials, and any identifiers you provide when creating an account or signing in via third‑party services (such as Google or Apple).
+
+Profile & Gameplay Data: Information you add to your profile, your groups and games, game configurations, scores entered, and related in‑app activity.
+
+Device & Usage Data: Technical information such as IP address, device type, operating system, app version, language, time zone, and information about how you interact with the Service (e.g., screens viewed, features used, session duration).
+
+Cookies & Similar Technologies: We use cookies, local storage, and similar technologies to remember your preferences, keep you signed in, and help us understand how the Service is used.
+
+Communications: Information you provide when you contact us for support, respond to surveys, or participate in promotions, including the content of messages and your contact details.
+
+We do not knowingly collect personal data from children under 13 (or under the digital age of consent in your jurisdiction). If we learn that we have collected such data, we will take steps to delete it.
+
+2. How We Use Information
+We use the information we collect for the following purposes:
+
+Provide the Service: To create and manage accounts, enable gameplay tracking and group features, and operate core functionality of the Service.
+
+Improve & Personalize: To understand how the Service is used, fix bugs, develop new features, and personalize content, settings, and recommendations.
+
+Communications: To send you service‑related messages (such as account notices, security alerts, and changes to our terms or policies) and, where permitted by law, marketing or promotional messages about ForeScore. You can opt out of marketing at any time (see Section 7).
+
+Security & Fraud Prevention: To protect the Service and our users, detect and prevent abuse, fraud, or other harmful activity, and enforce our Terms of Service.
+
+Legal Compliance: To comply with applicable laws, regulations, legal processes, and law enforcement requests.
+
+3. Sharing of Information
+We do not sell your personal data. We may share information in the following situations:
+
+Service Providers: With trusted third‑party vendors who perform services on our behalf, such as hosting, analytics, email delivery, customer support, or payment processing. These providers are permitted to use your information only as needed to provide services to us.
+
+Legal & Safety: When we believe in good faith that disclosure is reasonably necessary to comply with a law, regulation, legal process, or governmental request, or to protect the rights, property, or safety of ForeScore, our users, or others.
+
+Business Transfers: In connection with a merger, acquisition, financing, reorganization, or sale of all or part of our business or assets. In such cases, we will take reasonable steps to ensure your privacy rights are respected.
+
+With Your Consent: We may share information for other purposes when you explicitly direct or consent to that sharing.
+
+4. Analytics & Cookies (including Google Analytics)
+We use analytics tools (such as Google Analytics) to help us understand how users find and use ForeScore, measure the performance of the Service, and improve user experience.
+
+Analytics tools may collect information such as device type, approximate location (based on IP address), pages or screens viewed, time spent in the app, and interactions with features.
+
+We configure analytics tools so that data is reported in aggregate and is not used by us to directly identify you as an individual.
+
+You can manage cookies and similar technologies through your browser or device settings. Components such as the Google Analytics Opt‑out Browser Add‑on may allow you to limit certain tracking in web contexts.
+
+Where required by law, we will obtain your consent before using non‑essential cookies or similar technologies.
+
+5. Payments
+If you make a purchase or subscribe to paid features, payment information (such as card details and billing information) is collected and processed directly by third‑party payment providers (for example, Stripe, PayPal, or the relevant app store provider). We do not store full payment card numbers on our servers.
+
+Your use of those payment services is governed by their own terms and privacy policies in addition to this Privacy Policy.
+
+6. Data Retention
+We retain personal information for as long as reasonably necessary to:
+
+Provide and maintain the Service.
+
+Comply with our legal obligations.
+
+Resolve disputes and enforce our agreements.
+
+We may anonymize or aggregate information so that it can no longer be associated with you. We may retain such aggregated or anonymized information indefinitely for analytics, troubleshooting, or business planning.
+
+7. Your Rights & Choices
+Depending on your location and applicable law, you may have some or all of the following rights regarding your personal data:
+
+Access: Request confirmation of whether we process your personal data and request a copy of that data.
+
+Correction: Request that we correct inaccurate or incomplete personal data.
+
+Deletion: Request that we delete certain personal data, subject to legal or legitimate business requirements to retain it.
+
+Restriction/Objection: Request that we limit or stop certain processing of your data, including for direct marketing.
+
+Portability: Request a copy of your personal data in a structured, commonly used, and machine‑readable format, where technically feasible.
+
+You can also:
+
+Marketing Preferences: Opt out of marketing communications at any time by clicking "unsubscribe" in an email, changing your notification settings in the app, or contacting us at the email below.
+
+Account & Data Deletion: You may request that we delete your account and associated personal data by contacting us at the email below or, where available, using in‑app account deletion tools.
+
+To exercise any of these rights, email us at support@forescore.xyz. We may request additional information to verify your identity before fulfilling your request. We will respond within a reasonable period, consistent with applicable law.
+
+8. Security
+We use reasonable technical, administrative, and organizational safeguards designed to protect your information from unauthorized access, use, alteration, or destruction. However, no system is completely secure, and we cannot guarantee the absolute security of your data. You are responsible for maintaining the confidentiality of your account credentials and for any activity under your account.
+
+9. Children’s Privacy
+The Service is not directed to children under 13, and we do not knowingly collect personal data from children under 13 (or under the minimum digital age of consent in your jurisdiction). If you believe a child has provided us with personal data in violation of this Policy, please contact us so we can take appropriate steps to delete such information.
+
+10. International Users
+ForeScore is based in the United States, and your information may be processed and stored in the U.S. and other countries where our service providers operate. These countries may have data protection laws that differ from those in your jurisdiction.
+
+Where required, we rely on appropriate legal bases and safeguards for transferring personal data, such as your consent, performance of a contract, or other mechanisms recognized under applicable data protection laws.
+
+11. Changes to this Policy
+We may update this Privacy Policy from time to time to reflect changes in our practices, technologies, or legal requirements. If changes are material, we will notify you via the Service, email, or other reasonable means. The updated Policy will have an updated "Last updated" date. Your continued use of the Service after the Policy becomes effective means you accept the updated terms. If you do not agree, you should stop using the Service.
+
+12. Contact Us
+If you have questions, concerns, or requests regarding this Privacy Policy or our data practices, you can contact us at:
+
+danoNano, LLC dba ForeScore
+Email: support@forescore.xyz
+Postal: 2447 E Fremont Rd, Phoenix, AZ 85042, USA

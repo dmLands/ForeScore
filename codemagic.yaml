@@ -53,6 +53,13 @@ workflows:
         script: |
           xcode-project use-profiles
 
+      - name: Bump iOS build number
+        script: |
+          # Example: set build number to current Unix timestamp
+          BUILD_NUM=$(date +%s)
+          echo "Setting CFBundleVersion to $BUILD_NUM"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUM" ios/App/App/Info.plist
+
       # NEW: auto-detect workspace path so builds don't break if the folder name differs
       - name: Build IPA
         script: |

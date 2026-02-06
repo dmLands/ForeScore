@@ -76,15 +76,15 @@ workflows:
             --scheme "$XCODE_SCHEME" \
             --ipa-directory build/ios/ipa
 
-          - name: Verify IPA exists
-            script: |
-              set -e
-              echo "Verifying IPA in build/ios/ipa:"
-              ls -la build/ios/ipa
-              if ! ls build/ios/ipa/*.ipa 1> /dev/null 2>&1; then
-                echo "No IPA file found in build/ios/ipa"
-                exit 1
-              fi
+      - name: Verify IPA exists
+        script: |
+          set -e
+          echo "Verifying IPA in build/ios/ipa:"
+          ls -la build/ios/ipa
+          if ! ls build/ios/ipa/*.ipa 1> /dev/null 2>&1; then
+            echo "No IPA file found in build/ios/ipa"
+            exit 1
+          fi
           
     artifacts:
       - build/ios/ipa/*.ipa

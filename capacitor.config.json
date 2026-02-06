@@ -3,6 +3,7 @@
   "appName": "ForeScore",
   "webDir": "dist/public",
   "server": {
+    "url": "https://forescore.xyz",
     "androidScheme": "https",
     "iosScheme": "https",
     "hostname": "forescore.xyz"

@@ -1,5 +1,4 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
-import { getApiBaseUrl } from "./platform";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -18,8 +17,7 @@ export async function apiRequest(
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const fullUrl = `${getApiBaseUrl()}${url}`;
-    const res = await fetch(fullUrl, {
+    const res = await fetch(url, {
       method,
       headers: data ? { "Content-Type": "application/json" } : {},
       body: data ? JSON.stringify(data) : undefined,
@@ -45,8 +43,7 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const fullUrl = `${getApiBaseUrl()}${queryKey.join("/")}`;
-    const res = await fetch(fullUrl, {
+    const res = await fetch(queryKey.join("/") as string, {
       credentials: "include",
     });
 

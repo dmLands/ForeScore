@@ -12,7 +12,6 @@ import { useLocation } from "wouter";
 import { z } from "zod";
 import LegalDialogs from "@/components/LegalDialogs";
 import AppDownloadPrompt from "@/components/AppDownloadPrompt";
-import { apiUrl } from "@/lib/platform";
 import logoPath from "@assets/ForeScore_Logo_transparent_1763148840628.png";
 import payoutScreenshot from "@assets/image_1764097878852.png";
 import bbbScreenshot from "@assets/image_1764097900039.png";
@@ -54,7 +53,7 @@ export default function QRLanding() {
 
   const registerMutation = useMutation({
     mutationFn: async (data: Omit<RegisterForm, 'confirmPassword'>) => {
-      const response = await fetch(apiUrl("/api/auth/register"), {
+      const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),

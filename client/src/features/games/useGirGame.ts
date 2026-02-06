@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { apiUrl } from "@/lib/platform";
 import type { PointsGame, Group, GIRHoleConfig } from "@shared/schema";
 
 export function useGirGame(selectedGroup: Group | null) {
@@ -121,7 +120,7 @@ export function useGirGame(selectedGroup: Group | null) {
         nassauValue: nassauValue || '0'
       });
       
-      const response = await fetch(apiUrl(`/api/gir-games/${selectedGirGame!.id}/who-owes-who?${params}`));
+      const response = await fetch(`/api/gir-games/${selectedGirGame!.id}/who-owes-who?${params}`);
       if (!response.ok) throw new Error('Failed to fetch payouts');
       return response.json();
     }

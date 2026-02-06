@@ -9,8 +9,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Link } from "wouter";
 import { ArrowLeft, Mail, CheckCircle, AlertCircle } from "lucide-react";
-import { apiUrl } from "@/lib/platform";
-
 interface EmailPreferences {
   marketingPreferenceStatus: string;
   marketingConsentAt: string | null;
@@ -32,7 +30,7 @@ export default function EmailPreferences() {
   // Update email preferences mutation
   const updatePreferencesMutation = useMutation({
     mutationFn: async (data: { unsubscribe: boolean }) => {
-      const response = await fetch(apiUrl('/api/user/email-preferences'), {
+      const response = await fetch('/api/user/email-preferences', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'

@@ -13,8 +13,6 @@ import { Eye, EyeOff } from "lucide-react";
 import AppDownloadPrompt from "@/components/AppDownloadPrompt";
 import LegalDialogs from "@/components/LegalDialogs";
 import { LegalFooter } from "@/components/LegalFooter";
-import { apiUrl } from "@/lib/platform";
-
 const registerSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
@@ -52,7 +50,7 @@ export default function Register() {
 
   const registerMutation = useMutation({
     mutationFn: async (data: Omit<RegisterForm, 'confirmPassword'>) => {
-      const response = await fetch(apiUrl("/api/auth/register"), {
+      const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -144,9 +142,10 @@ export default function Register() {
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
             <img 
-              src="/attached_assets/ForeScore_Logo_transparent_1763148840628.png" 
+              src="/forescore-logo.png" 
               alt="ForeScore Logo" 
-              className="w-16 h-16 object-contain"
+              className="h-16 w-16"
+              data-testid="img-logo"
             />
           </div>
           <CardTitle className="text-2xl font-bold text-gray-900">Join ForeScore</CardTitle>

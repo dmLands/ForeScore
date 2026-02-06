@@ -12,8 +12,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Download, Users, Copy, CheckCircle, Shield, AlertTriangle, Search, Clock, Plus, Trash2, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { apiUrl } from "@/lib/platform";
-
 interface UserData {
   'First Name': string;
   'Last Name': string;
@@ -149,7 +147,7 @@ export default function AdminPage() {
   // Grant manual trial mutation
   const grantTrialMutation = useMutation({
     mutationFn: async (data: { userId: string; days: number; reason: string }) => {
-      const response = await fetch(apiUrl('/api/admin/grant-manual-trial'), {
+      const response = await fetch('/api/admin/grant-manual-trial', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -177,7 +175,7 @@ export default function AdminPage() {
   // Extend trial mutation
   const extendTrialMutation = useMutation({
     mutationFn: async (data: { userId: string; additionalDays: number; reason: string }) => {
-      const response = await fetch(apiUrl(`/api/admin/extend-manual-trial/${data.userId}`), {
+      const response = await fetch(`/api/admin/extend-manual-trial/${data.userId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ additionalDays: data.additionalDays, reason: data.reason }),
@@ -204,7 +202,7 @@ export default function AdminPage() {
   // Revoke trial mutation
   const revokeTrialMutation = useMutation({
     mutationFn: async (userId: string) => {
-      const response = await fetch(apiUrl(`/api/admin/revoke-manual-trial/${userId}`), {
+      const response = await fetch(`/api/admin/revoke-manual-trial/${userId}`, {
         method: 'DELETE',
         credentials: 'include'
       });

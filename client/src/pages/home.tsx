@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { apiUrl } from "@/lib/platform";
 import { Link } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -56,7 +55,7 @@ function useGamePayouts(gameStateId: string | undefined, cardValuesKey?: string)
     queryKey: ['/api/game-state', gameStateId, 'payouts', cardValuesKey, 'always-fresh'], // Force unique key
     queryFn: async () => {
       if (!gameStateId) throw new Error('No game state ID');
-      const response = await fetch(apiUrl(`/api/game-state/${gameStateId}/payouts?nocache=${timestamp}`), {
+      const response = await fetch(`/api/game-state/${gameStateId}/payouts?nocache=${timestamp}`, {
         credentials: 'include',
         cache: 'no-cache', // Disable browser cache
         headers: {
@@ -491,7 +490,7 @@ export default function Home() {
     queryKey: ['/api/calculate-combined-games', selectedGroup?.id, 'points-only', selectedPointsGame?.id, pointValue],
     queryFn: async () => {
       if (!selectedGroup?.id || !selectedPointsGame?.id) throw new Error('Missing group or points game');
-      const response = await fetch(apiUrl('/api/calculate-combined-games'), {
+      const response = await fetch('/api/calculate-combined-games', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -522,7 +521,7 @@ export default function Home() {
     queryKey: ['/api/calculate-combined-games', selectedGroup?.id, 'fbt-only', selectedPointsGame?.id, nassauValue],
     queryFn: async () => {
       if (!selectedGroup?.id || !selectedPointsGame?.id) throw new Error('Missing group or points game');
-      const response = await fetch(apiUrl('/api/calculate-combined-games'), {
+      const response = await fetch('/api/calculate-combined-games', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -554,7 +553,7 @@ export default function Home() {
     queryFn: async () => {
       if (!selectedGroup?.id || !selectedBBBGame?.id) throw new Error('Missing group or BBB game');
       const savedPointValue = selectedBBBGame.settings?.pointValue || 1;
-      const response = await fetch(apiUrl('/api/calculate-combined-games'), {
+      const response = await fetch('/api/calculate-combined-games', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -586,7 +585,7 @@ export default function Home() {
     queryFn: async () => {
       if (!selectedGroup?.id || !selectedBBBGame?.id) throw new Error('Missing group or BBB game');
       const savedFbtValue = selectedBBBGame.settings?.nassauValue || 10;
-      const response = await fetch(apiUrl('/api/calculate-combined-games'), {
+      const response = await fetch('/api/calculate-combined-games', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -644,7 +643,7 @@ export default function Home() {
         if (nassauValueNum > 0) selectedGamesForMode.push('nassau');
       }
 
-      const response = await fetch(apiUrl('/api/calculate-combined-games'), {
+      const response = await fetch('/api/calculate-combined-games', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -710,7 +709,7 @@ export default function Home() {
       const apiPointValue = parseFloat(hasBBBGames ? bbbPointValue : pointValue);
       const apiFbtValue = parseFloat(hasBBBGames ? bbbNassauValue : nassauValue);
 
-      const response = await fetch(apiUrl('/api/calculate-combined-games'), {
+      const response = await fetch('/api/calculate-combined-games', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -755,7 +754,7 @@ export default function Home() {
   // Logout mutation
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      const response = await fetch(apiUrl('/api/auth/logout'), {
+      const response = await fetch('/api/auth/logout', {
         method: 'POST',
         credentials: 'include'
       });
@@ -5630,7 +5629,7 @@ export default function Home() {
                       const savePointValue = 0;
                       const saveFbtValue = 0;
                       
-                      const response = await fetch(apiUrl('/api/calculate-combined-games'), {
+                      const response = await fetch('/api/calculate-combined-games', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include',
@@ -6054,7 +6053,7 @@ function ScorecardTable({
   const { data: scorecardData, isLoading } = useQuery({
     queryKey: ['/api/game-state', gameStateId, 'scorecard'],
     queryFn: async () => {
-      const response = await fetch(apiUrl(`/api/game-state/${gameStateId}/scorecard`), {
+      const response = await fetch(`/api/game-state/${gameStateId}/scorecard`, {
         credentials: 'include'
       });
       if (!response.ok) throw new Error('Failed to fetch scorecard');

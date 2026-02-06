@@ -2,7 +2,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from './useAuth';
-import { apiUrl } from '@/lib/platform';
 import type { Group, GameState } from '@shared/schema';
 
 type TabType = 'groups' | 'games' | 'scoreboard' | 'rules';
@@ -40,7 +39,7 @@ export function useTabPersistence(payoutDataReady?: boolean) {
   const { data: preferences, isLoading } = useQuery<UserPreferences>({
     queryKey: ['/api/user/preferences'],
     queryFn: async () => {
-      const response = await fetch(apiUrl('/api/user/preferences'), {
+      const response = await fetch('/api/user/preferences', {
         credentials: 'include'
       });
       if (!response.ok) {
@@ -57,7 +56,7 @@ export function useTabPersistence(payoutDataReady?: boolean) {
   const { data: groupData, isLoading: groupLoading } = useQuery({
     queryKey: ['/api/groups', preferences?.selectedGroupId],
     queryFn: async () => {
-      const response = await fetch(apiUrl(`/api/groups/${preferences!.selectedGroupId}`), {
+      const response = await fetch(`/api/groups/${preferences!.selectedGroupId}`, {
         credentials: 'include'
       });
       if (!response.ok) return null;
@@ -71,7 +70,7 @@ export function useTabPersistence(payoutDataReady?: boolean) {
   const { data: gameData, isLoading: gameLoading } = useQuery({
     queryKey: ['/api/game-state', preferences?.selectedGameId],
     queryFn: async () => {
-      const response = await fetch(apiUrl(`/api/game-state/${preferences!.selectedGameId}`), {
+      const response = await fetch(`/api/game-state/${preferences!.selectedGameId}`, {
         credentials: 'include'
       });
       if (!response.ok) return null;
@@ -117,7 +116,7 @@ export function useTabPersistence(payoutDataReady?: boolean) {
     // fire-and-forget local cache for instant next boot
     writeLS(updates);
 
-    const response = await fetch(apiUrl('/api/user/preferences'), {
+    const response = await fetch('/api/user/preferences', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',

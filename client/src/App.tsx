@@ -23,6 +23,8 @@ import NotFound from "@/pages/not-found";
 import AdminPage from "@/pages/admin";
 import QRCodePage from "@/pages/qr-code";
 import CompleteAccount from "@/pages/complete-account";
+import TermsOfServicePage from "@/pages/tos";
+import PrivacyPolicyPage from "@/pages/privacy";
 
 // Guard component that wraps Home to check subscription access
 function ProtectedHome() {
@@ -86,6 +88,8 @@ function Router() {
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/reset-password" component={ResetPassword} />
       <Route path="/complete-account" component={CompleteAccount} />
+      <Route path="/tos" component={TermsOfServicePage} />
+      <Route path="/privacy" component={PrivacyPolicyPage} />
       <Route component={NotFound} />
     </Switch>
   );

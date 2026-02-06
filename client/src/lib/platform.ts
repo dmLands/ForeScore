@@ -51,10 +51,13 @@ export function isWeb(): boolean {
 }
 
 export function usePlatform() {
-  const [platform, setPlatform] = useState<Platform>('web');
+  const [platform, setPlatform] = useState<Platform>(() => getPlatform());
 
   useEffect(() => {
-    setPlatform(getPlatform());
+    const detected = getPlatform();
+    if (detected !== platform) {
+      setPlatform(detected);
+    }
   }, []);
 
   return {

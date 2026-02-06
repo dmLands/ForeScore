@@ -5,6 +5,7 @@ import { CheckCircle, Trophy, Users, Calculator } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { usePlatform } from "@/lib/platform";
 
 interface SubscriptionPlan {
   priceId: string;
@@ -22,10 +23,11 @@ interface SubscriptionPlans {
 export default function WelcomeTrial() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { isIOS, isNative } = usePlatform();
 
-  // Fetch subscription plans for pricing display
   const { data: plans } = useQuery<SubscriptionPlans>({
     queryKey: ['/api/subscription/plans'],
+    enabled: !(isIOS || isNative),
   });
 
   // Mutation to activate auto-trial
@@ -72,9 +74,11 @@ export default function WelcomeTrial() {
       <Card className="w-full max-w-2xl shadow-xl bg-white/95 backdrop-blur-sm">
         <CardHeader className="text-center pb-4">
           <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-700 rounded-full flex items-center justify-center text-3xl text-white shadow-lg">
-              ⛳
-            </div>
+            <img 
+              src="/forescore-logo.png" 
+              alt="ForeScore Logo" 
+              className="h-16 w-16"
+            />
           </div>
           <CardTitle className="text-3xl font-bold text-gray-900">
             Welcome to ForeScore!
@@ -102,7 +106,9 @@ export default function WelcomeTrial() {
               </div>
               <div className="flex items-center space-x-3">
                 <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                <span className="text-sm text-gray-700">No credit card required for 7 days</span>
+                <span className="text-sm text-gray-700">
+                  {(isIOS || isNative) ? "Free for 7 days" : "No credit card required for 7 days"}
+                </span>
               </div>
             </div>
           </div>
@@ -117,55 +123,56 @@ export default function WelcomeTrial() {
             {startTrialMutation.isPending ? "Starting Trial..." : "Start Using ForeScore Now"}
           </Button>
 
-          {/* Divider */}
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white text-gray-500">
-                Or subscribe now and save
-              </span>
-            </div>
-          </div>
-
-          {/* Subscription Options */}
-          <div className="grid grid-cols-2 gap-4">
-            {plans && (
-              <>
-                {/* Monthly Plan */}
-                <Button
-                  variant="outline"
-                  onClick={() => handleSubscribe('monthly')}
-                  className="flex flex-col h-auto py-4 space-y-2 border-2 hover:border-green-500 hover:bg-green-50"
-                  data-testid="button-monthly"
-                >
-                  <span className="text-sm font-medium text-gray-700">Monthly</span>
-                  <span className="text-2xl font-bold text-gray-900">
-                    ${(plans.monthly.amount / 100).toFixed(2)}
+          {/* Subscription Options - Hidden on iOS/native (Apple compliance) */}
+          {!(isIOS || isNative) && (
+            <>
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-4 bg-white text-gray-500">
+                    Or subscribe now and save
                   </span>
-                  <span className="text-xs text-gray-500">/month</span>
-                </Button>
+                </div>
+              </div>
 
-                {/* Annual Plan */}
-                <Button
-                  variant="outline"
-                  onClick={() => handleSubscribe('annual')}
-                  className="flex flex-col h-auto py-4 space-y-2 border-2 hover:border-green-500 hover:bg-green-50 relative"
-                  data-testid="button-annual"
-                >
-                  <div className="absolute -top-2 -right-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full">
-                    Save 30%
-                  </div>
-                  <span className="text-sm font-medium text-gray-700">Annual</span>
-                  <span className="text-2xl font-bold text-gray-900">
-                    ${(plans.annual.amount / 100).toFixed(2)}
-                  </span>
-                  <span className="text-xs text-gray-500">/year</span>
-                </Button>
-              </>
-            )}
-          </div>
+              <div className="grid grid-cols-2 gap-4">
+                {plans && (
+                  <>
+                    <Button
+                      variant="outline"
+                      onClick={() => handleSubscribe('monthly')}
+                      className="flex flex-col h-auto py-4 space-y-2 border-2 hover:border-green-500 hover:bg-green-50"
+                      data-testid="button-monthly"
+                    >
+                      <span className="text-sm font-medium text-gray-700">Monthly</span>
+                      <span className="text-2xl font-bold text-gray-900">
+                        ${(plans.monthly.amount / 100).toFixed(2)}
+                      </span>
+                      <span className="text-xs text-gray-500">/month</span>
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      onClick={() => handleSubscribe('annual')}
+                      className="flex flex-col h-auto py-4 space-y-2 border-2 hover:border-green-500 hover:bg-green-50 relative"
+                      data-testid="button-annual"
+                    >
+                      <div className="absolute -top-2 -right-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full">
+                        Save 30%
+                      </div>
+                      <span className="text-sm font-medium text-gray-700">Annual</span>
+                      <span className="text-2xl font-bold text-gray-900">
+                        ${(plans.annual.amount / 100).toFixed(2)}
+                      </span>
+                      <span className="text-xs text-gray-500">/year</span>
+                    </Button>
+                  </>
+                )}
+              </div>
+            </>
+          )}
 
           {/* Feature Icons */}
           <div className="grid grid-cols-3 gap-4 pt-4 border-t">

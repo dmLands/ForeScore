@@ -80,30 +80,40 @@ export function useTabPersistence(payoutDataReady?: boolean) {
     staleTime: 30000,
   });
 
+  // Fetch preferences query loading state
+  const prefLoading = !user || (!!user && preferences === undefined);
+
   // Restore full game context from preferences in ONE pass, then mark initialized
   useEffect(() => {
-    if (!preferences || isInitialized) return;
+    if (isInitialized) return;
+
+    // If preferences query is still loading, wait
+    if (prefLoading) return;
+
+    // If preferences is null/empty (new user with no saved state), initialize immediately
+    if (!preferences || (!preferences.selectedGroupId && !preferences.selectedGameId && !preferences.currentTab)) {
+      setCurrentTab('groups');
+      setIsInitialized(true);
+      return;
+    }
 
     const wantGroup = !!preferences.selectedGroupId;
     const wantGame  = !!preferences.selectedGameId;
     const targetTab = preferences.currentTab ?? 'groups';
 
-    // We only finish init once required data queries are complete (even if data is null due to 404)
     const groupReady = !wantGroup || !groupLoading;
     const gameReady  = !wantGame  || !gameLoading;
     
-    // For Payouts tab, also wait for payout-critical data to prevent tile re-ordering flicker
     const needPayoutData = targetTab === 'scoreboard' && wantGroup && wantGame;
     const payoutReady = !needPayoutData || (payoutDataReady === true);
     
-    if (!groupReady || !gameReady || !payoutReady) return; // wait until all required data appear
+    if (!groupReady || !gameReady || !payoutReady) return;
 
-    // Apply all state in a single commit (React batches setState in effects)
     setCurrentTab(targetTab);
     setSelectedGroup(groupData ?? null);
     setSelectedGame(gameData ?? null);
     setIsInitialized(true);
-  }, [preferences, groupData, gameData, groupLoading, gameLoading, isInitialized, payoutDataReady]);
+  }, [preferences, prefLoading, groupData, gameData, groupLoading, gameLoading, isInitialized, payoutDataReady]);
 
   // when saving to server, also mirror to LS
   const saveState = useCallback(async (updates: Partial<{

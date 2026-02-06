@@ -69,3 +69,14 @@ export function usePlatform() {
 export function canShowPayments(): boolean {
   return isWeb();
 }
+
+export function getApiBaseUrl(): string {
+  if (isNativeApp()) {
+    return 'https://forescore.xyz';
+  }
+  return '';
+}
+
+export function apiUrl(path: string): string {
+  return `${getApiBaseUrl()}${path}`;
+}

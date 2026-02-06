@@ -13,6 +13,7 @@ import { Eye, EyeOff } from "lucide-react";
 import AppDownloadPrompt from "@/components/AppDownloadPrompt";
 import LegalDialogs from "@/components/LegalDialogs";
 import { LegalFooter } from "@/components/LegalFooter";
+import { apiUrl } from "@/lib/platform";
 
 const registerSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -51,7 +52,7 @@ export default function Register() {
 
   const registerMutation = useMutation({
     mutationFn: async (data: Omit<RegisterForm, 'confirmPassword'>) => {
-      const response = await fetch("/api/auth/register", {
+      const response = await fetch(apiUrl("/api/auth/register"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),

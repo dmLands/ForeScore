@@ -11,6 +11,7 @@ import { z } from "zod";
 import { Eye, EyeOff } from "lucide-react";
 import AppDownloadPrompt from "@/components/AppDownloadPrompt";
 import { LegalFooter } from "@/components/LegalFooter";
+import { apiUrl } from "@/lib/platform";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -31,7 +32,7 @@ export default function Login() {
 
   const loginMutation = useMutation({
     mutationFn: async (data: LoginForm) => {
-      const response = await fetch("/api/auth/login", {
+      const response = await fetch(apiUrl("/api/auth/login"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),

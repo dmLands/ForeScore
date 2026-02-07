@@ -62,16 +62,16 @@ export default function ManageSubscription() {
   const { isIOS, isNative } = usePlatform();
 
   // Redirect users without any subscription access (including trials) to subscribe page
+  // On iOS/native: redirect home instead of to subscribe (Apple compliance)
   useEffect(() => {
     if (!authLoading && !subscriptionAccess?.hasAccess) {
-      setLocation('/subscribe');
+      if (isIOS || isNative) {
+        setLocation('/');
+      } else {
+        setLocation('/subscribe');
+      }
     }
-  }, [authLoading, subscriptionAccess?.hasAccess, setLocation]);
-
-  // iOS-specific management prompt
-  const handleOpenWebManagement = () => {
-    window.open('https://forescore.xyz/manage-subscription', '_blank');
-  };
+  }, [authLoading, subscriptionAccess?.hasAccess, setLocation, isIOS, isNative]);
 
   // Fetch subscription status (using data from auth hook for consistency)
   const { data: accessInfo, isLoading: statusLoading } = useQuery<SubscriptionAccess>({
@@ -105,10 +105,10 @@ export default function ManageSubscription() {
       queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       
-      // Navigate back to subscribe page after cancellation
+      // Navigate after cancellation (iOS: go home, Web: go to subscribe)
       setTimeout(() => {
-        setLocation('/subscribe');
-      }, 2000); // Give user time to read the toast
+        setLocation(isIOS || isNative ? '/' : '/subscribe');
+      }, 2000);
     },
     onError: (error: any) => {
       toast({
@@ -361,7 +361,7 @@ export default function ManageSubscription() {
           </Card>
         )}
         
-        {/* iOS - Show subscription status info without pricing */}
+        {/* iOS - Show subscription status info without pricing or web references */}
         {currentAccessInfo?.hasAccess && (isIOS || isNative) && (
           <Card>
             <CardHeader>
@@ -377,7 +377,7 @@ export default function ManageSubscription() {
                   <div>
                     <h4 className="font-medium text-green-900">Your subscription is active</h4>
                     <p className="text-sm text-green-700 mt-1">
-                      To view billing details or make changes, visit forescore.xyz in your web browser.
+                      You have full access to all ForeScore features.
                     </p>
                   </div>
                 </div>
@@ -392,33 +392,22 @@ export default function ManageSubscription() {
             <CardTitle>Subscription Actions</CardTitle>
             <CardDescription>
               {isIOS || isNative 
-                ? "Manage your subscription through our website"
+                ? "View your subscription status"
                 : "Manage your subscription settings and billing"
               }
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* iOS/Native - Show web management option */}
+            {/* iOS/Native - Show simple back button (no external links or purchase references) */}
             {(isIOS || isNative) ? (
               <div className="space-y-4">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-start space-x-3">
-                    <Globe className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <h4 className="font-medium text-blue-900">Manage on Web</h4>
-                      <p className="text-sm text-blue-700 mt-1">
-                        Subscription changes and billing are managed through our website for security.
-                      </p>
-                    </div>
-                  </div>
-                </div>
                 <Button
-                  onClick={handleOpenWebManagement}
+                  onClick={() => setLocation('/')}
                   className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
-                  data-testid="button-open-web-manage"
+                  data-testid="button-back-to-app"
                 >
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  Open forescore.xyz
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to App
                 </Button>
               </div>
             ) : (

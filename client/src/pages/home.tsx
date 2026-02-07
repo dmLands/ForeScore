@@ -27,6 +27,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAutosaveObject } from "@/hooks/useAutosave";
 import { useTabPersistence } from "@/hooks/useTabPersistence";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { usePlatform } from "@/lib/platform";
 import type { Group, GameState, Card as GameCard, PointsGame } from "@shared/schema";
 
 // Hook for server-side payouts calculation
@@ -212,6 +213,7 @@ function CardGamePayouts({ selectedGroup, gameState, payoutData, selectedPointsG
 
 export default function Home() {
   const { user, isAdmin } = useAuth();
+  const { isIOS, isNative } = usePlatform();
   
   // Track payout data readiness for the restoration logic
   const [payoutDataReady, setPayoutDataReady] = useState(true);
@@ -1719,12 +1721,14 @@ export default function Home() {
                             </Link>
                           </DropdownMenuItem>
                         )}
-                        <DropdownMenuItem asChild>
-                          <Link href="/manage-subscription" className="cursor-pointer text-gray-900 hover:text-gray-700">
-                            <CreditCard className="h-4 w-4 mr-2" />
-                            Manage Subscription
-                          </Link>
-                        </DropdownMenuItem>
+                        {!(isIOS || isNative) && (
+                          <DropdownMenuItem asChild>
+                            <Link href="/manage-subscription" className="cursor-pointer text-gray-900 hover:text-gray-700">
+                              <CreditCard className="h-4 w-4 mr-2" />
+                              Manage Subscription
+                            </Link>
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem asChild>
                           <Link href="/email-preferences" className="cursor-pointer text-gray-900 hover:text-gray-700">
                             <Mail className="h-4 w-4 mr-2" />

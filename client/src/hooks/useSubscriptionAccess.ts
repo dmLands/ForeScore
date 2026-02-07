@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
+import { isNativeIOS, isNativeApp } from "@/lib/platform";
 
 interface SubscriptionAccess {
   hasAccess: boolean;
@@ -49,8 +50,9 @@ export function useSubscriptionAccess() {
           setLocation('/login');
         }
       } else if (error.status === 402) {
-        // Subscription required - redirect to subscription page (graceful)
-        if (!window.location.pathname.includes('/subscribe')) {
+        // Subscription required - redirect to subscription page (web only)
+        // On iOS/native: do NOT redirect to subscribe (Apple compliance - no purchase UI)
+        if (!window.location.pathname.includes('/subscribe') && !isNativeIOS() && !isNativeApp()) {
           toast({
             title: "Subscription Required",
             description: "Your trial has ended. Please subscribe to continue.",

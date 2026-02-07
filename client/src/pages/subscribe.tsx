@@ -12,7 +12,6 @@ import { useStripe, Elements, PaymentElement, useElements } from '@stripe/react-
 import { loadStripe, Stripe } from '@stripe/stripe-js';
 import { CheckCircle, Clock, CreditCard, Users, Calculator, Trophy, Eye, EyeOff, Lock } from "lucide-react";
 import { usePlatform, canShowPayments } from "@/lib/platform";
-import { IOSSubscriptionPrompt } from "@/components/IOSSubscriptionPrompt";
 
 // Only initialize Stripe on web platform (not iOS/native)
 let stripePromise: Promise<Stripe | null> | null = null;
@@ -367,20 +366,28 @@ const PlanCard = ({
   );
 };
 
-export default function Subscribe() {
+function IOSSubscribeRedirect() {
   const [, setLocation] = useLocation();
-  const { toast } = useToast();
+  useEffect(() => {
+    setLocation('/');
+  }, [setLocation]);
+  return null;
+}
+
+export default function Subscribe() {
   const { isIOS, isNative } = usePlatform();
 
-  // On iOS/native, show the web redirect prompt instead of Stripe
+  // On iOS/native, redirect home — no subscription/purchase UI (Apple compliance)
   if (isIOS || isNative) {
-    return (
-      <IOSSubscriptionPrompt 
-        title="Subscribe to ForeScore"
-        description="Set up your subscription through our website for the best experience."
-      />
-    );
+    return <IOSSubscribeRedirect />;
   }
+
+  return <SubscribeContent />;
+}
+
+function SubscribeContent() {
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
   
   const [selectedPlan, setSelectedPlan] = useState<string>(() => {
     const urlParams = new URLSearchParams(window.location.search);

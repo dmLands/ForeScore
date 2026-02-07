@@ -90,7 +90,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md shadow-xl bg-white/95 backdrop-blur-sm">
+      <Card className="w-full max-w-md md:max-w-lg shadow-xl bg-white/95 backdrop-blur-sm">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
             <img 

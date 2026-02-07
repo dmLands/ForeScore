@@ -7,7 +7,7 @@ export default function QRCodePage() {
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-white flex items-center justify-center p-6">
-      <div className="max-w-md w-full">
+      <div className="max-w-md md:max-w-lg w-full">
         <div className="bg-white rounded-2xl shadow-2xl p-8 space-y-6">
           <div className="text-center space-y-2">
             <h1 className="text-3xl font-bold text-gray-900">ForeScore</h1>

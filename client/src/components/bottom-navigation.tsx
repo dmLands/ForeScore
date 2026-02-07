@@ -15,7 +15,7 @@ export function BottomNavigation({ currentTab, onTabChange }: BottomNavigationPr
   ];
 
   return (
-    <nav className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-white border-t border-gray-200 px-6 py-2 backdrop-blur-sm bg-opacity-95">
+    <nav className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md md:max-w-2xl lg:max-w-4xl bg-white border-t border-gray-200 px-6 py-2 backdrop-blur-sm bg-opacity-95">
       <div className="flex justify-around">
         {tabs.map(({ id, label, icon: Icon }) => (
           <Button

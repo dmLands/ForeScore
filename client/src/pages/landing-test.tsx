@@ -446,7 +446,7 @@ export default function LandingTest() {
 
       {/* Sign Up Section - SIMPLIFIED EMAIL ONLY */}
       <section id="signup-section" className="py-16 md:py-24 bg-gradient-to-br from-emerald-900 via-green-800 to-teal-900">
-        <div className="max-w-md mx-auto px-4">
+        <div className="max-w-md md:max-w-lg mx-auto px-4">
           <Card className="shadow-2xl border-0">
             <CardContent className="pt-8 pb-8">
               <div className="text-center mb-6">

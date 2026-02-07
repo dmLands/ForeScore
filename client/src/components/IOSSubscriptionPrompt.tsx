@@ -92,7 +92,7 @@ export function IOSSubscriptionPrompt({
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="max-w-md w-full">
+      <div className="max-w-md md:max-w-lg w-full">
         <Card>
           <CardHeader className="text-center">
             <div className="mx-auto w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-4">

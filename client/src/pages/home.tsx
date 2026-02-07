@@ -1661,7 +1661,7 @@ export default function Home() {
   }
 
   return (
-    <div className="max-w-md mx-auto bg-white min-h-screen shadow-lg">
+    <div className="max-w-md md:max-w-2xl lg:max-w-4xl mx-auto bg-white min-h-screen shadow-lg">
       {/* Trial Countdown Banner */}
       <TrialCountdownBanner />
       

@@ -86,7 +86,7 @@ export default function AdminPage() {
   if (!isAuthenticated || !isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-md md:max-w-lg">
           <CardHeader className="text-center">
             <div className="mx-auto mb-4 w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
               <Shield className="h-6 w-6 text-red-600" />
@@ -279,7 +279,7 @@ export default function AdminPage() {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Card className="max-w-md">
+        <Card className="max-w-md md:max-w-lg">
           <CardContent className="p-6 text-center">
             <p className="text-red-600 mb-4">Failed to load user data</p>
             <p className="text-sm text-gray-500">You might not have admin access</p>

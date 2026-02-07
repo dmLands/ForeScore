@@ -111,6 +111,9 @@ function CardGamePayouts({ selectedGroup, gameState, payoutData, selectedPointsG
   pointValue?: string;
   nassauValue?: string;
 }) {
+  if (!selectedGroup?.players || !Array.isArray(selectedGroup.players)) {
+    return null;
+  }
   return (
     <>
       {/* Player Scoreboard */}
@@ -966,11 +969,11 @@ export default function Home() {
 
   // V6.6: Load hole strokes from server data when points game data changes or hole selection changes
   useEffect(() => {
-    if (selectedPointsGame && selectedGroup && selectedHole) {
+    if (selectedPointsGame && selectedGroup?.players && selectedHole) {
       console.log('Loading hole strokes for hole', selectedHole, 'from server data');
       const existingStrokes = selectedPointsGame.holes?.[selectedHole] || {};
       const strokesAsStrings: Record<string, string> = {};
-      selectedGroup.players.forEach(player => {
+      (selectedGroup.players || []).forEach(player => {
         strokesAsStrings[player.id] = existingStrokes[player.id]?.toString() || '';
       });
       setHoleStrokes(strokesAsStrings);

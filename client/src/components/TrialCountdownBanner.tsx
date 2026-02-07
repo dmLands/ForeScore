@@ -12,12 +12,6 @@ export default function TrialCountdownBanner() {
   const [timeRemaining, setTimeRemaining] = useState<string>("");
   const { isIOS, isNative } = usePlatform();
 
-  // Don't show upgrade banner on iOS/native - payments handled on web
-  if (isIOS || isNative) {
-    return null;
-  }
-
-  // Calculate time remaining
   useEffect(() => {
     if (!subscriptionAccess?.trialEndsAt) {
       return;
@@ -47,16 +41,22 @@ export default function TrialCountdownBanner() {
     };
 
     updateTimer();
-    const interval = setInterval(updateTimer, 60000); // Update every minute
+    const interval = setInterval(updateTimer, 60000);
 
     return () => clearInterval(interval);
   }, [subscriptionAccess?.trialEndsAt]);
 
-  // Don't show banner if:
-  // 1. No trial end date
-  // 2. Not in trial status (manual or auto)
-  // 3. Banner was dismissed
-  // 4. More than 3 days remaining
+  useEffect(() => {
+    const wasDismissed = sessionStorage.getItem('trialBannerDismissed');
+    if (wasDismissed) {
+      setDismissed(true);
+    }
+  }, []);
+
+  if (isIOS || isNative) {
+    return null;
+  }
+
   const isTrialUser = subscriptionAccess?.subscriptionStatus === 'manual_trial' || 
                       subscriptionAccess?.subscriptionStatus === 'auto_trial';
   
@@ -70,7 +70,6 @@ export default function TrialCountdownBanner() {
   const now = new Date();
   const daysRemaining = Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
-  // Only show if 3 days or less remaining
   if (daysRemaining > 3) {
     return null;
   }
@@ -81,17 +80,8 @@ export default function TrialCountdownBanner() {
 
   const handleDismiss = () => {
     setDismissed(true);
-    // Store dismissal in sessionStorage so it persists during this session
     sessionStorage.setItem('trialBannerDismissed', 'true');
   };
-
-  // Check if banner was dismissed this session
-  useEffect(() => {
-    const wasDismissed = sessionStorage.getItem('trialBannerDismissed');
-    if (wasDismissed) {
-      setDismissed(true);
-    }
-  }, []);
 
   return (
     <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white">

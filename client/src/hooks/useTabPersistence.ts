@@ -1,4 +1,3 @@
-// V6.5: Complete Game State Persistence Hook
 import { useState, useEffect, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from './useAuth';
@@ -6,7 +5,6 @@ import type { Group, GameState } from '@shared/schema';
 
 type TabType = 'groups' | 'games' | 'scoreboard' | 'rules';
 
-// top-level localStorage cache
 const LS_KEY = "fs.prefs.v1";
 
 function readLS() {
@@ -30,13 +28,26 @@ interface UserPreferences {
 export function useTabPersistence(payoutDataReady?: boolean) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [currentTab, setCurrentTab] = useState<TabType>('groups'); // hidden until initialized
+  const [currentTab, setCurrentTab] = useState<TabType>('groups');
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [selectedGame, setSelectedGame] = useState<GameState | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Fetch user preferences
-  const { data: preferences, isLoading } = useQuery<UserPreferences>({
+  useEffect(() => {
+    if (isInitialized) return;
+    const timeout = setTimeout(() => {
+      if (!isInitialized) {
+        console.warn('[useTabPersistence] Initialization timed out after 8s, forcing defaults');
+        setCurrentTab('groups');
+        setSelectedGroup(null);
+        setSelectedGame(null);
+        setIsInitialized(true);
+      }
+    }, 8000);
+    return () => clearTimeout(timeout);
+  }, [isInitialized]);
+
+  const { data: preferences, isLoading: prefIsLoading, isError: prefIsError } = useQuery<UserPreferences>({
     queryKey: ['/api/user/preferences'],
     queryFn: async () => {
       const response = await fetch('/api/user/preferences', {
@@ -50,10 +61,10 @@ export function useTabPersistence(payoutDataReady?: boolean) {
     enabled: !!user,
     staleTime: 30000,
     refetchOnWindowFocus: false,
+    retry: 1,
   });
 
-  // Fetch group data when preferences contain a selectedGroupId
-  const { data: groupData, isLoading: groupLoading } = useQuery({
+  const { data: groupData, isLoading: groupLoading, isError: groupError } = useQuery({
     queryKey: ['/api/groups', preferences?.selectedGroupId],
     queryFn: async () => {
       const response = await fetch(`/api/groups/${preferences!.selectedGroupId}`, {
@@ -64,10 +75,10 @@ export function useTabPersistence(payoutDataReady?: boolean) {
     },
     enabled: !!preferences?.selectedGroupId,
     staleTime: 30000,
+    retry: 1,
   });
 
-  // Fetch game data when preferences contain a selectedGameId
-  const { data: gameData, isLoading: gameLoading } = useQuery({
+  const { data: gameData, isLoading: gameLoading, isError: gameError } = useQuery({
     queryKey: ['/api/game-state', preferences?.selectedGameId],
     queryFn: async () => {
       const response = await fetch(`/api/game-state/${preferences!.selectedGameId}`, {
@@ -78,20 +89,17 @@ export function useTabPersistence(payoutDataReady?: boolean) {
     },
     enabled: !!preferences?.selectedGameId,
     staleTime: 30000,
+    retry: 1,
   });
 
-  // Fetch preferences query loading state
-  const prefLoading = !user || (!!user && preferences === undefined);
-
-  // Restore full game context from preferences in ONE pass, then mark initialized
   useEffect(() => {
     if (isInitialized) return;
 
-    // If preferences query is still loading, wait
-    if (prefLoading) return;
+    if (!user) return;
 
-    // If preferences is null/empty (new user with no saved state), initialize immediately
-    if (!preferences || (!preferences.selectedGroupId && !preferences.selectedGameId && !preferences.currentTab)) {
+    if (prefIsLoading) return;
+
+    if (prefIsError || !preferences || (!preferences.selectedGroupId && !preferences.selectedGameId && !preferences.currentTab)) {
       setCurrentTab('groups');
       setIsInitialized(true);
       return;
@@ -101,21 +109,60 @@ export function useTabPersistence(payoutDataReady?: boolean) {
     const wantGame  = !!preferences.selectedGameId;
     const targetTab = preferences.currentTab ?? 'groups';
 
-    const groupReady = !wantGroup || !groupLoading;
-    const gameReady  = !wantGame  || !gameLoading;
-    
+    const groupDone = !wantGroup || (!groupLoading);
+    const gameDone  = !wantGame  || (!gameLoading);
+
+    if (!groupDone || !gameDone) return;
+
+    if (groupError || (wantGroup && !groupData)) {
+      writeLS({ selectedGroupId: undefined, selectedGameId: undefined, currentTab: 'groups' });
+      fetch('/api/user/preferences', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ selectedGroupId: null, selectedGameId: null, currentTab: 'groups' }),
+      }).catch(() => {});
+      setCurrentTab('groups');
+      setSelectedGroup(null);
+      setSelectedGame(null);
+      setIsInitialized(true);
+      return;
+    }
+
+    if (gameError || (wantGame && !gameData)) {
+      writeLS({ selectedGameId: undefined });
+      fetch('/api/user/preferences', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ selectedGameId: null }),
+      }).catch(() => {});
+      setCurrentTab(wantGroup ? targetTab : 'groups');
+      setSelectedGroup(groupData ?? null);
+      setSelectedGame(null);
+      setIsInitialized(true);
+      return;
+    }
+
+    if (wantGroup && groupData && !groupData.players) {
+      setCurrentTab('groups');
+      setSelectedGroup(null);
+      setSelectedGame(null);
+      setIsInitialized(true);
+      return;
+    }
+
     const needPayoutData = targetTab === 'scoreboard' && wantGroup && wantGame;
     const payoutReady = !needPayoutData || (payoutDataReady === true);
-    
-    if (!groupReady || !gameReady || !payoutReady) return;
+
+    if (!payoutReady) return;
 
     setCurrentTab(targetTab);
     setSelectedGroup(groupData ?? null);
     setSelectedGame(gameData ?? null);
     setIsInitialized(true);
-  }, [preferences, prefLoading, groupData, gameData, groupLoading, gameLoading, isInitialized, payoutDataReady]);
+  }, [user, preferences, prefIsLoading, prefIsError, groupData, gameData, groupLoading, gameLoading, groupError, gameError, isInitialized, payoutDataReady]);
 
-  // when saving to server, also mirror to LS
   const saveState = useCallback(async (updates: Partial<{
     currentTab: TabType;
     selectedGroupId?: string;
@@ -123,19 +170,21 @@ export function useTabPersistence(payoutDataReady?: boolean) {
   }>) => {
     if (!user) return;
 
-    // fire-and-forget local cache for instant next boot
     writeLS(updates);
 
-    const response = await fetch('/api/user/preferences', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(updates),
-    });
-    if (!response.ok) throw new Error('Failed to save preferences');
+    try {
+      const response = await fetch('/api/user/preferences', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(updates),
+      });
+      if (!response.ok) console.warn('Failed to save preferences');
+    } catch (e) {
+      console.warn('Failed to save preferences:', e);
+    }
   }, [user]);
 
-  // and also mirror in the change* helpers:
   const changeTab = useCallback((newTab: TabType) => {
     setCurrentTab(newTab);
     writeLS({ currentTab: newTab });
@@ -146,7 +195,6 @@ export function useTabPersistence(payoutDataReady?: boolean) {
     setSelectedGroup(newGroup);
     writeLS({ selectedGroupId: newGroup?.id });
     saveState({ selectedGroupId: newGroup?.id || undefined, selectedGameId: undefined });
-    // Also clear selected game when changing groups
     setSelectedGame(null);
   }, [saveState]);
 
@@ -163,7 +211,6 @@ export function useTabPersistence(payoutDataReady?: boolean) {
     changeGroup,
     selectedGame,
     changeGame,
-    // Gate the UI purely on whether the initial restore finished.
     isRestoring: !isInitialized,
   };
 }

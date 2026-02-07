@@ -1711,7 +1711,7 @@ export default function Home() {
                             <span className="text-xs text-gray-500">{(user as any).email || 'Not set'}</span>
                           </div>
                         </DropdownMenuItem>
-                        {(user as any).isQuickSignup && !(user as any).firstName && (
+                        {!!(user as any).isQuickSignup && !(user as any).firstName && (
                           <DropdownMenuItem asChild>
                             <Link href="/complete-account" className="cursor-pointer text-emerald-600 hover:text-emerald-700 font-medium">
                               <Lock className="h-4 w-4 mr-2" />

@@ -1510,8 +1510,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Scorecard aggregation endpoint (admin-only feature flag)
-  app.get('/api/game-state/:id/scorecard', isAuthenticated, requireAdmin, async (req, res) => {
+  // Scorecard aggregation endpoint (available to all authenticated users)
+  app.get('/api/game-state/:id/scorecard', isAuthenticated, async (req, res) => {
     try {
       const gameStateId = req.params.id;
       

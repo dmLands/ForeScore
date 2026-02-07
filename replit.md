@@ -4,6 +4,14 @@
 ForeScore is a secure, full-stack Progressive Web App designed as a companion for golf penalty games like "Animal." It provides enterprise-grade local authentication, server-side security validation, and comprehensive game management. The application supports group management, card game mechanics using a Proportional Share Algorithm, isolated 2/9/16 points games, and multiple payout calculation views. A key feature is the GIR (Greens in Regulation) game with user-configurable penalty and bonus holes. All game calculations are performed server-side to prevent tampering, ensuring secure user authentication, session management, and subscription access control. The project aims to be a robust, reliable, and secure platform for managing golf penalty games, aspiring to be the leading digital tool in this niche.
 
 ## Recent Changes
+### V9.9 (COMPLETED) - February 2026
+- **White Screen Bug Fix (Critical)**:
+  - **ErrorBoundary Component**: Added React class-based ErrorBoundary (`client/src/components/ErrorBoundary.tsx`) wrapping entire app in App.tsx to catch render crashes and show friendly recovery UI instead of blank white screen
+  - **useTabPersistence Hardening**: Added null validation for groupData/gameData, clears stale server+localStorage preferences if entities deleted, 8-second timeout failsafe prevents infinite "Restoring your game..." state
+  - **TrialCountdownBanner Hooks Fix**: Fixed React Rules of Hooks violation - moved early returns after all hooks to prevent hook ordering crashes
+  - **Defensive Guards in Home**: Added null checks for `selectedGroup.players` access patterns in CardGamePayouts and useEffect hooks to prevent undefined access crashes
+  - **iOS Platform Detection**: Synchronous detection in usePlatform prevents UI flash on first render
+
 ### V9.8 (COMPLETED) - January 2026
 - **iOS App Store Preparation**:
   - **Platform Detection**: Added `client/src/lib/platform.ts` with `isNativeIOS()`, `usePlatform()` hook, and `canShowPayments()` to detect Capacitor/native context

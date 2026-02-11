@@ -61,17 +61,11 @@ export default function ManageSubscription() {
   const { hasActiveSubscription, isLoading: authLoading, subscriptionAccess } = useAuth();
   const { isIOS, isNative } = usePlatform();
 
-  // Redirect users without any subscription access (including trials) to subscribe page
-  // On iOS/native: redirect home instead of to subscribe (Apple compliance)
   useEffect(() => {
     if (!authLoading && !subscriptionAccess?.hasAccess) {
-      if (isIOS || isNative) {
-        setLocation('/');
-      } else {
-        setLocation('/subscribe');
-      }
+      setLocation('/subscribe');
     }
-  }, [authLoading, subscriptionAccess?.hasAccess, setLocation, isIOS, isNative]);
+  }, [authLoading, subscriptionAccess?.hasAccess, setLocation]);
 
   // Fetch subscription status (using data from auth hook for consistency)
   const { data: accessInfo, isLoading: statusLoading } = useQuery<SubscriptionAccess>({
@@ -105,9 +99,8 @@ export default function ManageSubscription() {
       queryClient.invalidateQueries({ queryKey: ["/api/subscription/status"] });
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       
-      // Navigate after cancellation (iOS: go home, Web: go to subscribe)
       setTimeout(() => {
-        setLocation(isIOS || isNative ? '/' : '/subscribe');
+        setLocation('/subscribe');
       }, 2000);
     },
     onError: (error: any) => {
@@ -398,9 +391,15 @@ export default function ManageSubscription() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* iOS/Native - Show simple back button (no external links or purchase references) */}
             {(isIOS || isNative) ? (
               <div className="space-y-4">
+                {currentAccessInfo?.subscriptionStatus?.startsWith('apple_') && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p className="text-sm text-blue-800">
+                      Your subscription is managed through Apple. To cancel or change your plan, go to <strong>Settings → Apple ID → Subscriptions</strong> on your device.
+                    </p>
+                  </div>
+                )}
                 <Button
                   onClick={() => setLocation('/')}
                   className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"

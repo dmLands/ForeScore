@@ -343,3 +343,32 @@ export const insertStripeSubscriptionSchema = createInsertSchema(stripeSubscript
 export type StripeSubscription = typeof stripeSubscriptions.$inferSelect;
 export type InsertStripeSubscription = z.infer<typeof insertStripeSubscriptionSchema>;
 
+export const appleSubscriptions = pgTable("apple_subscriptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  productId: varchar("product_id").notNull(),
+  originalTransactionId: varchar("original_transaction_id").notNull().unique(),
+  latestTransactionId: varchar("latest_transaction_id"),
+  status: varchar("status").$type<'active' | 'expired' | 'billing_retry' | 'revoked' | 'grace_period'>().notNull(),
+  environment: varchar("environment").$type<'Production' | 'Sandbox'>().notNull().default('Production'),
+  purchaseDate: timestamp("purchase_date"),
+  expiresDate: timestamp("expires_date"),
+  renewalDate: timestamp("renewal_date"),
+  isInBillingRetry: integer("is_in_billing_retry").notNull().default(0),
+  autoRenewEnabled: integer("auto_renew_enabled").notNull().default(1),
+  revocationDate: timestamp("revocation_date"),
+  lastVerifiedAt: timestamp("last_verified_at"),
+  rawJws: text("raw_jws"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertAppleSubscriptionSchema = createInsertSchema(appleSubscriptions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type AppleSubscription = typeof appleSubscriptions.$inferSelect;
+export type InsertAppleSubscription = z.infer<typeof insertAppleSubscriptionSchema>;
+

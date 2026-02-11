@@ -13,6 +13,7 @@ import { db } from "./db.js";
 import { sql, eq, and, gt, isNotNull } from "drizzle-orm";
 import { sendForgotPasswordEmail } from "./emailService.js";
 import { stripeService, SUBSCRIPTION_PLANS, stripe } from "./stripeService.js";
+import { appleIapService, APPLE_IAP_PRODUCTS } from "./appleIapService.js";
 import { requireSubscriptionAccess, isPublicRoute } from "./subscriptionMiddleware.js";
 import { randomBytes } from "crypto";
 import bcrypt from "bcryptjs";
@@ -653,6 +654,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({ error: 'Webhook signature verification failed' });
     }
   });
+
+  // ==================== APPLE IAP ENDPOINTS (V10.0) ====================
+
+  app.get('/api/apple/products', (_req, res) => {
+    res.json({
+      products: Object.entries(APPLE_IAP_PRODUCTS).map(([key, product]) => ({
+        planKey: key,
+        productId: product.productId,
+        name: product.name,
+        interval: product.interval,
+        amount: product.amount,
+        trialDays: product.trialDays,
+      })),
+    });
+  });
+
+  app.post('/api/apple/validate-transaction', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const { transactionId, jws } = req.body;
+      if (!transactionId || !jws) {
+        return res.status(400).json({ message: "transactionId and jws are required" });
+      }
+
+      const result = await appleIapService.validateAndSaveTransaction(userId, transactionId, jws);
+
+      if (result.success) {
+        const accessStatus = await stripeService.hasAccess(userId);
+        res.json({
+          success: true,
+          subscription: result.subscription,
+          accessStatus,
+        });
+      } else {
+        res.status(400).json({ success: false, message: result.error });
+      }
+    } catch (error) {
+      console.error("Apple validate-transaction error:", error);
+      res.status(500).json({ message: "Failed to validate Apple transaction" });
+    }
+  });
+
+  app.post('/api/apple/notifications', express.json(), async (req, res) => {
+    try {
+      const { signedPayload } = req.body;
+      if (!signedPayload) {
+        console.warn("⚠️ Apple S2S: Missing signedPayload");
+        return res.status(400).json({ error: "Missing signedPayload" });
+      }
+
+      console.log(`📱 Apple S2S notification received at ${new Date().toISOString()}`);
+
+      const result = await appleIapService.handleNotification(signedPayload);
+
+      if (result.success) {
+        console.log(`✅ Apple S2S notification processed: ${result.notificationType}`);
+        res.status(200).json({ success: true });
+      } else {
+        console.error(`❌ Apple S2S notification failed: ${result.error}`);
+        res.status(200).json({ success: true });
+      }
+    } catch (error) {
+      console.error("❌ Apple S2S notification error:", error);
+      res.status(200).json({ success: true });
+    }
+  });
+
+  app.get('/api/apple/subscription-status', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const appleAccess = await appleIapService.hasAccess(userId);
+      res.json(appleAccess);
+    } catch (error) {
+      console.error("Apple subscription-status error:", error);
+      res.status(500).json({ message: "Failed to check Apple subscription status" });
+    }
+  });
+
+  // ==================== END APPLE IAP ENDPOINTS ====================
 
   // Create subscription after payment setup (called by frontend)
   app.post('/api/subscription/create-after-setup', isAuthenticated, async (req: any, res) => {

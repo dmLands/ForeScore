@@ -1,4 +1,4 @@
-import { users, groups, gameStates, pointsGames, roomStates, combinedPayoutResults, stripeSubscriptions, type User, type UpsertUser, type Group, type InsertGroup, type GameState, type InsertGameState, type Player, type Card, type CustomCard, type CardAssignment, type CardValues, type PointsGame, type InsertPointsGame, type RoomState, type InsertRoomState, type CombinedPayoutResult, type InsertCombinedPayoutResult, type StripeSubscription, type InsertStripeSubscription } from "@shared/schema";
+import { users, groups, gameStates, pointsGames, roomStates, combinedPayoutResults, stripeSubscriptions, appleSubscriptions, type User, type UpsertUser, type Group, type InsertGroup, type GameState, type InsertGameState, type Player, type Card, type CustomCard, type CardAssignment, type CardValues, type PointsGame, type InsertPointsGame, type RoomState, type InsertRoomState, type CombinedPayoutResult, type InsertCombinedPayoutResult, type StripeSubscription, type InsertStripeSubscription, type AppleSubscription, type InsertAppleSubscription } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, lt, and, inArray } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -31,6 +31,12 @@ export interface IStorage {
   // Auto-Trial Management (V9.0 - Self-serve trials)
   startAutoTrial(userId: string, days?: number): Promise<User | undefined>;
   checkAutoTrialStatus(userId: string): Promise<{ status: 'eligible' | 'active' | 'expired' | null; endsAt?: Date }>;
+  
+  // Apple IAP Subscriptions (V10.0)
+  getAppleSubscription(userId: string): Promise<AppleSubscription | undefined>;
+  getAppleSubscriptionByTransactionId(originalTransactionId: string): Promise<AppleSubscription | undefined>;
+  upsertAppleSubscription(subscription: InsertAppleSubscription): Promise<AppleSubscription>;
+  updateAppleSubscription(originalTransactionId: string, updates: Partial<InsertAppleSubscription>): Promise<AppleSubscription | undefined>;
   
   // Groups
   getGroups(): Promise<Group[]>;
@@ -195,6 +201,41 @@ export class DatabaseStorage implements IStorage {
       .update(stripeSubscriptions)
       .set({ ...updates, updatedAt: new Date() })
       .where(eq(stripeSubscriptions.stripeSubscriptionId, stripeSubscriptionId))
+      .returning();
+    return subscription;
+  }
+
+  // Apple IAP Subscriptions (V10.0)
+  async getAppleSubscription(userId: string): Promise<AppleSubscription | undefined> {
+    const [subscription] = await db.select().from(appleSubscriptions).where(eq(appleSubscriptions.userId, userId));
+    return subscription;
+  }
+
+  async getAppleSubscriptionByTransactionId(originalTransactionId: string): Promise<AppleSubscription | undefined> {
+    const [subscription] = await db.select().from(appleSubscriptions).where(eq(appleSubscriptions.originalTransactionId, originalTransactionId));
+    return subscription;
+  }
+
+  async upsertAppleSubscription(subscription: InsertAppleSubscription): Promise<AppleSubscription> {
+    const [result] = await db
+      .insert(appleSubscriptions)
+      .values(subscription)
+      .onConflictDoUpdate({
+        target: appleSubscriptions.originalTransactionId,
+        set: {
+          ...subscription,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return result;
+  }
+
+  async updateAppleSubscription(originalTransactionId: string, updates: Partial<InsertAppleSubscription>): Promise<AppleSubscription | undefined> {
+    const [subscription] = await db
+      .update(appleSubscriptions)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(appleSubscriptions.originalTransactionId, originalTransactionId))
       .returning();
     return subscription;
   }

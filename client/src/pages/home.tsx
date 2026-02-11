@@ -1721,14 +1721,12 @@ export default function Home() {
                             </Link>
                           </DropdownMenuItem>
                         )}
-                        {!(isIOS || isNative) && (
-                          <DropdownMenuItem asChild>
-                            <Link href="/manage-subscription" className="cursor-pointer text-gray-900 hover:text-gray-700">
-                              <CreditCard className="h-4 w-4 mr-2" />
-                              Manage Subscription
-                            </Link>
-                          </DropdownMenuItem>
-                        )}
+                        <DropdownMenuItem asChild>
+                          <Link href="/manage-subscription" className="cursor-pointer text-gray-900 hover:text-gray-700">
+                            <CreditCard className="h-4 w-4 mr-2" />
+                            Manage Subscription
+                          </Link>
+                        </DropdownMenuItem>
                         <DropdownMenuItem asChild>
                           <Link href="/email-preferences" className="cursor-pointer text-gray-900 hover:text-gray-700">
                             <Mail className="h-4 w-4 mr-2" />

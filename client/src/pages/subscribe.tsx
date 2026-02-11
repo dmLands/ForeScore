@@ -12,6 +12,7 @@ import { useStripe, Elements, PaymentElement, useElements } from '@stripe/react-
 import { loadStripe, Stripe } from '@stripe/stripe-js';
 import { CheckCircle, Clock, CreditCard, Users, Calculator, Trophy, Eye, EyeOff, Lock } from "lucide-react";
 import { usePlatform, canShowPayments } from "@/lib/platform";
+import { IOSSubscriptionPrompt } from "@/components/IOSSubscriptionPrompt";
 
 // Only initialize Stripe on web platform (not iOS/native)
 let stripePromise: Promise<Stripe | null> | null = null;
@@ -366,23 +367,24 @@ const PlanCard = ({
   );
 };
 
-function IOSSubscribeRedirect() {
-  const [, setLocation] = useLocation();
-  useEffect(() => {
-    setLocation('/');
-  }, [setLocation]);
-  return null;
-}
-
 export default function Subscribe() {
   const { isIOS, isNative } = usePlatform();
 
-  // On iOS/native, redirect home — no subscription/purchase UI (Apple compliance)
   if (isIOS || isNative) {
-    return <IOSSubscribeRedirect />;
+    return <IOSSubscribeContent />;
   }
 
   return <SubscribeContent />;
+}
+
+function IOSSubscribeContent() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="max-w-md md:max-w-lg w-full">
+        <IOSSubscriptionPrompt variant="card" />
+      </div>
+    </div>
+  );
 }
 
 function SubscribeContent() {

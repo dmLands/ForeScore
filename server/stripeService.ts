@@ -1,5 +1,6 @@
 import Stripe from 'stripe';
 import { storage } from './storage';
+import { appleIapService } from './appleIapService';
 
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
@@ -257,7 +258,28 @@ export class StripeService {
       }
     }
     
-    // THIRD PRIORITY: Get canonical subscription data from our database (PAID subscriptions take precedence)
+    // THIRD PRIORITY: Check for active Apple IAP subscription
+    try {
+      const appleAccess = await appleIapService.hasAccess(userId);
+      if (appleAccess.hasAccess) {
+        console.log(`✅ User ${userId} has access: Apple IAP (product: ${appleAccess.productId}, status: ${appleAccess.subscriptionStatus})`);
+        return {
+          hasAccess: true,
+          subscriptionStatus: `apple_${appleAccess.subscriptionStatus}`,
+          nextRenewalDate: appleAccess.expiresDate,
+          currentPlan: appleAccess.planKey ? {
+            name: `ForeScore ${appleAccess.planKey === 'annual' ? 'Annual' : 'Monthly'} (Apple)`,
+            amount: appleAccess.planKey === 'annual' ? 1799 : 199,
+            interval: appleAccess.planKey === 'annual' ? 'year' : 'month',
+            planKey: `apple_${appleAccess.planKey}`,
+          } : undefined,
+        };
+      }
+    } catch (appleError) {
+      console.error(`⚠️ Apple IAP check failed for user ${userId}:`, appleError);
+    }
+
+    // FOURTH PRIORITY: Get canonical subscription data from our database (PAID subscriptions take precedence)
     const subscription = await storage.getStripeSubscription(userId);
     
     if (!subscription) {

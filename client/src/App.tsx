@@ -8,7 +8,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 import { initGA } from "./lib/analytics";
 import { useAnalytics } from "./hooks/use-analytics";
-import { isNativeIOS, isNativeApp } from "@/lib/platform";
 import Home from "@/pages/home";
 import Landing from "@/pages/landing";
 import QRLanding from "@/pages/qr-landing";
@@ -58,13 +57,7 @@ function ProtectedHome() {
     return <WelcomeTrial />;
   }
 
-  // On iOS/native: bypass subscription gate entirely (Apple compliance - no purchase UI)
-  // Let users into the app; server-side checks still enforce access limits
-  if (isNativeIOS() || isNativeApp()) {
-    return <Home />;
-  }
-
-  // No subscription (web only) - show subscribe page
+  // No subscription - show subscribe page (web shows Stripe, iOS shows Apple IAP)
   return <Subscribe />;
 }
 

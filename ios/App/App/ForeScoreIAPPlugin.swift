@@ -12,9 +12,23 @@ public class ForeScoreIAPPlugin: CAPPlugin, CAPBridgedPlugin {
         CAPPluginMethod(name: "restorePurchases", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getActiveSubscriptions", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "finishTransaction", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "isAvailable", returnType: CAPPluginReturnPromise),
     ]
 
+    @objc func isAvailable(_ call: CAPPluginCall) {
+        if #available(iOS 15.0, *) {
+            call.resolve(["available": true])
+        } else {
+            call.resolve(["available": false])
+        }
+    }
+
     @objc func getProducts(_ call: CAPPluginCall) {
+        guard #available(iOS 15.0, *) else {
+            call.reject("StoreKit 2 requires iOS 15.0 or later")
+            return
+        }
+
         guard let productIds = call.getArray("productIds", String.self) else {
             call.reject("Missing productIds parameter")
             return
@@ -56,12 +70,17 @@ public class ForeScoreIAPPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func purchaseProduct(_ call: CAPPluginCall) {
+        guard #available(iOS 15.0, *) else {
+            call.reject("StoreKit 2 requires iOS 15.0 or later")
+            return
+        }
+
         guard let productId = call.getString("productId") else {
             call.reject("Missing productId parameter")
             return
         }
 
-        Task {
+        Task { @MainActor in
             do {
                 let products = try await Product.products(for: [productId])
                 guard let product = products.first else {
@@ -73,7 +92,7 @@ public class ForeScoreIAPPlugin: CAPPlugin, CAPBridgedPlugin {
 
                 switch result {
                 case .success(let verification):
-                    let transaction = try checkVerified(verification)
+                    let transaction = try self.checkVerified(verification)
 
                     let transactionDict: [String: Any] = [
                         "transactionId": String(transaction.id),
@@ -100,6 +119,11 @@ public class ForeScoreIAPPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func restorePurchases(_ call: CAPPluginCall) {
+        guard #available(iOS 15.0, *) else {
+            call.reject("StoreKit 2 requires iOS 15.0 or later")
+            return
+        }
+
         Task {
             do {
                 try await AppStore.sync()
@@ -107,7 +131,7 @@ public class ForeScoreIAPPlugin: CAPPlugin, CAPBridgedPlugin {
                 var transactions: [[String: Any]] = []
 
                 for await result in Transaction.currentEntitlements {
-                    if let transaction = try? checkVerified(result) {
+                    if let transaction = try? self.checkVerified(result) {
                         if transaction.productType == .autoRenewable {
                             transactions.append([
                                 "transactionId": String(transaction.id),
@@ -127,11 +151,16 @@ public class ForeScoreIAPPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func getActiveSubscriptions(_ call: CAPPluginCall) {
+        guard #available(iOS 15.0, *) else {
+            call.reject("StoreKit 2 requires iOS 15.0 or later")
+            return
+        }
+
         Task {
             var transactions: [[String: Any]] = []
 
             for await result in Transaction.currentEntitlements {
-                if let transaction = try? checkVerified(result) {
+                if let transaction = try? self.checkVerified(result) {
                     if transaction.productType == .autoRenewable {
                         transactions.append([
                             "transactionId": String(transaction.id),
@@ -148,6 +177,11 @@ public class ForeScoreIAPPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func finishTransaction(_ call: CAPPluginCall) {
+        guard #available(iOS 15.0, *) else {
+            call.reject("StoreKit 2 requires iOS 15.0 or later")
+            return
+        }
+
         guard let transactionIdStr = call.getString("transactionId"),
               let transactionId = UInt64(transactionIdStr) else {
             call.reject("Missing or invalid transactionId parameter")
@@ -156,7 +190,7 @@ public class ForeScoreIAPPlugin: CAPPlugin, CAPBridgedPlugin {
 
         Task {
             for await result in Transaction.unfinished {
-                if let transaction = try? checkVerified(result) {
+                if let transaction = try? self.checkVerified(result) {
                     if transaction.id == transactionId {
                         await transaction.finish()
                         call.resolve()
@@ -169,6 +203,7 @@ public class ForeScoreIAPPlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
+    @available(iOS 15.0, *)
     private func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
         switch result {
         case .unverified(_, let error):

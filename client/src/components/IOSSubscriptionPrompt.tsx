@@ -5,7 +5,7 @@ import { CheckCircle, Smartphone, ArrowLeft, Crown, Loader2, RefreshCw } from "l
 import { LegalFooter } from "./LegalFooter";
 import { useLocation } from "wouter";
 import { useAppleIAP } from "@/hooks/useAppleIAP";
-import { isIAPAvailable } from "@/lib/appleIap";
+import { isIAPAvailable, checkStoreKitAvailable } from "@/lib/appleIap";
 
 interface IOSSubscriptionPromptProps {
   variant?: 'full-page' | 'card';

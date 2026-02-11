@@ -226,7 +226,7 @@ function PlanCard({
 
 export function IOSSubscriptionPrompt({ 
   variant = 'full-page',
-  title = "ForeScore Premium",
+  title = "ForeScore Subscription",
   description = "Start your free trial to unlock all features"
 }: IOSSubscriptionPromptProps) {
   const [, setLocation] = useLocation();

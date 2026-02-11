@@ -64,6 +64,7 @@ export function useAppleIAP() {
 
         queryClient.invalidateQueries({ queryKey: ['/api/subscription/status'] });
         queryClient.invalidateQueries({ queryKey: ['/api/apple/subscription-status'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
 
         toast({
           title: 'Subscription Active',
@@ -120,6 +121,7 @@ export function useAppleIAP() {
 
       queryClient.invalidateQueries({ queryKey: ['/api/subscription/status'] });
       queryClient.invalidateQueries({ queryKey: ['/api/apple/subscription-status'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
 
       if (restored) {
         toast({

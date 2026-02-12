@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Capacitor } from '@capacitor/core';
 
 export type Platform = 'web' | 'ios' | 'android';
 
@@ -8,16 +7,29 @@ export function getPlatform(): Platform {
     return 'web';
   }
 
-  try {
-    const isNative = Capacitor.isNativePlatform();
-    const capPlatform = Capacitor.getPlatform();
-    console.log('[Platform] Capacitor detection: isNative=', isNative, 'platform=', capPlatform);
-    if (isNative) {
-      if (capPlatform === 'ios') return 'ios';
-      if (capPlatform === 'android') return 'android';
+  const w = window as any;
+
+  if (w.__FORESCORE_NATIVE_IOS__ === true) {
+    return 'ios';
+  }
+
+  if (w.Capacitor) {
+    let isNative = false;
+
+    if (typeof w.Capacitor.isNativePlatform === 'function') {
+      isNative = w.Capacitor.isNativePlatform();
+    } else if (w.Capacitor.isNative === true) {
+      isNative = true;
     }
-  } catch (e) {
-    console.log('[Platform] Capacitor detection failed:', e);
+
+    if (isNative) {
+      const platform = typeof w.Capacitor.getPlatform === 'function'
+        ? w.Capacitor.getPlatform()
+        : null;
+      if (platform === 'ios') return 'ios';
+      if (platform === 'android') return 'android';
+      return 'ios';
+    }
   }
 
   const envPlatform = import.meta.env.VITE_PLATFORM;
@@ -26,6 +38,10 @@ export function getPlatform(): Platform {
 
   const ua = navigator.userAgent.toLowerCase();
   if (ua.includes('forescore-ios') || ua.includes('capacitor-ios')) {
+    return 'ios';
+  }
+
+  if (w.webkit?.messageHandlers && /iPhone|iPad|iPod/.test(navigator.userAgent) && !/Safari\//.test(navigator.userAgent)) {
     return 'ios';
   }
 
@@ -52,6 +68,16 @@ export function usePlatform() {
     const detected = getPlatform();
     if (detected !== platform) {
       setPlatform(detected);
+    }
+
+    if (detected === 'web') {
+      const timer = setTimeout(() => {
+        const recheck = getPlatform();
+        if (recheck !== 'web') {
+          setPlatform(recheck);
+        }
+      }, 500);
+      return () => clearTimeout(timer);
     }
   }, []);
 

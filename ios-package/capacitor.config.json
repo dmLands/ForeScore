@@ -31,5 +31,6 @@
       "resize": "body",
       "resizeOnFullScreen": true
     }
-  }
+  },
+  "packageClassList": ["ForeScoreIAPPlugin"]
 }

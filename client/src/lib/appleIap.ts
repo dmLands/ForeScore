@@ -28,52 +28,17 @@ interface ForeScoreIAPPlugin {
   isAvailable(): Promise<{ available: boolean }>;
 }
 
-let registeredPlugin: ForeScoreIAPPlugin | null = null;
-try {
-  registeredPlugin = registerPlugin<ForeScoreIAPPlugin>('ForeScoreIAP');
-} catch (e) {
-}
-
-let pluginInstance: ForeScoreIAPPlugin | null = null;
-let pluginResolved = false;
-
-function getPlugin(): ForeScoreIAPPlugin | null {
-  if (pluginResolved) return pluginInstance;
-
-  if (!isNativeIOS()) {
-    pluginResolved = true;
-    return null;
-  }
-
-  if (registeredPlugin) {
-    pluginInstance = registeredPlugin;
-    pluginResolved = true;
-    return pluginInstance;
-  }
-
-  const w = window as any;
-  try {
-    if (w.Capacitor?.Plugins?.ForeScoreIAP) {
-      pluginInstance = w.Capacitor.Plugins.ForeScoreIAP as ForeScoreIAPPlugin;
-      pluginResolved = true;
-      return pluginInstance;
-    }
-  } catch (err) {
-  }
-
-  return null;
-}
+const ForeScoreIAP = registerPlugin<ForeScoreIAPPlugin>('ForeScoreIAP');
 
 export function isIAPAvailable(): boolean {
-  return getPlugin() !== null;
+  return isNativeIOS();
 }
 
 export async function checkStoreKitAvailable(): Promise<boolean> {
-  const plugin = getPlugin();
-  if (!plugin) return false;
+  if (!isNativeIOS()) return false;
 
   try {
-    const result = await plugin.isAvailable();
+    const result = await ForeScoreIAP.isAvailable();
     return result.available;
   } catch {
     return false;
@@ -81,11 +46,10 @@ export async function checkStoreKitAvailable(): Promise<boolean> {
 }
 
 export async function fetchProducts(productIds: string[]): Promise<AppleIAPProduct[]> {
-  const plugin = getPlugin();
-  if (!plugin) return [];
+  if (!isNativeIOS()) return [];
 
   try {
-    const result = await plugin.getProducts({ productIds });
+    const result = await ForeScoreIAP.getProducts({ productIds });
     return result.products || [];
   } catch (error) {
     console.error('Apple IAP: Failed to fetch products:', error);
@@ -94,32 +58,28 @@ export async function fetchProducts(productIds: string[]): Promise<AppleIAPProdu
 }
 
 export async function purchaseProduct(productId: string): Promise<AppleIAPTransaction | null> {
-  const plugin = getPlugin();
-  if (!plugin) throw new Error('Apple IAP not available');
+  if (!isNativeIOS()) throw new Error('Apple IAP not available');
 
-  const result = await plugin.purchaseProduct({ productId });
+  const result = await ForeScoreIAP.purchaseProduct({ productId });
   return result.transaction || null;
 }
 
 export async function restorePurchases(): Promise<AppleIAPTransaction[]> {
-  const plugin = getPlugin();
-  if (!plugin) return [];
+  if (!isNativeIOS()) return [];
 
-  const result = await plugin.restorePurchases();
+  const result = await ForeScoreIAP.restorePurchases();
   return result.transactions || [];
 }
 
 export async function getActiveSubscriptions(): Promise<AppleIAPTransaction[]> {
-  const plugin = getPlugin();
-  if (!plugin) return [];
+  if (!isNativeIOS()) return [];
 
-  const result = await plugin.getActiveSubscriptions();
+  const result = await ForeScoreIAP.getActiveSubscriptions();
   return result.transactions || [];
 }
 
 export async function finishTransaction(transactionId: string): Promise<void> {
-  const plugin = getPlugin();
-  if (!plugin) return;
+  if (!isNativeIOS()) return;
 
-  await plugin.finishTransaction({ transactionId });
+  await ForeScoreIAP.finishTransaction({ transactionId });
 }

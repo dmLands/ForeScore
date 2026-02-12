@@ -18,6 +18,6 @@ class ForeScoreViewController: CAPBridgeViewController {
     }
 
     override open func capacitorDidLoad() {
-        bridge?.registerPluginType(ForeScoreIAPPlugin.self)
+        bridge?.registerPluginInstance(ForeScoreIAPPlugin())
     }
 }

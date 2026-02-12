@@ -7,7 +7,6 @@ import {
   finishTransaction,
   isIAPAvailable,
   type AppleIAPProduct,
-  type AppleIAPTransaction,
 } from '@/lib/appleIap';
 import { apiRequest } from '@/lib/queryClient';
 import { queryClient } from '@/lib/queryClient';
@@ -24,7 +23,7 @@ export function useAppleIAP() {
   const [isRestoring, setIsRestoring] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const available = isIOS && isNative && isIAPAvailable();
+  const available = isIOS && isNative;
 
   const loadProducts = useCallback(async () => {
     if (!available) return;

@@ -26,6 +26,7 @@ interface ForeScoreIAPPlugin {
   getActiveSubscriptions(): Promise<{ transactions: AppleIAPTransaction[] }>;
   finishTransaction(options: { transactionId: string }): Promise<void>;
   isAvailable(): Promise<{ available: boolean }>;
+  diagnose(): Promise<Record<string, any>>;
 }
 
 const ForeScoreIAP = registerPlugin<ForeScoreIAPPlugin>('ForeScoreIAP');
@@ -82,4 +83,17 @@ export async function finishTransaction(transactionId: string): Promise<void> {
   if (!isNativeIOS()) return;
 
   await ForeScoreIAP.finishTransaction({ transactionId });
+}
+
+export async function diagnoseIAP(): Promise<Record<string, any>> {
+  if (!isNativeIOS()) return { error: 'Not running on native iOS' };
+
+  try {
+    const result = await ForeScoreIAP.diagnose();
+    console.log('[ForeScoreIAP] Diagnose result:', JSON.stringify(result, null, 2));
+    return result;
+  } catch (error: any) {
+    console.error('[ForeScoreIAP] Diagnose error:', error);
+    return { error: error.message || 'Diagnose failed' };
+  }
 }

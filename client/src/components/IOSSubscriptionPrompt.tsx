@@ -61,8 +61,8 @@ function IOSPlanPicker() {
     );
   }
 
-  const monthlyProduct = products.find(p => p.productId === 'forescore.monthly');
-  const annualProduct = products.find(p => p.productId === 'forescore.annual');
+  const monthlyProduct = products.find(p => p.productId === 'forescore_monthly');
+  const annualProduct = products.find(p => p.productId === 'forescore_annual');
 
   const hasFallback = !monthlyProduct && !annualProduct;
 
@@ -72,22 +72,22 @@ function IOSPlanPicker() {
         {hasFallback ? (
           <>
             <PlanCard
-              planId="forescore.monthly"
+              planId="forescore_monthly"
               title="Monthly"
               price="$1.99/month"
               trial="7-day free trial"
-              selected={selectedPlan === 'forescore.monthly'}
-              onSelect={() => setSelectedPlan('forescore.monthly')}
+              selected={selectedPlan === 'forescore_monthly'}
+              onSelect={() => setSelectedPlan('forescore_monthly')}
               disabled={isPurchasing}
             />
             <PlanCard
-              planId="forescore.annual"
+              planId="forescore_annual"
               title="Annual"
               price="$17.99/year"
               trial="7-day free trial"
               badge="Best Value"
-              selected={selectedPlan === 'forescore.annual'}
-              onSelect={() => setSelectedPlan('forescore.annual')}
+              selected={selectedPlan === 'forescore_annual'}
+              onSelect={() => setSelectedPlan('forescore_annual')}
               disabled={isPurchasing}
             />
           </>

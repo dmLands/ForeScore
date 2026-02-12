@@ -73,17 +73,17 @@ function IOSWelcomePlanPicker() {
     );
   }
 
-  const monthlyProduct = products.find(p => p.productId === 'forescore.monthly');
-  const annualProduct = products.find(p => p.productId === 'forescore.annual');
+  const monthlyProduct = products.find(p => p.productId === 'forescore_monthly');
+  const annualProduct = products.find(p => p.productId === 'forescore_annual');
 
   return (
     <div className="space-y-4">
       <div className="space-y-3">
         <button
-          onClick={() => setSelectedPlan('forescore.monthly')}
+          onClick={() => setSelectedPlan('forescore_monthly')}
           disabled={isPurchasing}
           className={`w-full text-left p-4 rounded-lg border-2 transition-all relative ${
-            selectedPlan === 'forescore.monthly'
+            selectedPlan === 'forescore_monthly'
               ? 'border-emerald-500 bg-emerald-50 shadow-sm'
               : 'border-gray-200 bg-white hover:border-gray-300'
           } ${isPurchasing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
@@ -97,9 +97,9 @@ function IOSWelcomePlanPicker() {
               <p className="text-xs text-emerald-600 font-medium mt-1">7-day free trial</p>
             </div>
             <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-              selectedPlan === 'forescore.monthly' ? 'border-emerald-500 bg-emerald-500' : 'border-gray-300'
+              selectedPlan === 'forescore_monthly' ? 'border-emerald-500 bg-emerald-500' : 'border-gray-300'
             }`}>
-              {selectedPlan === 'forescore.monthly' && (
+              {selectedPlan === 'forescore_monthly' && (
                 <div className="w-2 h-2 rounded-full bg-white" />
               )}
             </div>
@@ -107,10 +107,10 @@ function IOSWelcomePlanPicker() {
         </button>
 
         <button
-          onClick={() => setSelectedPlan('forescore.annual')}
+          onClick={() => setSelectedPlan('forescore_annual')}
           disabled={isPurchasing}
           className={`w-full text-left p-4 rounded-lg border-2 transition-all relative ${
-            selectedPlan === 'forescore.annual'
+            selectedPlan === 'forescore_annual'
               ? 'border-emerald-500 bg-emerald-50 shadow-sm'
               : 'border-gray-200 bg-white hover:border-gray-300'
           } ${isPurchasing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
@@ -127,9 +127,9 @@ function IOSWelcomePlanPicker() {
               <p className="text-xs text-emerald-600 font-medium mt-1">7-day free trial</p>
             </div>
             <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-              selectedPlan === 'forescore.annual' ? 'border-emerald-500 bg-emerald-500' : 'border-gray-300'
+              selectedPlan === 'forescore_annual' ? 'border-emerald-500 bg-emerald-500' : 'border-gray-300'
             }`}>
-              {selectedPlan === 'forescore.annual' && (
+              {selectedPlan === 'forescore_annual' && (
                 <div className="w-2 h-2 rounded-full bg-white" />
               )}
             </div>

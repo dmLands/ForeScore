@@ -12,7 +12,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { queryClient } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 
-const PRODUCT_IDS = ['forescore.monthly', 'forescore.annual'];
+const PRODUCT_IDS = ['forescore_monthly', 'forescore_annual'];
 
 export function useAppleIAP() {
   const { isIOS, isNative } = usePlatform();

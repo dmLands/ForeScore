@@ -8,14 +8,14 @@ const IS_DEVELOPMENT = process.env.NODE_ENV === "development";
 
 export const APPLE_IAP_PRODUCTS: Record<string, { productId: string; name: string; interval: 'month' | 'year'; amount: number; trialDays: number }> = {
   monthly: {
-    productId: "forescore.monthly",
+    productId: "forescore_monthly",
     name: "ForeScore Monthly",
     interval: "month",
     amount: 199,
     trialDays: 7,
   },
   annual: {
-    productId: "forescore.annual",
+    productId: "forescore_annual",
     name: "ForeScore Annual",
     interval: "year",
     amount: 1799,

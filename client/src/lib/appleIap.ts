@@ -1,3 +1,4 @@
+import { Capacitor, registerPlugin } from '@capacitor/core';
 import { isNativeIOS } from './platform';
 
 export interface AppleIAPProduct {
@@ -27,23 +28,42 @@ interface ForeScoreIAPPlugin {
   isAvailable(): Promise<{ available: boolean }>;
 }
 
+let pluginInstance: ForeScoreIAPPlugin | null = null;
+let pluginResolved = false;
+
 function getPlugin(): ForeScoreIAPPlugin | null {
+  if (pluginResolved) return pluginInstance;
+
   if (!isNativeIOS()) {
-    console.log('Apple IAP: Not native iOS, plugin unavailable');
+    console.log('Apple IAP: Not native iOS, plugin unavailable. Platform:', Capacitor.getPlatform(), 'isNative:', Capacitor.isNativePlatform());
+    pluginResolved = true;
     return null;
+  }
+
+  try {
+    pluginInstance = registerPlugin<ForeScoreIAPPlugin>('ForeScoreIAP');
+    pluginResolved = true;
+    console.log('Apple IAP: Plugin registered via @capacitor/core registerPlugin');
+    return pluginInstance;
+  } catch (err) {
+    console.error('Apple IAP: registerPlugin failed, trying fallback:', err);
   }
 
   try {
     const w = window as any;
     if (w.Capacitor?.Plugins?.ForeScoreIAP) {
-      return w.Capacitor.Plugins.ForeScoreIAP as ForeScoreIAPPlugin;
+      pluginInstance = w.Capacitor.Plugins.ForeScoreIAP as ForeScoreIAPPlugin;
+      pluginResolved = true;
+      console.log('Apple IAP: Plugin found via window.Capacitor.Plugins fallback');
+      return pluginInstance;
     }
-    console.warn('Apple IAP: Native iOS detected but ForeScoreIAP plugin not found in Capacitor.Plugins');
+    console.warn('Apple IAP: Native iOS detected but ForeScoreIAP plugin not found');
     console.log('Apple IAP: Available plugins:', Object.keys(w.Capacitor?.Plugins || {}));
   } catch (err) {
     console.error('Apple IAP: Error accessing plugin:', err);
   }
 
+  pluginResolved = true;
   return null;
 }
 

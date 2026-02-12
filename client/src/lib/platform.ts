@@ -1,34 +1,29 @@
 import { useState, useEffect } from 'react';
+import { Capacitor } from '@capacitor/core';
 
 export type Platform = 'web' | 'ios' | 'android';
-
-declare global {
-  interface Window {
-    Capacitor?: {
-      isNativePlatform: () => boolean;
-      getPlatform: () => string;
-    };
-  }
-}
 
 export function getPlatform(): Platform {
   if (typeof window === 'undefined') {
     return 'web';
   }
 
-  // Check for Capacitor native platform
-  if (window.Capacitor?.isNativePlatform()) {
-    const platform = window.Capacitor.getPlatform();
-    if (platform === 'ios') return 'ios';
-    if (platform === 'android') return 'android';
+  try {
+    const isNative = Capacitor.isNativePlatform();
+    const capPlatform = Capacitor.getPlatform();
+    console.log('[Platform] Capacitor detection: isNative=', isNative, 'platform=', capPlatform);
+    if (isNative) {
+      if (capPlatform === 'ios') return 'ios';
+      if (capPlatform === 'android') return 'android';
+    }
+  } catch (e) {
+    console.log('[Platform] Capacitor detection failed:', e);
   }
 
-  // Check for VITE_PLATFORM environment variable (build-time override)
   const envPlatform = import.meta.env.VITE_PLATFORM;
   if (envPlatform === 'ios') return 'ios';
   if (envPlatform === 'android') return 'android';
 
-  // Check user agent as fallback for testing in browser
   const ua = navigator.userAgent.toLowerCase();
   if (ua.includes('forescore-ios') || ua.includes('capacitor-ios')) {
     return 'ios';

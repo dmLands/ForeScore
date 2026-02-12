@@ -256,6 +256,13 @@ export default function WelcomeTrial() {
         </CardHeader>
         
         <CardContent className="space-y-6">
+          {import.meta.env.DEV || (isIOS || isNative) ? null : null}
+          {/* Debug banner - remove after TestFlight verification */}
+          {typeof window !== 'undefined' && (window as any).__FORESCORE_DEBUG__ && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 text-xs text-blue-700 font-mono">
+              Platform: {isIOS ? 'iOS' : isNative ? 'native' : 'web'} | isIOS: {String(isIOS)} | isNative: {String(isNative)}
+            </div>
+          )}
           <div className="bg-green-50 rounded-lg p-4 border border-green-200">
             <div className="grid gap-3">
               <div className="flex items-center space-x-3">

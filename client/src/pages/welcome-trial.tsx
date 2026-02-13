@@ -9,7 +9,6 @@ import { useToast } from "@/hooks/use-toast";
 import { usePlatform } from "@/lib/platform";
 import { useAppleIAP } from "@/hooks/useAppleIAP";
 import { useAuth } from "@/hooks/useAuth";
-import { diagnoseIAP } from "@/lib/appleIap";
 
 interface SubscriptionPlan {
   priceId: string;
@@ -40,12 +39,10 @@ function IOSWelcomePlanPicker() {
   } = useAppleIAP();
 
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-  const [diagResult, setDiagResult] = useState<string | null>(null);
 
   useEffect(() => {
     if (available) {
       loadProducts();
-      diagnoseIAP().then(r => setDiagResult(JSON.stringify(r, null, 2)));
     }
   }, [available, loadProducts]);
 
@@ -146,11 +143,6 @@ function IOSWelcomePlanPicker() {
         </div>
       )}
 
-      {diagResult && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-          <p className="text-xs font-mono text-blue-800 whitespace-pre-wrap break-all">{diagResult}</p>
-        </div>
-      )}
 
       <Button
         onClick={() => selectedPlan && purchase(selectedPlan)}

@@ -40,8 +40,8 @@ export function useAppleIAP() {
     }
   }, [available]);
 
-  const purchase = useCallback(async (productId: string) => {
-    if (!available) return;
+  const purchase = useCallback(async (productId: string): Promise<boolean> => {
+    if (!available) return false;
 
     setIsPurchasing(true);
     setError(null);
@@ -61,14 +61,15 @@ export function useAppleIAP() {
       if (result.success) {
         await finishTransaction(transaction.transactionId);
 
-        queryClient.invalidateQueries({ queryKey: ['/api/subscription/status'] });
-        queryClient.invalidateQueries({ queryKey: ['/api/apple/subscription-status'] });
-        queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+        await queryClient.invalidateQueries({ queryKey: ['/api/subscription/status'] });
+        await queryClient.invalidateQueries({ queryKey: ['/api/apple/subscription-status'] });
+        await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
 
         toast({
           title: 'Subscription Active',
           description: 'Your ForeScore subscription is now active!',
         });
+        return true;
       } else {
         throw new Error(result.message || 'Failed to validate purchase');
       }
@@ -82,6 +83,7 @@ export function useAppleIAP() {
           variant: 'destructive',
         });
       }
+      return false;
     } finally {
       setIsPurchasing(false);
     }

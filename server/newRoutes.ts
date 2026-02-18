@@ -398,6 +398,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Self-service account deletion (Apple App Store requirement 5.1.1v)
+  app.delete('/api/auth/account', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      console.log(`🗑️ User requesting account deletion: ${user.email} (${userId})`);
+
+      // Cancel Stripe subscriptions
+      if (user.stripeCustomerId) {
+        try {
+          const subscriptions = await stripe.subscriptions.list({
+            customer: user.stripeCustomerId,
+            limit: 100,
+          });
+          for (const sub of subscriptions.data) {
+            if (sub.status !== 'canceled') {
+              await stripe.subscriptions.cancel(sub.id);
+            }
+          }
+        } catch (stripeErr) {
+          console.error(`⚠️ Stripe cleanup error for ${userId}:`, stripeErr);
+        }
+      }
+
+      // Note: Apple subscriptions cannot be cancelled server-side — users must cancel
+      // via iOS Settings. Deleting the user record removes Apple subscription DB entries
+      // (cascade) and prevents future access even if Apple continues billing until
+      // the user cancels in their Apple ID settings.
+
+      // Delete user (cascades to apple_subscriptions, stripe_subscriptions, groups, games, etc.)
+      const deleted = await storage.deleteUser(userId);
+      if (!deleted) {
+        return res.status(500).json({ message: "Failed to delete account" });
+      }
+
+      console.log(`✅ Account deleted: ${user.email}`);
+
+      // Destroy session
+      req.logout((err: any) => {
+        req.session.destroy(() => {
+          res.clearCookie('connect.sid');
+          res.json({ success: true, message: "Account deleted successfully" });
+        });
+      });
+    } catch (error) {
+      console.error("Account deletion error:", error);
+      res.status(500).json({ message: "Failed to delete account" });
+    }
+  });
+
   // Auto-trial activation endpoint (V9.0)
   app.post('/api/trial/start', isAuthenticated, async (req, res) => {
     try {

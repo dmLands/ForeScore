@@ -5950,7 +5950,7 @@ export default function Home() {
             <hr className="my-6" />
 
             <h3>6. Data Retention</h3>
-            <p>We retain information as long as necessary to provide the Service, comply with legal obligations, and resolve disputes. You may request deletion of your data (see Section 7).</p>
+            <p>We retain information as long as necessary to provide the Service, comply with legal obligations, and resolve disputes. When you delete your account from within the ForeScore app, we permanently remove your personal profile and associated gameplay data, except for information we are legally required or have a legitimate business reason to retain (for example, basic transaction records for accounting).</p>
 
             <hr className="my-6" />
 
@@ -5964,7 +5964,7 @@ export default function Home() {
               <li>Withdraw consent for marketing communications at any time by clicking "unsubscribe" in an email or adjusting settings in your account.</li>
             </ul>
             
-            <p>To exercise rights, email us at support@forescore.xyz.</p>
+            <p>You can delete your ForeScore account at any time directly from within the iOS app. For other rights requests, email us at support@forescore.xyz.</p>
 
             <hr className="my-6" />
 

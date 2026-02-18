@@ -81,33 +81,19 @@ export default function PrivacyPolicyPage() {
 
               <section>
                 <h3 className="font-semibold text-lg mb-2">6. Data Retention</h3>
-                <p>We retain personal information for as long as reasonably necessary to:</p>
-                <ul className="list-disc list-inside mt-2 space-y-1">
-                  <li>Provide and maintain the Service.</li>
-                  <li>Comply with our legal obligations.</li>
-                  <li>Resolve disputes and enforce our agreements.</li>
-                </ul>
-                <p className="mt-2">
-                  We may anonymize or aggregate information so that it can no longer be associated with you. We may retain such aggregated or anonymized information indefinitely for analytics, troubleshooting, or business planning.
-                </p>
+                <p>We retain information as long as necessary to provide the Service, comply with legal obligations, and resolve disputes. When you delete your account from within the ForeScore app, we permanently remove your personal profile and associated gameplay data, except for information we are legally required or have a legitimate business reason to retain (for example, basic transaction records for accounting).</p>
               </section>
 
               <section>
                 <h3 className="font-semibold text-lg mb-2">7. Your Rights & Choices</h3>
-                <p>Depending on your location and applicable law, you may have some or all of the following rights regarding your personal data:</p>
+                <p>Depending on your location, you may have the right to:</p>
                 <ul className="list-disc list-inside mt-2 space-y-1">
-                  <li><strong>Access:</strong> Request confirmation of whether we process your personal data and request a copy of that data.</li>
-                  <li><strong>Correction:</strong> Request that we correct inaccurate or incomplete personal data.</li>
-                  <li><strong>Deletion:</strong> Request that we delete certain personal data, subject to legal or legitimate business requirements to retain it.</li>
-                  <li><strong>Restriction/Objection:</strong> Request that we limit or stop certain processing of your data, including for direct marketing.</li>
-                  <li><strong>Portability:</strong> Request a copy of your personal data in a structured, commonly used, and machine-readable format, where technically feasible.</li>
+                  <li>Access or request a copy of your data.</li>
+                  <li>Correct or delete personal data.</li>
+                  <li>Restrict or object to our processing of your data.</li>
+                  <li>Withdraw consent for marketing communications at any time by clicking "unsubscribe" in an email or adjusting settings in your account.</li>
                 </ul>
-                <p className="mt-2">You can also:</p>
-                <ul className="list-disc list-inside mt-2 space-y-1">
-                  <li><strong>Marketing Preferences:</strong> Opt out of marketing communications at any time by clicking "unsubscribe" in an email, changing your notification settings in the app, or contacting us at the email below.</li>
-                  <li><strong>Account & Data Deletion:</strong> You may request that we delete your account and associated personal data by contacting us at the email below or, where available, using in-app account deletion tools.</li>
-                </ul>
-                <p className="mt-2">To exercise any of these rights, email us at support@forescore.xyz. We may request additional information to verify your identity before fulfilling your request. We will respond within a reasonable period, consistent with applicable law.</p>
+                <p className="mt-2">You can delete your ForeScore account at any time directly from within the iOS app. For other rights requests, email us at support@forescore.xyz.</p>
               </section>
 
               <section>

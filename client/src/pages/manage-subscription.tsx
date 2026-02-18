@@ -21,7 +21,6 @@ import {
   Trash2,
   Loader2
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { usePlatform } from "@/lib/platform";
 import { LegalFooter } from "@/components/LegalFooter";
@@ -590,7 +589,6 @@ export default function ManageSubscription() {
 
 function DeleteAccountSection() {
   const [showConfirm, setShowConfirm] = useState(false);
-  const [confirmText, setConfirmText] = useState('');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -608,7 +606,8 @@ function DeleteAccountSection() {
     },
     onSuccess: () => {
       queryClient.clear();
-      window.location.href = '/';
+      localStorage.clear();
+      window.location.href = '/account-deleted';
     },
     onError: (error: Error) => {
       toast({
@@ -620,18 +619,18 @@ function DeleteAccountSection() {
   });
 
   return (
-    <Card className="mt-6 border-red-200">
-      <CardHeader>
-        <CardTitle className="text-red-600 flex items-center gap-2 text-lg">
-          <Trash2 className="h-5 w-5" />
-          Delete Account
-        </CardTitle>
-        <CardDescription>
-          Permanently delete your account and all associated data. This action cannot be undone.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {!showConfirm ? (
+    <>
+      <Card className="mt-6 border-red-200">
+        <CardHeader>
+          <CardTitle className="text-red-600 flex items-center gap-2 text-lg">
+            <Trash2 className="h-5 w-5" />
+            Delete Account
+          </CardTitle>
+          <CardDescription>
+            Permanently delete your account and all associated data.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
           <Button
             variant="outline"
             className="border-red-300 text-red-600 hover:bg-red-50"
@@ -640,53 +639,39 @@ function DeleteAccountSection() {
             <Trash2 className="h-4 w-4 mr-2" />
             Delete My Account
           </Button>
-        ) : (
-          <div className="space-y-4">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <p className="text-sm text-red-700">
-                <AlertTriangle className="h-4 w-4 inline mr-1" />
-                This will permanently delete all your data including groups, games, scores, and cancel any active subscriptions.
-              </p>
-            </div>
-            <p className="text-sm text-gray-600">
-              Type <span className="font-bold text-red-600">DELETE</span> to confirm:
-            </p>
-            <Input
-              value={confirmText}
-              onChange={(e) => setConfirmText(e.target.value)}
-              placeholder="Type DELETE to confirm"
-              className="border-red-300 focus:border-red-500"
-            />
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => {
-                  setShowConfirm(false);
-                  setConfirmText('');
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                className="flex-1"
-                disabled={confirmText !== 'DELETE' || deleteAccountMutation.isPending}
-                onClick={() => deleteAccountMutation.mutate()}
-              >
-                {deleteAccountMutation.isPending ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Deleting...
-                  </>
-                ) : (
-                  'Permanently Delete'
-                )}
-              </Button>
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+
+      <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Account</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete your ForeScore account and associated data. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteAccountMutation.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700 text-white"
+              disabled={deleteAccountMutation.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                deleteAccountMutation.mutate();
+              }}
+            >
+              {deleteAccountMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete Account'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

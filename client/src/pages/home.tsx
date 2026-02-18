@@ -787,7 +787,6 @@ export default function Home() {
 
   // Delete account state
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
-  const [deleteConfirmText, setDeleteConfirmText] = useState('');
 
   const deleteAccountMutation = useMutation({
     mutationFn: async () => {
@@ -803,7 +802,8 @@ export default function Home() {
     },
     onSuccess: () => {
       queryClient.clear();
-      window.location.href = '/';
+      localStorage.clear();
+      window.location.href = '/account-deleted';
     },
     onError: (error: Error) => {
       toast({
@@ -5717,59 +5717,37 @@ export default function Home() {
         </DialogContent>
       </Dialog>
 
-      {/* About ForeScore Dialog */}
       {/* Delete Account Confirmation Dialog */}
-      <Dialog open={showDeleteAccount} onOpenChange={(open) => {
-        setShowDeleteAccount(open);
-        if (!open) setDeleteConfirmText('');
-      }}>
-        <DialogContent className="max-w-md">
+      <Dialog open={showDeleteAccount} onOpenChange={setShowDeleteAccount}>
+        <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle className="text-red-600 flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5" />
-              Delete Account
-            </DialogTitle>
+            <DialogTitle>Delete Account</DialogTitle>
             <DialogDescription>
-              This action is permanent and cannot be undone. All your data including groups, games, scores, and subscription will be permanently deleted.
+              This will permanently delete your ForeScore account and associated data. This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-2">
-            <p className="text-sm text-gray-600">
-              To confirm, type <span className="font-bold text-red-600">DELETE</span> below:
-            </p>
-            <Input
-              value={deleteConfirmText}
-              onChange={(e) => setDeleteConfirmText(e.target.value)}
-              placeholder="Type DELETE to confirm"
-              className="border-red-300 focus:border-red-500"
-            />
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => {
-                  setShowDeleteAccount(false);
-                  setDeleteConfirmText('');
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                className="flex-1"
-                disabled={deleteConfirmText !== 'DELETE' || deleteAccountMutation.isPending}
-                onClick={() => deleteAccountMutation.mutate()}
-              >
-                {deleteAccountMutation.isPending ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Deleting...
-                  </>
-                ) : (
-                  'Delete My Account'
-                )}
-              </Button>
-            </div>
+          <div className="flex flex-col gap-2 pt-2">
+            <Button
+              variant="destructive"
+              disabled={deleteAccountMutation.isPending}
+              onClick={() => deleteAccountMutation.mutate()}
+            >
+              {deleteAccountMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete Account'
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteAccount(false)}
+              disabled={deleteAccountMutation.isPending}
+            >
+              Cancel
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

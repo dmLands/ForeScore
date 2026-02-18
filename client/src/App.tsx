@@ -26,6 +26,7 @@ import QRCodePage from "@/pages/qr-code";
 import CompleteAccount from "@/pages/complete-account";
 import TermsOfServicePage from "@/pages/tos";
 import PrivacyPolicyPage from "@/pages/privacy";
+import AccountDeleted from "@/pages/account-deleted";
 
 // Guard component that wraps Home to check subscription access
 function ProtectedHome() {
@@ -91,6 +92,7 @@ function Router() {
       <Route path="/complete-account" component={CompleteAccount} />
       <Route path="/tos" component={TermsOfServicePage} />
       <Route path="/privacy" component={PrivacyPolicyPage} />
+      <Route path="/account-deleted" component={AccountDeleted} />
       <Route component={NotFound} />
     </Switch>
   );

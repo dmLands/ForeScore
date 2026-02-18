@@ -35,7 +35,7 @@ export const users = pgTable("users", {
   marketingUnsubscribeAt: timestamp("marketing_unsubscribe_at"),
   marketingPreferenceStatus: varchar("marketing_preference_status").$type<'subscribed' | 'unsubscribed'>().default('subscribed'),
   // Manual trial fields for admin-granted trial access
-  manualTrialGrantedBy: varchar("manual_trial_granted_by").references(() => users.id),
+  manualTrialGrantedBy: varchar("manual_trial_granted_by").references(() => users.id, { onDelete: "set null" }),
   manualTrialGrantedAt: timestamp("manual_trial_granted_at"),
   manualTrialEndsAt: timestamp("manual_trial_ends_at"),
   manualTrialDays: integer("manual_trial_days"),
@@ -79,14 +79,14 @@ export const groups = pgTable("groups", {
   }),
   customCards: json("custom_cards").$type<CustomCard[]>().notNull().default([]),
   groupPhoto: text("group_photo"), // base64 image data
-  createdBy: varchar("created_by").references(() => users.id),
+  createdBy: varchar("created_by").references(() => users.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   lastPlayed: timestamp("last_played"),
 });
 
 export const gameStates = pgTable("game_states", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  groupId: varchar("group_id").notNull().references(() => groups.id),
+  groupId: varchar("group_id").notNull().references(() => groups.id, { onDelete: "cascade" }),
   name: text("name").notNull().default("Game"),
   deck: json("deck").$type<Card[]>().notNull(),
   playerCards: json("player_cards").$type<Record<string, Card[]>>().notNull(),
@@ -96,7 +96,7 @@ export const gameStates = pgTable("game_states", {
   cardValues: json("card_values").$type<CardValues>().notNull().default({
     camel: 2, fish: 2, roadrunner: 2, ghost: 2, skunk: 2, snake: 2, yeti: 2
   }),
-  createdBy: varchar("created_by").references(() => users.id),
+  createdBy: varchar("created_by").references(() => users.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -104,8 +104,8 @@ export const gameStates = pgTable("game_states", {
 export const roomStates = pgTable("room_states", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   roomId: varchar("room_id").notNull().unique(),
-  gameStateId: varchar("game_state_id").references(() => gameStates.id),
-  pointsGameId: varchar("points_game_id").references(() => pointsGames.id),
+  gameStateId: varchar("game_state_id").references(() => gameStates.id, { onDelete: "cascade" }),
+  pointsGameId: varchar("points_game_id").references(() => pointsGames.id, { onDelete: "cascade" }),
   state: jsonb("state").notNull(), // Current room state for persistence
   lastActivity: timestamp("last_activity").defaultNow().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -272,7 +272,7 @@ export const combinedPayoutResults = pgTable("combined_payout_results", {
     }>;
     summary: Record<string, number>;
   }>().notNull(),
-  createdBy: varchar("created_by").references(() => users.id),
+  createdBy: varchar("created_by").references(() => users.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

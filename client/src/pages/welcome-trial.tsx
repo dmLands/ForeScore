@@ -90,11 +90,11 @@ function IOSWelcomePlanPicker() {
         >
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="font-semibold text-gray-900">Monthly</h4>
-              <p className="text-sm text-gray-600">
+              <h4 className="text-gray-900">Monthly</h4>
+              <p className="text-sm font-semibold text-gray-900">
                 {monthlyProduct?.price ? `${monthlyProduct.price}/month` : '$1.99/month'}
               </p>
-              <p className="text-xs text-emerald-600 font-medium mt-1">7-day free trial</p>
+              <p className="text-xs text-gray-400 mt-1">7-day free trial, then {monthlyProduct?.price ? `${monthlyProduct.price}/month` : '$1.99/month'}</p>
             </div>
             <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
               selectedPlan === 'forescore_monthly' ? 'border-emerald-500 bg-emerald-500' : 'border-gray-300'
@@ -120,11 +120,11 @@ function IOSWelcomePlanPicker() {
           </span>
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="font-semibold text-gray-900">Annual</h4>
-              <p className="text-sm text-gray-600">
+              <h4 className="text-gray-900">Annual</h4>
+              <p className="text-sm font-semibold text-gray-900">
                 {annualProduct?.price ? `${annualProduct.price}/year` : '$17.99/year'}
               </p>
-              <p className="text-xs text-emerald-600 font-medium mt-1">7-day free trial</p>
+              <p className="text-xs text-gray-400 mt-1">7-day free trial, then {annualProduct?.price ? `${annualProduct.price}/year` : '$17.99/year'}</p>
             </div>
             <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
               selectedPlan === 'forescore_annual' ? 'border-emerald-500 bg-emerald-500' : 'border-gray-300'

@@ -76,7 +76,7 @@ function IOSPlanPicker() {
               planId="forescore_monthly"
               title="Monthly"
               price="$1.99/month"
-              trial="7-day free trial"
+              trial="7-day free trial, then $1.99/month"
               selected={selectedPlan === 'forescore_monthly'}
               onSelect={() => setSelectedPlan('forescore_monthly')}
               disabled={isPurchasing}
@@ -85,7 +85,7 @@ function IOSPlanPicker() {
               planId="forescore_annual"
               title="Annual"
               price="$17.99/year"
-              trial="7-day free trial"
+              trial="7-day free trial, then $17.99/year"
               badge="Best Value"
               selected={selectedPlan === 'forescore_annual'}
               onSelect={() => setSelectedPlan('forescore_annual')}
@@ -99,7 +99,7 @@ function IOSPlanPicker() {
                 planId={monthlyProduct.productId}
                 title="Monthly"
                 price={monthlyProduct.price ? `${monthlyProduct.price}/month` : '$1.99/month'}
-                trial={monthlyProduct.introductoryPrice ? `${monthlyProduct.introductoryPricePeriod} free trial` : '7-day free trial'}
+                trial={`7-day free trial, then ${monthlyProduct.price ? `${monthlyProduct.price}/month` : '$1.99/month'}`}
                 selected={selectedPlan === monthlyProduct.productId}
                 onSelect={() => setSelectedPlan(monthlyProduct.productId)}
                 disabled={isPurchasing}
@@ -110,7 +110,7 @@ function IOSPlanPicker() {
                 planId={annualProduct.productId}
                 title="Annual"
                 price={annualProduct.price ? `${annualProduct.price}/year` : '$17.99/year'}
-                trial={annualProduct.introductoryPrice ? `${annualProduct.introductoryPricePeriod} free trial` : '7-day free trial'}
+                trial={`7-day free trial, then ${annualProduct.price ? `${annualProduct.price}/year` : '$17.99/year'}`}
                 badge="Best Value"
                 selected={selectedPlan === annualProduct.productId}
                 onSelect={() => setSelectedPlan(annualProduct.productId)}
@@ -215,9 +215,9 @@ function PlanCard({
       )}
       <div className="flex items-center justify-between">
         <div>
-          <h4 className="font-semibold text-gray-900">{title}</h4>
-          <p className="text-sm text-gray-600">{price}</p>
-          <p className="text-xs text-emerald-600 font-medium mt-1">{trial}</p>
+          <h4 className="text-gray-900">{title}</h4>
+          <p className="text-sm font-semibold text-gray-900">{price}</p>
+          <p className="text-xs text-gray-400 mt-1">{trial}</p>
         </div>
         <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
           selected ? 'border-emerald-500 bg-emerald-500' : 'border-gray-300'
@@ -234,7 +234,7 @@ function PlanCard({
 export function IOSSubscriptionPrompt({ 
   variant = 'full-page',
   title = "ForeScore Subscription",
-  description = "Start your free trial to unlock all features"
+  description = "Choose a subscription to start your free 7-day trial and unlock all features"
 }: IOSSubscriptionPromptProps) {
   const [, setLocation] = useLocation();
   const iapAvailable = isIAPAvailable();

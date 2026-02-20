@@ -464,17 +464,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Not authenticated" });
       }
 
-      const ua = (req.headers['user-agent'] || '').toLowerCase();
-      const isIOSNative = ua.includes('capacitor') || ua.includes('forescore-ios') || ua.includes('forescore/ios') ||
-        (ua.includes('mobile') && (ua.includes('iphone') || ua.includes('ipad')) && !ua.includes('safari/'));
-      const clientPlatform = req.headers['x-forescore-platform'] as string | undefined;
-      if (isIOSNative || clientPlatform === 'ios') {
-        console.log(`⚠️ Blocking trial/start for iOS native user ${userId} (UA: ${ua}, x-platform: ${clientPlatform})`);
-        return res.status(403).json({ 
-          message: "Free trial on iOS must be started through the App Store subscription. Please use the subscription options on screen." 
-        });
-      }
-
+      // Check if user is eligible for auto-trial
       const user = await storage.getUser(userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });

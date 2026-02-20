@@ -1,13 +1,4 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
-import { getPlatform } from "./platform";
-
-function getPlatformHeaders(): Record<string, string> {
-  const platform = getPlatform();
-  if (platform !== 'web') {
-    return { 'X-ForeScore-Platform': platform };
-  }
-  return {};
-}
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -26,14 +17,9 @@ export async function apiRequest(
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const headers: Record<string, string> = {
-      ...getPlatformHeaders(),
-      ...(data ? { "Content-Type": "application/json" } : {}),
-    };
-
     const res = await fetch(url, {
       method,
-      headers,
+      headers: data ? { "Content-Type": "application/json" } : {},
       body: data ? JSON.stringify(data) : undefined,
       credentials: "include",
       signal: controller.signal,
@@ -59,7 +45,6 @@ export const getQueryFn: <T>(options: {
   async ({ queryKey }) => {
     const res = await fetch(queryKey.join("/") as string, {
       credentials: "include",
-      headers: getPlatformHeaders(),
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {

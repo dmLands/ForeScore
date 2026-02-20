@@ -8,6 +8,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { usePlatform } from "@/lib/platform";
 import { useAppleIAP } from "@/hooks/useAppleIAP";
+import { useAuth } from "@/hooks/useAuth";
 
 interface SubscriptionPlan {
   priceId: string;
@@ -24,6 +25,7 @@ interface SubscriptionPlans {
 
 function IOSWelcomePlanPicker() {
   const [, setLocation] = useLocation();
+  const { hasActiveSubscription } = useAuth();
   const {
     available,
     products,
@@ -31,28 +33,32 @@ function IOSWelcomePlanPicker() {
     isPurchasing,
     isRestoring,
     error,
-    setError,
     loadProducts,
     purchase,
     restore,
   } = useAppleIAP();
 
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-  const [purchaseAttempted, setPurchaseAttempted] = useState(false);
 
   useEffect(() => {
-    console.log('[IOSWelcomePlanPicker] Mount - available:', available);
     if (available) {
       loadProducts();
     }
   }, [available, loadProducts]);
 
+  useEffect(() => {
+    if (hasActiveSubscription) {
+      setLocation('/');
+    }
+  }, [hasActiveSubscription, setLocation]);
+
   if (!available) {
     return (
       <div className="space-y-4">
-        <div className="flex flex-col items-center justify-center py-8 space-y-3">
-          <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
-          <p className="text-sm text-gray-500">Connecting to App Store...</p>
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+          <p className="text-sm text-amber-800 text-center">
+            In-app purchases are loading. Please wait a moment...
+          </p>
         </div>
       </div>
     );
@@ -69,48 +75,12 @@ function IOSWelcomePlanPicker() {
 
   const monthlyProduct = products.find(p => p.productId === 'forescore_monthly');
   const annualProduct = products.find(p => p.productId === 'forescore_annual');
-  const hasProducts = !!(monthlyProduct || annualProduct);
-
-  const handlePurchase = async () => {
-    if (!selectedPlan) return;
-    if (!hasProducts) {
-      setError('Subscription products are not available. Please check your internet connection and try again.');
-      return;
-    }
-    setPurchaseAttempted(true);
-    setError(null);
-    console.log('[IOSWelcomePlanPicker] Purchase button tapped, plan:', selectedPlan);
-    const success = await purchase(selectedPlan);
-    console.log('[IOSWelcomePlanPicker] Purchase result:', success);
-    if (success) {
-      setLocation('/');
-    }
-  };
-
-  if (!hasProducts) {
-    return (
-      <div className="space-y-4">
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-          <p className="text-sm font-medium text-amber-800">Unable to load subscription plans</p>
-          <p className="text-xs text-amber-700 mt-1">Please check your internet connection and ensure you are signed into the App Store.</p>
-        </div>
-        <Button
-          onClick={() => loadProducts()}
-          variant="outline"
-          className="w-full"
-        >
-          <RefreshCw className="w-4 h-4 mr-2" />
-          Retry
-        </Button>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-4">
       <div className="space-y-3">
         <button
-          onClick={() => { setSelectedPlan('forescore_monthly'); setError(null); }}
+          onClick={() => setSelectedPlan('forescore_monthly')}
           disabled={isPurchasing}
           className={`w-full text-left p-4 rounded-lg border-2 transition-all relative ${
             selectedPlan === 'forescore_monthly'
@@ -137,7 +107,7 @@ function IOSWelcomePlanPicker() {
         </button>
 
         <button
-          onClick={() => { setSelectedPlan('forescore_annual'); setError(null); }}
+          onClick={() => setSelectedPlan('forescore_annual')}
           disabled={isPurchasing}
           className={`w-full text-left p-4 rounded-lg border-2 transition-all relative ${
             selectedPlan === 'forescore_annual'
@@ -168,28 +138,27 @@ function IOSWelcomePlanPicker() {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-sm font-medium text-red-800">Purchase could not be completed</p>
-          <p className="text-sm text-red-700 mt-1">{error}</p>
-          <p className="text-xs text-red-500 mt-2">Please try again or select a different plan. If the issue persists, try "Restore Previous Purchase" below.</p>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+          <p className="text-sm text-red-700">{error}</p>
         </div>
       )}
 
-      {purchaseAttempted && !error && !isPurchasing && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-          <p className="text-sm text-amber-800">If the purchase sheet did not appear, please try tapping the button again.</p>
-        </div>
-      )}
 
       <Button
-        onClick={handlePurchase}
+        onClick={async () => {
+          if (!selectedPlan) return;
+          const success = await purchase(selectedPlan);
+          if (success) {
+            setLocation('/');
+          }
+        }}
         disabled={!selectedPlan || isPurchasing}
         className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 h-12 text-base"
       >
         {isPurchasing ? (
           <>
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            Processing Purchase...
+            Processing...
           </>
         ) : (
           <>
@@ -229,13 +198,11 @@ function IOSWelcomePlanPicker() {
 export default function WelcomeTrial() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { isIOS, isNative, platformReady } = usePlatform();
-
-  const isIOSDevice = isIOS || isNative;
+  const { isIOS, isNative } = usePlatform();
 
   const { data: plans } = useQuery<SubscriptionPlans>({
     queryKey: ['/api/subscription/plans'],
-    enabled: !isIOSDevice && platformReady,
+    enabled: !(isIOS || isNative),
   });
 
   const startTrialMutation = useMutation({
@@ -288,8 +255,8 @@ export default function WelcomeTrial() {
             Welcome to ForeScore!
           </CardTitle>
           <CardDescription className="text-lg text-gray-600 mt-2">
-            {isIOSDevice
-              ? "Choose a subscription to start your free 7-day trial and unlock all features"
+            {(isIOS || isNative) 
+              ? "Choose your plan to start your 7-day free trial"
               : "Your 7-day free trial has started"
             }
           </CardDescription>
@@ -313,18 +280,13 @@ export default function WelcomeTrial() {
               <div className="flex items-center space-x-3">
                 <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
                 <span className="text-sm text-gray-700">
-                  {isIOSDevice ? "Free for 7 days" : "No credit card required for 7 days"}
+                  {(isIOS || isNative) ? "Free for 7 days" : "No credit card required for 7 days"}
                 </span>
               </div>
             </div>
           </div>
 
-          {!platformReady ? (
-            <div className="flex flex-col items-center justify-center py-8 space-y-3">
-              <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
-              <p className="text-sm text-gray-500">Loading...</p>
-            </div>
-          ) : isIOSDevice ? (
+          {(isIOS || isNative) ? (
             <IOSWelcomePlanPicker />
           ) : (
             <>

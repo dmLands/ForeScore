@@ -22,7 +22,6 @@ function IOSPlanPicker() {
     isPurchasing,
     isRestoring,
     error,
-    setError,
     loadProducts,
     purchase,
     restore,
@@ -65,70 +64,73 @@ function IOSPlanPicker() {
 
   const monthlyProduct = products.find(p => p.productId === 'forescore_monthly');
   const annualProduct = products.find(p => p.productId === 'forescore_annual');
-  const hasProducts = !!(monthlyProduct || annualProduct);
 
-  if (!hasProducts) {
-    return (
-      <div className="space-y-4">
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-          <p className="text-sm font-medium text-amber-800">Unable to load subscription plans</p>
-          <p className="text-xs text-amber-700 mt-1">Please check your internet connection and ensure you are signed into the App Store.</p>
-        </div>
-        <Button
-          onClick={() => loadProducts()}
-          variant="outline"
-          className="w-full"
-        >
-          <RefreshCw className="w-4 h-4 mr-2" />
-          Retry
-        </Button>
-      </div>
-    );
-  }
+  const hasFallback = !monthlyProduct && !annualProduct;
 
   return (
     <div className="space-y-4">
       <div className="space-y-3">
-        {monthlyProduct && (
-          <PlanCard
-            planId={monthlyProduct.productId}
-            title="Monthly"
-            price={monthlyProduct.price ? `${monthlyProduct.price}/month` : '$1.99/month'}
-            trial={`7-day free trial, then ${monthlyProduct.price ? `${monthlyProduct.price}/month` : '$1.99/month'}`}
-            selected={selectedPlan === monthlyProduct.productId}
-            onSelect={() => setSelectedPlan(monthlyProduct.productId)}
-            disabled={isPurchasing}
-          />
-        )}
-        {annualProduct && (
-          <PlanCard
-            planId={annualProduct.productId}
-            title="Annual"
-            price={annualProduct.price ? `${annualProduct.price}/year` : '$17.99/year'}
-            trial={`7-day free trial, then ${annualProduct.price ? `${annualProduct.price}/year` : '$17.99/year'}`}
-            badge="Best Value"
-            selected={selectedPlan === annualProduct.productId}
-            onSelect={() => setSelectedPlan(annualProduct.productId)}
-            disabled={isPurchasing}
-          />
+        {hasFallback ? (
+          <>
+            <PlanCard
+              planId="forescore_monthly"
+              title="Monthly"
+              price="$1.99/month"
+              trial="7-day free trial, then $1.99/month"
+              selected={selectedPlan === 'forescore_monthly'}
+              onSelect={() => setSelectedPlan('forescore_monthly')}
+              disabled={isPurchasing}
+            />
+            <PlanCard
+              planId="forescore_annual"
+              title="Annual"
+              price="$17.99/year"
+              trial="7-day free trial, then $17.99/year"
+              badge="Best Value"
+              selected={selectedPlan === 'forescore_annual'}
+              onSelect={() => setSelectedPlan('forescore_annual')}
+              disabled={isPurchasing}
+            />
+          </>
+        ) : (
+          <>
+            {monthlyProduct && (
+              <PlanCard
+                planId={monthlyProduct.productId}
+                title="Monthly"
+                price={monthlyProduct.price ? `${monthlyProduct.price}/month` : '$1.99/month'}
+                trial={`7-day free trial, then ${monthlyProduct.price ? `${monthlyProduct.price}/month` : '$1.99/month'}`}
+                selected={selectedPlan === monthlyProduct.productId}
+                onSelect={() => setSelectedPlan(monthlyProduct.productId)}
+                disabled={isPurchasing}
+              />
+            )}
+            {annualProduct && (
+              <PlanCard
+                planId={annualProduct.productId}
+                title="Annual"
+                price={annualProduct.price ? `${annualProduct.price}/year` : '$17.99/year'}
+                trial={`7-day free trial, then ${annualProduct.price ? `${annualProduct.price}/year` : '$17.99/year'}`}
+                badge="Best Value"
+                selected={selectedPlan === annualProduct.productId}
+                onSelect={() => setSelectedPlan(annualProduct.productId)}
+                disabled={isPurchasing}
+              />
+            )}
+          </>
         )}
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-sm font-medium text-red-800">Purchase could not be completed</p>
-          <p className="text-sm text-red-700 mt-1">{error}</p>
-          <p className="text-xs text-red-500 mt-2">Please try again or select a different plan. If the issue persists, try "Restore Previous Purchase" below.</p>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+          <p className="text-sm text-red-700">{error}</p>
         </div>
       )}
 
       <Button
         onClick={async () => {
           if (!selectedPlan) return;
-          setError(null);
-          console.log('[IOSPlanPicker] Purchase button tapped, plan:', selectedPlan);
           const success = await purchase(selectedPlan);
-          console.log('[IOSPlanPicker] Purchase result:', success);
           if (success) {
             setLocation('/');
           }
@@ -139,7 +141,7 @@ function IOSPlanPicker() {
         {isPurchasing ? (
           <>
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            Processing Purchase...
+            Processing...
           </>
         ) : (
           <>

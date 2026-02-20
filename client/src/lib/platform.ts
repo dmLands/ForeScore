@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export type Platform = 'web' | 'ios' | 'android';
+
+let _cachedPlatform: Platform | null = null;
 
 export function getPlatform(): Platform {
   if (typeof window === 'undefined') {
@@ -10,6 +12,7 @@ export function getPlatform(): Platform {
   const w = window as any;
 
   if (w.__FORESCORE_NATIVE_IOS__ === true) {
+    _cachedPlatform = 'ios';
     return 'ios';
   }
 
@@ -26,22 +29,25 @@ export function getPlatform(): Platform {
       const platform = typeof w.Capacitor.getPlatform === 'function'
         ? w.Capacitor.getPlatform()
         : null;
-      if (platform === 'ios') return 'ios';
-      if (platform === 'android') return 'android';
+      if (platform === 'ios') { _cachedPlatform = 'ios'; return 'ios'; }
+      if (platform === 'android') { _cachedPlatform = 'android'; return 'android'; }
+      _cachedPlatform = 'ios';
       return 'ios';
     }
   }
 
   const envPlatform = import.meta.env.VITE_PLATFORM;
-  if (envPlatform === 'ios') return 'ios';
-  if (envPlatform === 'android') return 'android';
+  if (envPlatform === 'ios') { _cachedPlatform = 'ios'; return 'ios'; }
+  if (envPlatform === 'android') { _cachedPlatform = 'android'; return 'android'; }
 
   const ua = navigator.userAgent.toLowerCase();
   if (ua.includes('forescore-ios') || ua.includes('capacitor-ios')) {
+    _cachedPlatform = 'ios';
     return 'ios';
   }
 
   if (w.webkit?.messageHandlers && /iPhone|iPad|iPod/.test(navigator.userAgent) && !/Safari\//.test(navigator.userAgent)) {
+    _cachedPlatform = 'ios';
     return 'ios';
   }
 
@@ -62,23 +68,46 @@ export function isWeb(): boolean {
 }
 
 export function usePlatform() {
-  const [platform, setPlatform] = useState<Platform>(() => getPlatform());
+  const [platform, setPlatform] = useState<Platform>(() => {
+    if (_cachedPlatform) return _cachedPlatform;
+    return getPlatform();
+  });
+  const [platformReady, setPlatformReady] = useState(() => {
+    const initial = getPlatform();
+    return initial !== 'web' || _cachedPlatform !== null;
+  });
+  const pollCountRef = useRef(0);
 
   useEffect(() => {
     const detected = getPlatform();
     if (detected !== platform) {
       setPlatform(detected);
     }
-
-    if (detected === 'web') {
-      const timer = setTimeout(() => {
-        const recheck = getPlatform();
-        if (recheck !== 'web') {
-          setPlatform(recheck);
-        }
-      }, 500);
-      return () => clearTimeout(timer);
+    if (detected !== 'web') {
+      setPlatformReady(true);
+      return;
     }
+
+    const hasNativeHints = typeof window !== 'undefined' && !!(
+      (window as any).webkit?.messageHandlers ||
+      /iPhone|iPad|iPod/.test(navigator.userAgent)
+    );
+    const maxPolls = hasNativeHints ? 40 : 10;
+
+    const poll = setInterval(() => {
+      pollCountRef.current++;
+      const recheck = getPlatform();
+      if (recheck !== 'web') {
+        setPlatform(recheck);
+        setPlatformReady(true);
+        clearInterval(poll);
+      } else if (pollCountRef.current >= maxPolls) {
+        setPlatformReady(true);
+        clearInterval(poll);
+      }
+    }, 100);
+
+    return () => clearInterval(poll);
   }, []);
 
   return {
@@ -87,6 +116,7 @@ export function usePlatform() {
     isAndroid: platform === 'android',
     isNative: platform !== 'web',
     isWeb: platform === 'web',
+    platformReady,
   };
 }
 

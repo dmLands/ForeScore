@@ -26,30 +26,49 @@ export function useAppleIAP() {
   const available = isIOS && isNative;
 
   const loadProducts = useCallback(async () => {
-    if (!available) return;
+    if (!available) {
+      console.log('[useAppleIAP] loadProducts skipped: available=false, isIOS=', isIOS, 'isNative=', isNative);
+      return;
+    }
 
+    console.log('[useAppleIAP] Loading products for IDs:', PRODUCT_IDS);
     setIsLoading(true);
     setError(null);
     try {
       const fetchedProducts = await fetchProducts(PRODUCT_IDS);
+      console.log('[useAppleIAP] Products loaded:', fetchedProducts.length, fetchedProducts.map(p => p.productId));
       setProducts(fetchedProducts);
+      if (fetchedProducts.length === 0) {
+        console.warn('[useAppleIAP] WARNING: No products returned from StoreKit');
+      }
     } catch (err: any) {
+      console.error('[useAppleIAP] Failed to load products:', err);
       setError(err.message || 'Failed to load products');
     } finally {
       setIsLoading(false);
     }
-  }, [available]);
+  }, [available, isIOS, isNative]);
 
   const purchase = useCallback(async (productId: string): Promise<boolean> => {
-    if (!available) return false;
+    if (!available) {
+      console.error('[useAppleIAP] Purchase blocked: IAP not available. isIOS=', isIOS, 'isNative=', isNative);
+      setError('In-app purchases are not available on this device.');
+      return false;
+    }
 
+    console.log('[useAppleIAP] Starting purchase for:', productId);
     setIsPurchasing(true);
     setError(null);
     try {
+      console.log('[useAppleIAP] Calling native purchaseProduct...');
       const transaction = await purchaseProduct(productId);
       if (!transaction) {
+        console.warn('[useAppleIAP] purchaseProduct returned null (cancelled or failed)');
         throw new Error('Purchase cancelled or failed');
       }
+
+      console.log('[useAppleIAP] Native purchase succeeded, transactionId:', transaction.transactionId, 'productId:', transaction.productId);
+      console.log('[useAppleIAP] Validating transaction with server...');
 
       const response = await apiRequest('POST', '/api/apple/validate-transaction', {
         transactionId: transaction.transactionId,
@@ -57,8 +76,10 @@ export function useAppleIAP() {
       });
 
       const result = await response.json();
+      console.log('[useAppleIAP] Server validation result:', result);
 
       if (result.success) {
+        console.log('[useAppleIAP] Server validation succeeded, finishing transaction...');
         await finishTransaction(transaction.transactionId);
 
         await queryClient.invalidateQueries({ queryKey: ['/api/subscription/status'] });
@@ -69,13 +90,18 @@ export function useAppleIAP() {
           title: 'Subscription Active',
           description: 'Your ForeScore subscription is now active!',
         });
+        console.log('[useAppleIAP] Purchase flow complete - SUCCESS');
         return true;
       } else {
-        throw new Error(result.message || 'Failed to validate purchase');
+        console.error('[useAppleIAP] Server validation failed:', result.message);
+        throw new Error(result.message || 'Failed to validate purchase with server');
       }
     } catch (err: any) {
       const message = err.message || 'Purchase failed';
-      if (!message.includes('cancelled') && !message.includes('canceled')) {
+      console.error('[useAppleIAP] Purchase error:', message, err);
+      if (message.includes('cancelled') || message.includes('canceled')) {
+        console.log('[useAppleIAP] Purchase was cancelled by user');
+      } else {
         setError(message);
         toast({
           title: 'Purchase Failed',
@@ -87,15 +113,17 @@ export function useAppleIAP() {
     } finally {
       setIsPurchasing(false);
     }
-  }, [available, toast]);
+  }, [available, isIOS, isNative, toast]);
 
   const restore = useCallback(async () => {
     if (!available) return;
 
+    console.log('[useAppleIAP] Restoring purchases...');
     setIsRestoring(true);
     setError(null);
     try {
       const transactions = await restorePurchases();
+      console.log('[useAppleIAP] Restore found', transactions.length, 'transactions');
 
       if (transactions.length === 0) {
         toast({
@@ -108,6 +136,7 @@ export function useAppleIAP() {
       let restored = false;
       for (const transaction of transactions) {
         try {
+          console.log('[useAppleIAP] Validating restored transaction:', transaction.transactionId);
           const response = await apiRequest('POST', '/api/apple/validate-transaction', {
             transactionId: transaction.transactionId,
             jws: transaction.jwsRepresentation,
@@ -116,8 +145,11 @@ export function useAppleIAP() {
           if (result.success) {
             await finishTransaction(transaction.transactionId);
             restored = true;
+            console.log('[useAppleIAP] Restored transaction validated:', transaction.transactionId);
           }
-        } catch {}
+        } catch (restoreErr) {
+          console.error('[useAppleIAP] Failed to validate restored transaction:', transaction.transactionId, restoreErr);
+        }
       }
 
       queryClient.invalidateQueries({ queryKey: ['/api/subscription/status'] });
@@ -136,6 +168,7 @@ export function useAppleIAP() {
         });
       }
     } catch (err: any) {
+      console.error('[useAppleIAP] Restore failed:', err);
       setError(err.message || 'Restore failed');
       toast({
         title: 'Restore Failed',
@@ -154,6 +187,7 @@ export function useAppleIAP() {
     isPurchasing,
     isRestoring,
     error,
+    setError,
     loadProducts,
     purchase,
     restore,

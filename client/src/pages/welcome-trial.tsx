@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useLocation } from "wouter";
 import { CheckCircle, Trophy, Users, Calculator, Crown, Loader2, RefreshCw } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -256,40 +257,289 @@ export default function WelcomeTrial() {
           </CardTitle>
           <CardDescription className="text-lg text-gray-600 mt-2">
             {(isIOS || isNative) 
-              ? "Choose your plan to start your 7-day free trial"
+              ? "Choose your plan to unlock ForeScore and all of its features"
               : "Your 7-day free trial has started"
             }
           </CardDescription>
         </CardHeader>
         
         <CardContent className="space-y-6">
-          <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-            <div className="grid gap-3">
-              <div className="flex items-center space-x-3">
-                <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                <span className="text-sm text-gray-700">Full access to all premium features</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                <span className="text-sm text-gray-700">Create unlimited groups and games</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                <span className="text-sm text-gray-700">Smart payout calculations with minimal transactions</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                <span className="text-sm text-gray-700">
-                  {(isIOS || isNative) ? "Free for 7 days" : "No credit card required for 7 days"}
-                </span>
-              </div>
-            </div>
-          </div>
-
           {(isIOS || isNative) ? (
-            <IOSWelcomePlanPicker />
+            <>
+              <IOSWelcomePlanPicker />
+
+              <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                <div className="grid gap-3">
+                  <div className="flex items-center space-x-3">
+                    <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+                    <span className="text-sm text-gray-700">Track unlimited golf games and betting side games for your groups</span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+                    <span className="text-sm text-gray-700">Automatically calculate payouts for all players with minimal transactions</span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+                    <span className="text-sm text-gray-700">Features are available only with a subscription</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <h3 className="text-base font-semibold text-gray-800">What do I get with my subscription?</h3>
+                <Accordion type="multiple" className="space-y-2">
+
+                  <AccordionItem value="gir" className="border rounded-lg overflow-hidden">
+                    <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-gray-50">
+                      <span className="text-sm font-semibold text-gray-800">🚩 Greens in Regulation Rules</span>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="px-4 pb-4 pt-0 space-y-4 text-gray-600">
+                        <p className="leading-relaxed text-sm">
+                          Greens in Regulation (GIR) is a scoring game where players earn points by hitting the green in the regulation number of strokes, creating competitive pressure on approach shots.
+                        </p>
+                        <div>
+                          <h4 className="text-sm font-semibold text-gray-800 mb-2">How GIR Is Scored</h4>
+                          <div className="ml-2 space-y-2">
+                            <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                              <p className="text-xs font-medium text-gray-800 mb-1">✅ Green in Regulation (Hit)</p>
+                              <p className="text-xs text-gray-600">Your ball is on the green in regulation strokes: Par 3 = 1 stroke, Par 4 = 2 strokes, Par 5 = 3 strokes. Each hit earns 1 point.</p>
+                            </div>
+                            <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                              <p className="text-xs font-medium text-gray-800 mb-1">❌ Missed GIR</p>
+                              <p className="text-xs text-gray-600">Your ball is not on the green within regulation strokes. Each miss earns 0 points.</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-semibold text-gray-800 mb-2">2 Payout Systems — Nassau and Points</h4>
+                          <div className="space-y-2">
+                            <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                              <p className="text-xs font-medium text-gray-800 mb-1">Points System</p>
+                              <ul className="space-y-1 text-xs text-gray-700">
+                                <li>• Each player pays/receives money based on point differences</li>
+                                <li>• Players with more GIRs receive from players with fewer GIRs</li>
+                              </ul>
+                            </div>
+                            <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                              <p className="text-xs font-medium text-gray-800 mb-1">Nassau System (Front/Back/Total)</p>
+                              <ul className="space-y-1 text-xs text-gray-700">
+                                <li>• Winners determined by most GIRs across Front 9, Back 9, and Total 18</li>
+                                <li>• Winners receive Nassau Value for each category won</li>
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="bbb" className="border rounded-lg overflow-hidden">
+                    <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-gray-50">
+                      <span className="text-sm font-semibold text-gray-800">🎲 Bingo Bango Bongo Rules</span>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="px-4 pb-4 pt-0 space-y-4 text-gray-600">
+                        <p className="leading-relaxed text-sm">
+                          Bingo Bango Bongo is a fun points-based game where players earn points by achieving three different objectives on each hole.
+                        </p>
+                        <div>
+                          <h4 className="text-sm font-semibold text-gray-800 mb-2">How Points Are Awarded</h4>
+                          <div className="ml-2 space-y-2">
+                            <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                              <p className="text-xs font-medium text-gray-800 mb-1">🎯 Bingo — First on Green</p>
+                              <p className="text-xs text-gray-600">The first player to hit their ball on the green, regardless of green-in-regulation.</p>
+                            </div>
+                            <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                              <p className="text-xs font-medium text-gray-800 mb-1">🎯 Bango — Closest to Pin</p>
+                              <p className="text-xs text-gray-600">The player whose ball comes to rest closest to the hole before any other player holes out.</p>
+                            </div>
+                            <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                              <p className="text-xs font-medium text-gray-800 mb-1">🎯 Bongo — First in Hole</p>
+                              <p className="text-xs text-gray-600">The first person to hole out from anywhere on the course.</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-semibold text-gray-800 mb-2">2 Payout Systems — Points and Nassau</h4>
+                          <div className="space-y-2">
+                            <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                              <p className="text-xs font-medium text-gray-800 mb-1">Points System</p>
+                              <ul className="space-y-1 text-xs text-gray-700">
+                                <li>• Each player pays/receives money based on point differences</li>
+                                <li>• Higher-scoring players receive from lower-scoring players</li>
+                              </ul>
+                            </div>
+                            <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                              <p className="text-xs font-medium text-gray-800 mb-1">Nassau System (Front/Back/Total)</p>
+                              <ul className="space-y-1 text-xs text-gray-700">
+                                <li>• Winners determined by highest point count across Front 9, Back 9, and Total 18</li>
+                                <li>• Winners receive Nassau Value for each category won</li>
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="2916" className="border rounded-lg overflow-hidden">
+                    <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-gray-50">
+                      <span className="text-sm font-semibold text-gray-800">👑 Sacramento Game Rules</span>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="px-4 pb-4 pt-0 space-y-4 text-gray-600">
+                        <p className="leading-relaxed text-sm">
+                          The Sacramento (916) Game is a stroke-based competition where players earn points based on their performance relative to other players on each hole.
+                        </p>
+                        <div>
+                          <h4 className="text-sm font-semibold text-gray-800 mb-2">How Points Are Awarded</h4>
+                          <div className="ml-2 space-y-2 text-xs">
+                            <div>
+                              <p className="font-medium text-gray-800">2 Players:</p>
+                              <ul className="ml-3 space-y-0.5 text-gray-600">
+                                <li>• Fewer strokes: 2 points</li>
+                                <li>• More strokes: 0 points &nbsp;• Tie: 1 point each</li>
+                              </ul>
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-800">3 Players:</p>
+                              <ul className="ml-3 space-y-0.5 text-gray-600">
+                                <li>• Fewest strokes: 5 pts &nbsp;• Middle: 3 pts &nbsp;• Most: 1 pt</li>
+                              </ul>
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-800">4 Players:</p>
+                              <ul className="ml-3 space-y-0.5 text-gray-600">
+                                <li>• 1st: 7 pts &nbsp;• 2nd: 5 pts &nbsp;• 3rd: 3 pts &nbsp;• 4th: 1 pt</li>
+                                <li>• Ties: Points distributed proportionally</li>
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-semibold text-gray-800 mb-2">3 Payout Systems — Points, Nassau, Both</h4>
+                          <div className="space-y-2">
+                            <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                              <p className="text-xs font-medium text-gray-800 mb-1">Points System</p>
+                              <p className="text-xs text-gray-600">Players pay/receive money based on point differences. Set Point Value to calculate amounts.</p>
+                            </div>
+                            <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                              <p className="text-xs font-medium text-gray-800 mb-1">Nassau System (Front/Back/Total)</p>
+                              <p className="text-xs text-gray-600">Winners determined by lowest stroke count across Front 9, Back 9, and Total 18. Winners receive Nassau Value for each category won.</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="cards" className="border rounded-lg overflow-hidden">
+                    <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-gray-50">
+                      <span className="text-sm font-semibold text-gray-800">🃏 Card Game Rules</span>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="px-4 pb-4 pt-0 space-y-4">
+                        <div>
+                          <h4 className="text-sm font-semibold text-gray-800 mb-1">1. Setup</h4>
+                          <p className="text-xs text-gray-600 ml-4">Set the monetary value for each card type before starting the game.</p>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-semibold text-gray-800 mb-1">2. Drawing Cards</h4>
+                          <p className="text-xs text-gray-600 ml-4">Players are assigned cards when they hit a shot corresponding to one of the card types below. Cards are re-assigned as additional players perform the same mishap. Each card can only be held by one player at a time.</p>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-semibold text-gray-800 mb-2">3. Card Types</h4>
+                          <div className="space-y-2 ml-4">
+                            <div className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg border">
+                              <span className="text-xl">🐪</span>
+                              <div>
+                                <p className="text-xs font-medium text-gray-800">Camel</p>
+                                <p className="text-xs text-gray-600">Land in a sand trap</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg border">
+                              <span className="text-xl">🐟</span>
+                              <div>
+                                <p className="text-xs font-medium text-gray-800">Fish</p>
+                                <p className="text-xs text-gray-600">Ball in the water</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg border">
+                              <span className="text-xl">🐦</span>
+                              <div>
+                                <p className="text-xs font-medium text-gray-800">Roadrunner</p>
+                                <p className="text-xs text-gray-600">Hit the cart path</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg border">
+                              <span className="text-xl">👻</span>
+                              <div>
+                                <p className="text-xs font-medium text-gray-800">Ghost</p>
+                                <p className="text-xs text-gray-600">Lost ball or out of bounds</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg border">
+                              <span className="text-xl">🦨</span>
+                              <div>
+                                <p className="text-xs font-medium text-gray-800">Skunk</p>
+                                <p className="text-xs text-gray-600">Double bogey or worse</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg border">
+                              <span className="text-xl">🐍</span>
+                              <div>
+                                <p className="text-xs font-medium text-gray-800">Snake</p>
+                                <p className="text-xs text-gray-600">Three or more putts</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg border">
+                              <span className="text-xl">🌲</span>
+                              <div>
+                                <p className="text-xs font-medium text-gray-800">Yeti</p>
+                                <p className="text-xs text-gray-600">Hit a tree</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-semibold text-gray-800 mb-1">4. Custom Cards</h4>
+                          <p className="text-xs text-gray-600 ml-4">Create your own penalty cards with custom names, emojis, and values to match your group's specific rules. Examples: Whiff, Shank, Hit a House.</p>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-semibold text-gray-800 mb-1">5. Winning</h4>
+                          <p className="text-xs text-gray-600 ml-4">At the end of the round, players pay out based on the cards they hold.</p>
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                </Accordion>
+              </div>
+            </>
           ) : (
             <>
+              <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                <div className="grid gap-3">
+                  <div className="flex items-center space-x-3">
+                    <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+                    <span className="text-sm text-gray-700">Full access to all premium features</span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+                    <span className="text-sm text-gray-700">Create unlimited groups and games</span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+                    <span className="text-sm text-gray-700">Smart payout calculations with minimal transactions</span>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+                    <span className="text-sm text-gray-700">No credit card required for 7 days</span>
+                  </div>
+                </div>
+              </div>
+
               <Button
                 onClick={handleStartTrial}
                 disabled={startTrialMutation.isPending}

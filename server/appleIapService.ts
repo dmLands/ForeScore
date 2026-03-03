@@ -183,6 +183,11 @@ export class AppleIapService {
       const expiresDateMs = decoded.expiresDate;
       const purchaseDateMs = decoded.purchaseDate;
 
+      if (expiresDateMs && new Date(expiresDateMs) <= new Date()) {
+        console.warn(`⚠️ Apple IAP: Received expired transaction for ${productId}, expired at ${new Date(expiresDateMs).toISOString()}`);
+        return { success: false, error: "This subscription has expired. Please subscribe again to start a new trial." };
+      }
+
       const subscriptionData: InsertAppleSubscription = {
         userId,
         productId,

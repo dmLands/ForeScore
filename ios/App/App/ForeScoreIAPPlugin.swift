@@ -136,6 +136,47 @@ public class ForeScoreIAPPlugin: CAPPlugin, CAPBridgedPlugin {
 
         Task { @MainActor in
             do {
+                // T001: Check for any unfinished transactions for this product first.
+                // If StoreKit has a stuck/interrupted transaction, return it to JS so the
+                // server can validate it and JS can call finishTransaction normally.
+                // This prevents StoreKit silently re-delivering old transactions and bypassing
+                // the payment sheet on subsequent purchase attempts.
+                for await result in Transaction.unfinished {
+                    if let transaction = try? self.checkVerified(result) {
+                        if transaction.productID == productId {
+                            NSLog("[ForeScoreIAP] UNFINISHED_TRANSACTION_FOUND for %@ txn %llu — returning to allow server validation", productId, transaction.id)
+                            let transactionDict: [String: Any] = [
+                                "transactionId": String(transaction.id),
+                                "originalTransactionId": String(transaction.originalID),
+                                "productId": transaction.productID,
+                                "jwsRepresentation": result.jwsRepresentation,
+                            ]
+                            call.resolve(["transaction": transactionDict])
+                            return
+                        }
+                    }
+                }
+
+                // T002: Check for an existing active entitlement for this product.
+                // If the sandbox account already has an active subscription, StoreKit would
+                // return .success immediately without showing the payment sheet. We make this
+                // explicit and logged so the behavior is transparent and deterministic.
+                for await result in Transaction.currentEntitlements {
+                    if let transaction = try? self.checkVerified(result) {
+                        if transaction.productID == productId && transaction.productType == .autoRenewable {
+                            NSLog("[ForeScoreIAP] EXISTING_SUBSCRIPTION_FOUND for %@ txn %llu — returning current entitlement, no payment sheet needed", productId, transaction.id)
+                            let transactionDict: [String: Any] = [
+                                "transactionId": String(transaction.id),
+                                "originalTransactionId": String(transaction.originalID),
+                                "productId": transaction.productID,
+                                "jwsRepresentation": result.jwsRepresentation,
+                            ]
+                            call.resolve(["transaction": transactionDict])
+                            return
+                        }
+                    }
+                }
+
                 let products = try await Product.products(for: [productId])
                 NSLog("[ForeScoreIAP] Purchase lookup found %d products for %@", products.count, productId)
 

@@ -1,0 +1,168 @@
+2026-03-02 17:02:07.84
+3f5bedf8
+User
+WebSocket manager initialized successfully
+2026-03-02 17:02:07.91
+3f5bedf8
+User
+12:02:07 AM [express] serving on port 5000
+2026-03-02 17:02:08.34
+3f5bedf8
+User
+Database connection established successfully
+2026-03-02 17:05:35.92
+822dea81
+System
+system: received signal terminated
+2026-03-02 17:30:25.55
+f6f0be4e
+System
+starting up user application
+2026-03-02 17:30:25.55
+f6f0be4e
+System
+forwarding local port 5000 to external port 80 (mapped as 1104)
+2026-03-02 17:30:25.55
+f6f0be4e
+System
+metasidecar: loaded enterprise status from environment is_enterprise=false
+2026-03-02 17:30:25.55
+f6f0be4e
+System
+healthcheck failed error=healthcheck /: Get "http://127.0.0.1:1104/": dial tcp 127.0.0.1:1104: connect: connection refused
+2026-03-02 17:30:25.56
+f6f0be4e
+System
+healthcheck failed error=healthcheck / returned status 500
+2026-03-02 17:30:25.58
+f6f0be4e
+System
+healthcheck failed error=healthcheck / returned status 500
+2026-03-02 17:30:25.60
+f6f0be4e
+System
+healthcheck failed error=healthcheck / returned status 500
+2026-03-02 17:30:25.64
+f6f0be4e
+System
+healthcheck failed error=healthcheck / returned status 500
+2026-03-02 17:30:25.81
+f6f0be4e
+System
+healthcheck failed error=healthcheck / returned status 500
+2026-03-02 17:30:26.05
+f6f0be4e
+System
+healthcheck failed error=healthcheck / returned status 500
+2026-03-02 17:30:26.61
+f6f0be4e
+System
+healthcheck failed error=healthcheck / returned status 500
+2026-03-02 17:30:27.21
+f6f0be4e
+User
+> rest-express@1.0.0 start
+2026-03-02 17:30:27.21
+f6f0be4e
+User
+> NODE_ENV=production node dist/index.js
+2026-03-02 17:30:27.36
+f6f0be4e
+System
+healthcheck failed error=healthcheck / returned status 500
+2026-03-02 17:30:28.45
+f6f0be4e
+System
+healthcheck failed error=healthcheck / returned status 500
+2026-03-02 17:30:29.05
+f6f0be4e
+User
+Automatic cleanup disabled - use /api/admin/cleanup-old-games for manual cleanup
+2026-03-02 17:30:29.34
+f6f0be4e
+User
+WebSocket manager initialized successfully
+2026-03-02 17:30:29.46
+f6f0be4e
+User
+12:30:29 AM [express] serving on port 5000
+2026-03-02 17:30:32.45
+f6f0be4e
+User
+Database connection established successfully
+2026-03-02 17:32:14.33
+3f5bedf8
+System
+system: received signal terminated
+2026-03-02 18:06:45.63
+f6f0be4e
+User
+✅ Quick signup (new) for replitdown@forescore.xyz, trial started
+2026-03-02 18:06:45.63
+f6f0be4e
+User
+(node:40) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+2026-03-02 18:06:45.63
+f6f0be4e
+User
+(Use `node --trace-warnings ...` to show where the warning was created)
+2026-03-02 18:06:45.63
+f6f0be4e
+User
+To prepare for this change:
+2026-03-02 18:06:45.63
+f6f0be4e
+User
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+2026-03-02 18:06:45.63
+f6f0be4e
+User
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+2026-03-02 18:06:45.63
+f6f0be4e
+User
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+2026-03-02 18:06:45.63
+f6f0be4e
+User
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+2026-03-02 18:06:45.99
+f6f0be4e
+User
+1:06:45 AM [express] POST /api/auth/quick-signup 201 in 709ms :: {"message":"Welcome to ForeScore!",…
+2026-03-02 18:06:48.25
+f6f0be4e
+User
+length: 116,
+2026-03-02 18:06:48.25
+f6f0be4e
+User
+severity: 'FATAL',
+2026-03-02 18:06:48.25
+f6f0be4e
+User
+detail: undefined,
+2026-03-02 18:06:48.25
+f6f0be4e
+User
+code: '57P01',
+2026-03-02 18:06:48.25
+f6f0be4e
+User
+Database pool error: error: terminating connection due to administrator command
+2026-03-02 18:06:48.25
+f6f0be4e
+User
+at WebSocket.emit (node:events:524:28)
+2026-03-02 18:06:48.25
+f6f0be4e
+User
+at v. (file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1190:16)
+2026-03-02 18:06:48.25
+f6f0be4e
+User
+hint: undefined,
+2026-03-02 18:06:48.25
+f6f0be4e
+User
+at Receiver.receiverOnMessage (/home/runner/workspace/node_modules/ws/lib/websocket.js:1225:20) {

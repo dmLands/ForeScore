@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useLocation } from "wouter";
-import { CheckCircle, Trophy, Users, Calculator, Crown, Loader2, RefreshCw } from "lucide-react";
+import { CheckCircle, Trophy, Handshake, Calculator, Crown, Loader2, RefreshCw } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -272,7 +272,7 @@ export default function WelcomeTrial() {
                 <div className="grid gap-3">
                   <div className="flex items-center space-x-3">
                     <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                    <span className="text-sm text-gray-700">Track unlimited golf games and betting side games for your groups</span>
+                    <span className="text-sm text-gray-700">Track unlimited golf rounds and side games for your groups</span>
                   </div>
                   <div className="flex items-center space-x-3">
                     <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
@@ -286,7 +286,7 @@ export default function WelcomeTrial() {
               </div>
 
               <div className="space-y-3">
-                <h3 className="text-base font-semibold text-gray-800">What do I get with my subscription?</h3>
+                <h3 className="text-base font-semibold text-gray-800">What games are included with the subscription?</h3>
                 <Accordion type="multiple" className="space-y-2">
 
                   <AccordionItem value="gir" className="border rounded-lg overflow-hidden">
@@ -491,9 +491,9 @@ export default function WelcomeTrial() {
           <div className="grid grid-cols-3 gap-4 pt-4 border-t">
             <div className="text-center">
               <div className="mx-auto w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mb-2">
-                <Users className="w-5 h-5 text-green-600" />
+                <Handshake className="w-5 h-5 text-green-600" />
               </div>
-              <p className="text-xs text-gray-600">Group Management</p>
+              <p className="text-xs text-gray-600">Optimized Payments</p>
             </div>
             <div className="text-center">
               <div className="mx-auto w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mb-2">

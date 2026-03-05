@@ -257,7 +257,7 @@ export default function WelcomeTrial() {
           </CardTitle>
           <CardDescription className="text-lg text-gray-600 mt-2">
             {(isIOS || isNative) 
-              ? "Choose your plan to unlock ForeScore and all of its features"
+              ? "Choose your plan to unlock ForeScore's side-game scoring and payout tools for your golf groups."
               : "Your 7-day free trial has started"
             }
           </CardDescription>
@@ -280,13 +280,14 @@ export default function WelcomeTrial() {
                   </div>
                   <div className="flex items-center space-x-3">
                     <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                    <span className="text-sm text-gray-700">Features are available only with a subscription</span>
+                    <span className="text-sm text-gray-700">Save and view your group's game history so everyone knows who won</span>
                   </div>
                 </div>
+                <p className="text-sm font-semibold text-gray-700 mt-2">ForeScore's scoring, payout, and history features require an active subscription.</p>
               </div>
 
               <div className="space-y-3">
-                <h3 className="text-base font-semibold text-gray-800">What games are included with the subscription?</h3>
+                <h3 className="text-base font-semibold text-gray-800">Your subscription includes scoring and payouts for these games:</h3>
                 <Accordion type="multiple" className="space-y-2">
 
                   <AccordionItem value="gir" className="border rounded-lg overflow-hidden">
